@@ -17,7 +17,7 @@ const Navbar = () => {
 
   const handleNavigation = (path) => {
     navigate(path)
-    setIsMobileMenuOpen(false) // Close mobile menu after navigation
+    setIsMobileMenuOpen(false)
   }
 
   const isActive = (path) => {
@@ -47,10 +47,10 @@ const Navbar = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           maxWidth: '1200px',
-          margin: '0 auto',
-          height: '100%'
+          margin: '0 auto'
         }}>
-          {/* Logo - Left */}
+
+          {/* ✅ FIXED LOGO */}
           <div 
             onClick={() => handleNavigation('/')}
             style={{
@@ -61,16 +61,17 @@ const Navbar = () => {
               cursor: 'pointer'
             }}
           >
-            MudgarFitnessClub
+            Mudgarvale
           </div>
 
-          {/* Desktop Navigation Links - Middle */}
-          <div style={{
-            display: 'flex',
-            gap: 'clamp(1rem, 3vw, 2.5rem)',
-            alignItems: 'center'
-          }}
-          className="desktop-nav"
+          {/* Desktop Navigation */}
+          <div
+            className="desktop-nav"
+            style={{
+              display: 'flex',
+              gap: 'clamp(1rem, 3vw, 2.5rem)',
+              alignItems: 'center'
+            }}
           >
             {navItems.map((item) => (
               <a
@@ -83,21 +84,10 @@ const Navbar = () => {
                   fontWeight: 500,
                   transition: 'all 0.3s ease',
                   padding: '0.5rem 0',
-                  borderBottom: isActive(item.path) ? '2px solid #D4A373' : '2px solid transparent',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive(item.path)) {
-                    e.target.style.color = '#D4A373'
-                    e.target.style.borderBottomColor = '#D4A373'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive(item.path)) {
-                    e.target.style.color = 'white'
-                    e.target.style.borderBottomColor = 'transparent'
-                  }
+                  borderBottom: isActive(item.path)
+                    ? '2px solid #D4A373'
+                    : '2px solid transparent',
+                  cursor: 'pointer'
                 }}
               >
                 {item.name}
@@ -105,164 +95,66 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Cart Icon & Mobile Menu Button - Right */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem'
-          }}>
-            <a
+          {/* Right Side */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span
               onClick={() => handleNavigation('/cart')}
-              style={{
-                color: 'white',
-                textDecoration: 'none',
-                fontSize: '1.4rem',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-                padding: '0.5rem 0',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.color = '#D4A373'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.color = 'white'
-              }}
+              style={{ color: 'white', fontSize: '1.4rem', cursor: 'pointer' }}
             >
               🛒
-            </a>
+            </span>
 
-            {/* Hamburger Menu Icon - Three Lines */}
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="mobile-menu-btn"
               style={{
                 display: 'none',
                 background: 'none',
                 border: 'none',
-                cursor: 'pointer',
-                padding: '0.5rem',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                width: '30px',
-                height: '30px'
+                cursor: 'pointer'
               }}
-              className="mobile-menu-btn"
             >
-              <span style={{
-                width: '25px',
-                height: '2px',
-                backgroundColor: 'white',
-                transition: 'all 0.3s ease',
-                transform: isMobileMenuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none'
-              }}></span>
-              <span style={{
-                width: '25px',
-                height: '2px',
-                backgroundColor: 'white',
-                transition: 'all 0.3s ease',
-                opacity: isMobileMenuOpen ? 0 : 1
-              }}></span>
-              <span style={{
-                width: '25px',
-                height: '2px',
-                backgroundColor: 'white',
-                transition: 'all 0.3s ease',
-                transform: isMobileMenuOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none'
-              }}></span>
+              ☰
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       <div
         className="mobile-menu"
         style={{
           position: 'fixed',
           top: '70px',
-          left: 0,
           width: '100%',
           backgroundColor: '#5C3A21',
-          backdropFilter: 'blur(10px)',
           transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(-150%)',
-          transition: 'transform 0.3s ease-in-out',
-          zIndex: 99,
-          padding: '1rem 0',
-          borderBottom: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: isMobileMenuOpen ? '0 10px 20px rgba(0,0,0,0.2)' : 'none'
+          transition: '0.3s',
+          zIndex: 99
         }}
       >
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-          padding: '0 1.5rem'
-        }}>
-          {navItems.map((item) => (
-            <a
-              key={item.name}
-              onClick={() => handleNavigation(item.path)}
-              style={{
-                color: isActive(item.path) ? '#D4A373' : 'white',
-                textDecoration: 'none',
-                fontSize: '1.1rem',
-                fontWeight: 500,
-                padding: '0.75rem 0',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                cursor: 'pointer',
-                display: 'block',
-                transition: 'all 0.2s ease',
-                borderLeft: isActive(item.path) ? '3px solid #D4A373' : '3px solid transparent',
-                paddingLeft: isActive(item.path) ? '12px' : '0'
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive(item.path)) {
-                  e.target.style.color = '#D4A373'
-                  e.target.style.paddingLeft = '12px'
-                  e.target.style.borderLeftColor = '#D4A373'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive(item.path)) {
-                  e.target.style.color = 'white'
-                  e.target.style.paddingLeft = '0'
-                  e.target.style.borderLeftColor = 'transparent'
-                }
-              }}
-            >
-              {item.name}
-            </a>
-          ))}
-        </div>
+        {navItems.map((item) => (
+          <div
+            key={item.name}
+            onClick={() => handleNavigation(item.path)}
+            style={{
+              padding: '1rem',
+              color: isActive(item.path) ? '#D4A373' : 'white',
+              cursor: 'pointer'
+            }}
+          >
+            {item.name}
+          </div>
+        ))}
       </div>
 
-      {/* CSS for responsive design */}
+      {/* Responsive CSS */}
       <style>{`
         @media (max-width: 768px) {
-          .desktop-nav {
-            display: none !important;
-          }
-          .mobile-menu-btn {
-            display: flex !important;
-          }
+          .desktop-nav { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
         }
-        
-        @media (min-width: 769px) {
-          .mobile-menu {
-            display: none !important;
-          }
-        }
-
-        /* Prevent body scroll when mobile menu is open */
-        ${isMobileMenuOpen ? `
-          body {
-            overflow: hidden;
-          }
-        ` : ''}
       `}</style>
     </div>
   )

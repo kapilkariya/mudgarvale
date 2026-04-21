@@ -13,7 +13,7 @@ const About = () => {
         <div className="absolute inset-0 bg-black/30"></div>
 
         <h1 className="relative text-white text-center font-serif text-5xl md:text-6xl leading-tight">
-          The Story <br /> Behind Mudgar Club
+          The Story <br /> Behind Mudgarvale
         </h1>
       </section>
 
@@ -32,7 +32,7 @@ const About = () => {
           </h2>
 
           <p className="text-[#5c3d2e] leading-8 text-lg">
-            At Mughar Club, we believe fitness goes beyond simple exercise — it is a journey
+            At Mudgarvale, we believe fitness goes beyond simple exercise — it is a journey
             that connects you with tradition, strengthens your body, and enhances your lifestyle.
             Our handcrafted tools, inspired by ancient training practices, combine cultural
             heritage with modern usability. Every movement you make becomes part of a timeless
@@ -52,7 +52,7 @@ const About = () => {
 
           <div className="space-y-6 text-[#5c3d2e] leading-7 text-[15px]">
             <p>
-              Mughar Club started as a vision of a passionate fitness enthusiast whose journey
+              Mudgarvale started as a vision of a passionate fitness enthusiast whose journey
               began with yoga but soon demanded something more dynamic and hands-on.
               Discovering traditional tools transformed not just personal fitness but ignited
               a mission to share this ancient practice with the world.
@@ -106,7 +106,7 @@ const About = () => {
           </p>
 
           <p>
-            Today, Mughar Club stands as a reflection of resilience, passion, and a shared love
+            Today, Mudgarvale stands as a reflection of resilience, passion, and a shared love
             for traditional strength practices carried into the modern world.
           </p>
 
@@ -119,7 +119,7 @@ const About = () => {
 
           <div className="space-y-6 text-[#5c3d2e] leading-7 text-[15px]">
             <p>
-              What truly sets Mughar Club apart is not just the product — it is the philosophy behind every piece.
+              What truly sets Mudgarvale apart is not just the product — it is the philosophy behind every piece.
               Each mudgar is carefully shaped, balanced, and finished by skilled hands that understand the
               importance of precision in movement and design.
             </p>
@@ -136,7 +136,7 @@ const About = () => {
             </p>
 
             <p>
-              For those who seek more than ordinary workouts, Mughar Club offers an experience that feels
+              For those who seek more than ordinary workouts, Mudgarvale offers an experience that feels
               exclusive, powerful, and deeply connected to tradition — crafted for individuals who value both
               performance and prestige.
             </p>
@@ -172,7 +172,7 @@ const About = () => {
           </p>
 
           <p>
-            Today, Mughar Club stands as a reflection of resilience, passion, and a shared love
+            Today, Mudgarvale stands as a reflection of resilience, passion, and a shared love
             for traditional strength practices carried into the modern world.
           </p>
 
@@ -224,7 +224,7 @@ const About = () => {
       {/* WHY CHOOSE */}
       <section className="py-24 px-6 md:px-20">
         <h2 className="text-center font-serif text-4xl mb-14">
-          Why Choose Mughar Club?
+          Why Choose Mudgarvale?
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto text-center">

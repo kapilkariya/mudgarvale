@@ -68,7 +68,7 @@ export default function MudgarFooter() {
             <ellipse cx="46" cy="48" rx="8" ry="5.5" fill="url(#lg1)" />
             <circle cx="28" cy="9" r="5.5" fill="url(#lg1)" />
           </svg>
-          <span style={{ marginTop: "5px", fontSize: "13px", letterSpacing: "0.05em", color: "#2e1503", fontStyle: "italic" }}>Mudgar Club</span>
+          <span style={{ marginTop: "5px", fontSize: "13px", letterSpacing: "0.05em", color: "#2e1503", fontStyle: "italic" }}>Mudgarvale</span>
         </div>
 
         {/* Amazon Badge */}
@@ -106,7 +106,7 @@ export default function MudgarFooter() {
         <div style={{ maxWidth: "400px" }}>
           <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "18px", color: "#2e1503" }}>About Us</h3>
           <p style={{ fontSize: "14px", lineHeight: "1.8", color: "#4a2800", marginBottom: "22px" }}>
-            At Mudgar Club Private Limited, we bring you authentic Indian traditional fitness equipment tools
+            At Mudgarvale Private Limited, we bring you authentic Indian traditional fitness equipment tools
             like Mudgar, Gada, Samtola, Shena Push-Up Board and Indian Clubs.
           </p>
           <div style={{ display: "flex", gap: "16px" }}>
@@ -148,7 +148,7 @@ export default function MudgarFooter() {
             39 krishna nagar ,<br />near shanti nagar udhana,<br /> Surat
 +91 87993 57438,
           </p>
-          <a href="mailto:support@mudgarclub.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>support@mudgarclub.com</a>
+          <a href="mailto:support@mudgarvale.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>support@mudgarvale.com</a>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <input
