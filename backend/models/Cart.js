@@ -1,0 +1,51 @@
+const mongoose = require('mongoose');
+
+const cartItemSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  image: {
+    type: String,
+    required: true,
+  },
+  selectedWeight: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1,
+    default: 1,
+  },
+});
+
+const cartSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true, // One cart per user
+    },
+    items: [cartItemSchema],
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Index for faster queries
+cartSchema.index({ userId: 1 });
+
+module.exports = mongoose.model('Cart', cartSchema);

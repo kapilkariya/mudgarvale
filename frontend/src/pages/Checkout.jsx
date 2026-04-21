@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { orderAPI, configAPI } from '../config/api';
+import { orderAPI, configAPI, addressAPI } from '../config/api';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -12,34 +12,59 @@ const Checkout = () => {
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
 
+  // Saved addresses from backend
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     address: '',
+    city: '',
+    state: '',
     pincode: '',
+    email: '',
   });
 
   const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch config from backend
+  // Fetch config and saved addresses from backend
   useEffect(() => {
-    const fetchConfig = async () => {
+    const fetchData = async () => {
       try {
-        const response = await configAPI.get();
-        if (response.success) {
-          setDeliveryCharge(response.data.deliveryCharge || 400);
-          setCodAdvanceAmount(response.data.codAdvanceAmount || 200);
-          setRazorpayKeyId(response.data.razorpayKeyId || '');
+        const [configResponse, addressesResponse] = await Promise.all([
+          configAPI.get(),
+          addressAPI.getAll(),
+        ]);
+
+        if (configResponse.success) {
+          setDeliveryCharge(configResponse.data.deliveryCharge || 400);
+          setCodAdvanceAmount(configResponse.data.codAdvanceAmount || 200);
+          setRazorpayKeyId(configResponse.data.razorpayKeyId || '');
+        }
+
+        if (addressesResponse.success) {
+          setSavedAddresses(addressesResponse.data);
+          // Auto-select default address if exists
+          const defaultAddr = addressesResponse.data.find(a => a.isDefault);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr._id);
+          } else if (addressesResponse.data.length > 0) {
+            setSelectedAddressId(addressesResponse.data[0]._id);
+          } else {
+            setUseNewAddress(true); // No saved addresses, use new
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch config:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setConfigLoading(false);
       }
     };
-    fetchConfig();
+    fetchData();
   }, []);
 
   const formatPrice = (price) => {
@@ -57,12 +82,38 @@ const Checkout = () => {
   };
 
   const validateForm = () => {
+    // If using saved address, no need to validate form
+    if (!useNewAddress && selectedAddressId) {
+      return null;
+    }
+    // Validate new address form
     if (!formData.name.trim()) return 'Please enter your name';
     if (!formData.phone.trim()) return 'Please enter your phone number';
     if (!formData.address.trim()) return 'Please enter your address';
+    if (!formData.city.trim()) return 'Please enter your city';
+    if (!formData.state.trim()) return 'Please enter your state';
     if (!formData.pincode.trim()) return 'Please enter your pincode';
     if (formData.phone.length < 10) return 'Please enter a valid phone number';
     return null;
+  };
+
+  // Get address data for order (either from saved address or form)
+  const getOrderAddress = () => {
+    if (!useNewAddress && selectedAddressId) {
+      const selectedAddress = savedAddresses.find(a => a._id === selectedAddressId);
+      if (selectedAddress) {
+        return {
+          name: selectedAddress.name,
+          email: selectedAddress.email,
+          phone: selectedAddress.phone,
+          address: selectedAddress.address,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          pincode: selectedAddress.pincode,
+        };
+      }
+    }
+    return formData;
   };
 
   const handleSubmit = async (e) => {
@@ -78,11 +129,12 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      const address = getOrderAddress();
       const orderData = {
         items: cart,
         totalAmount: total,
         paymentMethod: paymentMethod,
-        address: formData,
+        address: address,
       };
 
       // Create order
@@ -213,57 +265,153 @@ const Checkout = () => {
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">Full Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+                {/* Saved Addresses */}
+                {savedAddresses.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="block text-gray-700 font-medium">Select Saved Address</label>
+                    {savedAddresses.map((addr) => (
+                      <div
+                        key={addr._id}
+                        onClick={() => {
+                          setSelectedAddressId(addr._id);
+                          setUseNewAddress(false);
+                        }}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                          selectedAddressId === addr._id && !useNewAddress
+                            ? 'border-[#5C3A21] bg-[#fdf6ec]'
+                            : 'border-gray-200 hover:border-[#D4A373]'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-gray-800">{addr.name}</p>
+                            <p className="text-sm text-gray-600">{addr.phone}</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {addr.address}, {addr.city}, {addr.state} - {addr.pincode}
+                            </p>
+                          </div>
+                          {addr.isDefault && (
+                            <span className="text-xs bg-[#5C3A21] text-white px-2 py-1 rounded">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
 
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">Phone Number *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
+                    {/* Use New Address Option */}
+                    <div
+                      onClick={() => {
+                        setUseNewAddress(true);
+                        setSelectedAddressId(null);
+                      }}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                        useNewAddress
+                          ? 'border-[#5C3A21] bg-[#fdf6ec]'
+                          : 'border-gray-200 hover:border-[#D4A373]'
+                      }`}
+                    >
+                      <p className="font-medium text-gray-800">+ Use New Address</p>
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">Address *</label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    required
-                    rows="3"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none resize-none"
-                    placeholder="Enter your complete address"
-                  />
-                </div>
+                {/* New Address Form */}
+                {useNewAddress && (
+                  <div className="space-y-4 pt-4 border-t">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Full Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Enter your full name"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">Pincode *</label>
-                  <input
-                    type="text"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-                    placeholder="Enter your pincode"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Phone Number *</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Address *</label>
+                      <textarea
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        required
+                        rows="2"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none resize-none"
+                        placeholder="Enter your complete address"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">City *</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                          placeholder="City"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">State *</label>
+                        <input
+                          type="text"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                          placeholder="State"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Pincode *</label>
+                      <input
+                        type="text"
+                        name="pincode"
+                        value={formData.pincode}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Enter your pincode"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Payment Method */}
                 <div className="pt-4">

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react'
 
-
-
 const reviews = [
   {
     image: '/cust1.jpg',
@@ -27,7 +25,6 @@ const reviews = [
 ]
 
 const HomePage = () => {
-
   const [current, setCurrent] = useState(0)
 
   const prev = () => setCurrent((c) => (c - 1 + reviews.length) % reviews.length)
@@ -61,264 +58,304 @@ const HomePage = () => {
       </div>
 
       {/* Section 2 - Welcome */}
-      <div className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
+      <div className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-4 sm:px-6 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
         <img src="/bg1.svg" alt="" className="absolute inset-10 w-full h-full object-contain pointer-events-none" style={{ opacity: 1 }} />
         <div className="absolute inset-0 bg-gray-400/15 pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-[1000px] mx-auto">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-3" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+        <div className="relative z-10 max-w-[1000px] mx-auto px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
             Welcome to Mudgarvale
           </h1>
-          <p className="text-2xl md:text-3xl lg:text-4xl font-medium tracking-wide mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+          <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium tracking-wide mb-6 sm:mb-10 md:mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
             From Tradition To Transformation
           </p>
-          <p className="text-lg md:text-xl lg:text-2xl leading-relaxed mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-           Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-8 sm:mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+            Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
           </p>
-          <button className="h-24 w-80 px-12 py-4 rounded-full text-white text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}>
+          <button className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 rounded-full text-white text-base sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}>
             Step Into Our Story
           </button>
         </div>
       </div>
 
       {/* Section 3 - Bestseller Products */}
-      <div className="shadow-[0_20px_30px_rgba(0,0,0,0.2)] w-full py-12 px-4" style={{ backgroundColor: '#F5EDE0' }}>
-        <h2 className="text-5xl md:text-6xl font-semibold text-center mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+      <div className="shadow-[0_20px_30px_rgba(0,0,0,0.2)] w-full py-12 sm:py-16 px-4 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-center mb-8 sm:mb-12 md:mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
           Bestseller Products
         </h2>
 
-        <div className="grid grid-cols-3 m-auto gap-10 w-full">
-          {/* Product 1 */}
-          <div className="flex flex-col">
-            <div className="rounded-2xl overflow-hidden h-[80vh]">
-              <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover" />
+        {/* Infinite Scroll Container */}
+        <div className="relative w-full overflow-hidden">
+          <div
+            className="flex gap-4 sm:gap-6 md:gap-8 lg:gap-10 animate-infinite-scroll"
+            style={{
+              width: 'max-content',
+              animation: 'scroll 25s linear infinite'
+            }}
+          >
+            {/* First set of products */}
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Sena Push-up Board
+              </p>
             </div>
-            <p className="text-center mt-8 text-4xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-              Sena Push-up Board
-            </p>
-          </div>
 
-          {/* Product 2 */}
-          <div className="flex flex-col">
-            <div className="rounded-2xl overflow-hidden h-[80vh]">
-              <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover" />
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Traditional Mudgar
+              </p>
             </div>
-            <p className="text-center  mt-8 text-4xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-              Traditional Mudgar
-            </p>
-          </div>
 
-          {/* Product 3 */}
-          <div className="flex flex-col">
-            <div className="rounded-2xl overflow-hidden h-[80vh]">
-              <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover" />
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Indian Hanuman Gada
+              </p>
             </div>
-            <p className="text-center  mt-8 text-4xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-              Indian Hanuman Gada
-            </p>
+
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Indian Samtola
+              </p>
+            </div>
+
+            {/* Duplicate set for seamless loop */}
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Sena Push-up Board
+              </p>
+            </div>
+
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Traditional Mudgar
+              </p>
+            </div>
+
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Indian Hanuman Gada
+              </p>
+            </div>
+
+            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+              </div>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                Indian Samtola
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Pause on hover */}
+        <style>{`
+    @keyframes scroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+    
+    .animate-infinite-scroll {
+      animation: scroll 25s linear infinite;
+    }
+    
+    .animate-infinite-scroll:hover {
+      animation-play-state: paused;
+    }
+    
+    /* Slower scroll on mobile for better readability */
+    @media (max-width: 640px) {
+      .animate-infinite-scroll {
+        animation: scroll 35s linear infinite;
+      }
+    }
+  `}</style>
       </div>
-      {/* Section 4 -  */}
+
+      {/* Section 4 */}
       <div className='h-[1px] bg-gray-800'></div>
-      <div className="relative w-full h-[45vh] overflow-hidden flex items-end justify-center pb-8" style={{ backgroundColor: '#F5EDE0' }}>
-        {/* Mountain background */}
+      <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[40vh] lg:h-[45vh] overflow-hidden flex items-end justify-center pb-4 sm:pb-6 md:pb-8" style={{ backgroundColor: '#F5EDE0' }}>
         <img
           src="/bg2.webp"
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-top opacity-80 pointer-events-none"
         />
-
-        {/* Text with lines */}
-        <div className="relative z-10 flex items-center justify-center w-full px-8 gap-4">
+        <div className="relative z-10 flex items-center justify-center w-full px-4 sm:px-6 md:px-8 gap-2 sm:gap-3 md:gap-4">
           <div className="flex-1 h-[1.5px]" style={{ backgroundColor: '#3B1408' }} />
-          <p className="text-3xl md:text-4xl font-semibold whitespace-nowrap" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+          <p className="text-sm sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold text-center whitespace-normal sm:whitespace-nowrap px-2" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
             Built by Hand. Backed by Tradition
           </p>
           <div className="flex-1 h-[1.5px]" style={{ backgroundColor: '#3B1408' }} />
         </div>
       </div>
 
-
-      {/* Section 5 -  */}
-      <div className="relative w-full min-h-[60vh] flex items-center px-8 md:px-16 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
-
-        {/* Logs image on the left */}
-        <div className="flex-shrink-0 w-[200px] md:w-[260px]">
+      {/* Section 5 */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
-
-        {/* Blob bg3.png + Content */}
-        <div className="relative flex items-center justify-center ml-8 md:ml-16 w-[500px] md:w-[600px] h-[400px] md:h-[500px]">
-          {/* bg3.png as blob background */}
-          <img
-            src="/bg3.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-          />
-
-          {/* Text content */}
-          <div className="relative z-10 px-14 py-12 max-w-[420px]">
+        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
             <div className="flex items-start gap-1 mb-3">
-              <span className="text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
-              <h2 className="text-2xl md:text-3xl font-semibold leading-snug mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
                 It Starts with Premium Wood
               </h2>
             </div>
-            <p className="text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
               We handpick kiln-dried African Mahogany wood—dense, seasoned, and perfect for strength training. No shortcuts, just the best wood we can find.
             </p>
           </div>
         </div>
-
       </div>
 
-      {/* Section 6 - Shaped with Precision */}
-      <div className="relative w-full min-h-[60vh] flex items-center px-8 md:px-16 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
-
-        {/* Blob bg3.png + Content - centered */}
-        <div className="relative flex items-center justify-center ml-auto mr-8 w-[500px] md:w-[600px] h-[400px] md:h-[500px]">
-          <img
-            src="/bg3.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-          />
-          <div className="relative z-10 px-14 py-12 max-w-[420px]">
+      {/* Section 6 */}
+      <div className="relative w-full min-h-[60vh] flex flex-col-reverse md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
             <div className="flex items-start gap-1 mb-3">
-              <span className="text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
-              <h2 className="text-2xl md:text-3xl font-semibold leading-snug mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
                 Shaped with Precision
               </h2>
             </div>
-            <p className="text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
               Each piece is turned on a lathe by skilled hands to achieve the perfect shape, balance, and proportions—no CNC, just craftsmanship.
             </p>
           </div>
         </div>
-
-        {/* Craftsman image on the right */}
-        <div className="flex-shrink-0 w-[200px] md:w-[260px]">
+        <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
         </div>
-
       </div>
 
-
-      {/* Section 7 -  */}
-      <div className="relative w-full min-h-[60vh] flex items-center px-8 md:px-16 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
-
-        {/* Logs image on the left */}
-        <div className="flex-shrink-0 w-[200px] md:w-[260px]">
+      {/* Section 7 */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam3.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
-
-        {/* Blob bg3.png + Content */}
-        <div className="relative flex items-center justify-center ml-8 md:ml-16 w-[500px] md:w-[600px] h-[400px] md:h-[500px]">
-          {/* bg3.png as blob background */}
-          <img
-            src="/bg3.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-          />
-
-          {/* Text content */}
-          <div className="relative z-10 px-14 py-12 max-w-[420px]">
+        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
             <div className="flex items-start gap-1 mb-3">
-              <span className="text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
-              <h2 className="text-2xl md:text-3xl font-semibold leading-snug mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
                 Finished by Hand
               </h2>
             </div>
-            <p className="text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
               After shaping, every product is hand-sanded, oiled, and polished to bring out the natural grain and ensure a smooth, durable finish
             </p>
           </div>
         </div>
-
       </div>
 
-      {/* Section 8 - Shaped with Precision */}
-      <div className="relative w-full min-h-[60vh] flex items-center px-8 md:px-16 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
-
-        {/* Blob bg3.png + Content - centered */}
-        <div className="relative flex items-center justify-center ml-auto mr-8 w-[500px] md:w-[600px] h-[400px] md:h-[500px]">
-          <img
-            src="/bg3.png"
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-          />
-          <div className="relative z-10 px-14 py-12 max-w-[420px]">
+      {/* Section 8 */}
+      <div className="relative w-full min-h-[60vh] flex flex-col-reverse md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
             <div className="flex items-start gap-1 mb-3">
-              <span className="text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
-              <h2 className="text-2xl md:text-3xl font-semibold leading-snug mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
                 Packed with Care
               </h2>
             </div>
-            <p className="text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
               Before dispatch, every item is quality-checked, hand-oiled once more, and securely packed to travel safely to your home or gym.
             </p>
           </div>
         </div>
-
-        {/* Craftsman image on the right */}
-        <div className="flex-shrink-0 w-[200px] md:w-[260px]">
+        <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
         </div>
-
       </div>
 
-
-      {/* Section -9 */}
-      <div className="w-full min-h-[80vh] flex flex-col items-center justify-center py-12 px-6 md:px-16" style={{ backgroundColor: '#F5EDE0' }}>
-
-        {/* Heading */}
-        <h2 className="text-4xl md:text-5xl font-bold mb-10 text-center" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+      {/* Section 9 - With Crossfade Animation */}
+      <div className="w-full min-h-[80vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6 md:px-8 lg:px-16" style={{ backgroundColor: '#F5EDE0' }}>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
           We've Got Some Compliments
         </h2>
 
-        {/* Card */}
-        <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-2xl overflow-hidden" style={{ backgroundColor: '#EDD9C0' }}>
-
-          {/* Customer Image */}
-          <div className="w-full md:w-[420px] flex-shrink-0">
-            <img
-              src={review.image}
-              alt={review.name}
-              className="w-full h-full object-cover"
-              style={{ minHeight: '420px', maxHeight: '520px' }}
-            />
+        <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-2xl overflow-hidden mx-4 relative" style={{ backgroundColor: '#EDD9C0' }}>
+          {/* Customer Image with crossfade */}
+          <div className="w-full md:w-[300px] lg:w-[420px] flex-shrink-0 relative overflow-hidden">
+            {reviews.map((r, idx) => (
+              <img
+                key={`img-${idx}`}
+                src={r.image}
+                alt={r.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out ${idx === current ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+                  }`}
+                style={{ minHeight: '300px', maxHeight: '520px' }}
+              />
+            ))}
+            {/* Placeholder to maintain height */}
+            <img src={review.image} alt="" className="w-full h-full object-cover opacity-0" style={{ minHeight: '300px', maxHeight: '520px' }} />
           </div>
 
-          {/* Review Content */}
-          <div className="flex flex-col justify-center px-10 py-12 flex-1">
-            <h3 className="text-xl font-semibold mb-1" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-              {review.name}
-            </h3>
-            <p className="text-sm mb-2" style={{ color: '#A0522D' }}>{review.location}</p>
+          {/* Review Content with crossfade */}
+          <div className="flex flex-col justify-center px-6 sm:px-8 md:px-10 py-8 md:py-12 flex-1 relative min-h-[400px]">
+            {reviews.map((r, idx) => (
+              <div
+                key={`content-${idx}`}
+                className={`absolute inset-0 px-6 sm:px-8 md:px-10 py-8 md:py-12 transition-all duration-500 ease-in-out ${idx === current ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10 pointer-events-none'
+                  }`}
+              >
+                <h3 className="text-lg md:text-xl font-semibold mb-1" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+                  {r.name}
+                </h3>
+                <p className="text-xs md:text-sm mb-2" style={{ color: '#A0522D' }}>{r.location}</p>
+                <div className="flex gap-1 mb-4 md:mb-6">
+                  {Array.from({ length: r.stars }).map((_, i) => (
+                    <span key={i} className="text-yellow-500 text-base md:text-xl">★</span>
+                  ))}
+                </div>
+                <p className="text-xs sm:text-sm md:text-base leading-relaxed mb-6 md:mb-8 lg:mb-10" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+                  {r.text}
+                </p>
+              </div>
+            ))}
 
-            {/* Stars */}
-            <div className="flex gap-1 mb-6">
-              {Array.from({ length: review.stars }).map((_, i) => (
-                <span key={i} className="text-yellow-500 text-xl">★</span>
-              ))}
-            </div>
-
-            <p className="text-sm md:text-base leading-relaxed mb-10" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-              {review.text}
-            </p>
-
-            {/* Navigation arrows */}
-            <div className="flex gap-4">
+            {/* Navigation arrows - fixed position */}
+            <div className="absolute bottom-8 left-6 sm:left-8 md:left-10 flex gap-4 z-10">
               <button
                 onClick={prev}
-                className="w-9 h-9 flex items-center justify-center rounded-full border text-lg transition hover:bg-white/40"
+                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full border text-base md:text-lg transition hover:bg-white/40 hover:scale-110"
                 style={{ borderColor: '#3B1408', color: '#3B1408' }}
               >
                 ‹
               </button>
               <button
                 onClick={next}
-                className="w-9 h-9 flex items-center justify-center rounded-full border text-lg transition hover:bg-white/40"
+                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full border text-base md:text-lg transition hover:bg-white/40 hover:scale-110"
                 style={{ borderColor: '#3B1408', color: '#3B1408' }}
               >
                 ›
@@ -327,7 +364,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

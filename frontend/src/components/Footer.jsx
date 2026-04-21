@@ -34,7 +34,6 @@ export default function MudgarFooter() {
     { name: "Products", href: "/products" },
     { name: "Blogs", href: "/blogs" },
     { name: "About Us", href: "/about-us" },
-    { name: "Courses", href: "/courses" },
     { name: "Contact", href: "/contact" },
   ];
 

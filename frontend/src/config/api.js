@@ -106,6 +106,44 @@ export const orderAPI = {
   getOrderById: (id) => fetchWithAuth(`${API_URL}/orders/${id}`),
 };
 
+// Address API calls
+export const addressAPI = {
+  getAll: () => fetchWithAuth(`${API_URL}/addresses`),
+
+  add: (data) => fetchWithAuth(`${API_URL}/addresses`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  delete: (id) => fetchWithAuth(`${API_URL}/addresses/${id}`, { method: 'DELETE' }),
+
+  setDefault: (id) => fetchWithAuth(`${API_URL}/addresses/${id}/default`, { method: 'PUT' }),
+};
+
+// Cart API calls (persistent cart)
+export const cartAPI = {
+  get: () => fetchWithAuth(`${API_URL}/cart`),
+
+  add: (data) => fetchWithAuth(`${API_URL}/cart`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateQuantity: (itemId, quantity) => fetchWithAuth(`${API_URL}/cart/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ quantity }),
+  }),
+
+  remove: (itemId) => fetchWithAuth(`${API_URL}/cart/${itemId}`, { method: 'DELETE' }),
+
+  clear: () => fetchWithAuth(`${API_URL}/cart`, { method: 'DELETE' }),
+
+  sync: (items) => fetchWithAuth(`${API_URL}/cart/sync`, {
+    method: 'POST',
+    body: JSON.stringify({ items }),
+  }),
+};
+
 // Config API calls
 export const configAPI = {
   get: () => fetchWithAuth(`${API_URL}/config`),
