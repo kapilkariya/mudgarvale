@@ -9,6 +9,7 @@ import BlogsPage from "./pages/BlogListing";
 import BlogDetail from "./pages/BlogDetail";
 import About from "./pages/Aboutus";
 import ContactPage from "./pages/Contact";
+import Products from "./pages/Products";
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
         <Route path="/blogs/:slug" element={<BlogDetail />} /> //dynamic route
         <Route path="/about-us" element={<About />} />
         <Route path="/contact" element={<ContactPage />} />
-
+        <Route path="/products" element={<Products/>} />
 
       </Routes>
 
