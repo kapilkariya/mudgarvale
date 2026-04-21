@@ -7,10 +7,9 @@ const About = () => {
       {/* HERO */}
       <section className="relative h-[85vh] flex items-center justify-center mt-19">
         <img
-          src="https://images.unsplash.com/photo-1594737625785-a6cbdabd333c"
+          src="/images/abousus-hero.png"
           className="absolute w-full h-full object-cover"
         />
-
         <div className="absolute inset-0 bg-black/30"></div>
 
         <h1 className="relative text-white text-center font-serif text-5xl md:text-6xl leading-tight">
@@ -18,23 +17,20 @@ const About = () => {
         </h1>
       </section>
 
-      {/* ICON + INTRO (VERY IMPORTANT SECTION) */}
+      {/* ICON + INTRO */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
 
-          {/* ICON */}
           <div className="flex justify-center mb-8">
             <div className="w-20 h-20 rounded-full border border-[#d6c4b2] flex items-center justify-center text-2xl">
               🌿
             </div>
           </div>
 
-          {/* TITLE */}
           <h2 className="font-serif text-4xl mb-6">
             Preserving Tradition, Empowering Fitness
           </h2>
 
-          {/* TEXT */}
           <p className="text-[#5c3d2e] leading-8 text-lg">
             At Mughar Club, we believe fitness goes beyond simple exercise — it is a journey
             that connects you with tradition, strengthens your body, and enhances your lifestyle.
@@ -50,11 +46,10 @@ const About = () => {
         <h2 className="font-serif text-4xl">Our Story</h2>
       </section>
 
-      {/* STORY GRID */}
+      {/* STORY GRID - FIRST */}
       <section className="px-6 md:px-20 pb-20">
         <div className="grid md:grid-cols-2 gap-14 items-start max-w-6xl mx-auto">
 
-          {/* LEFT TEXT */}
           <div className="space-y-6 text-[#5c3d2e] leading-7 text-[15px]">
             <p>
               Mughar Club started as a vision of a passionate fitness enthusiast whose journey
@@ -81,17 +76,17 @@ const About = () => {
             </p>
           </div>
 
-          {/* RIGHT IMAGE */}
           <div>
             <img
-              src="https://images.unsplash.com/photo-1599058917212-d750089bc07e"
+              src="/images/aboutus-model1.png"
               className="w-full h-[520px] object-cover"
             />
           </div>
+
         </div>
       </section>
 
-      {/* SECOND STORY BLOCK (FULL WIDTH TEXT LIKE ORIGINAL) */}
+      {/* STORY CONTINUATION */}
       <section className="px-6 md:px-20 pb-24">
         <div className="max-w-4xl mx-auto text-[#5c3d2e] space-y-6 leading-7 text-[15px]">
 
@@ -114,6 +109,73 @@ const About = () => {
             Today, Mughar Club stands as a reflection of resilience, passion, and a shared love
             for traditional strength practices carried into the modern world.
           </p>
+
+        </div>
+      </section>
+
+      {/* STORY GRID - PREMIUM VERSION */}
+      <section className="px-6 md:px-20 pb-20">
+        <div className="grid md:grid-cols-2 gap-14 items-start max-w-6xl mx-auto">
+
+          <div className="space-y-6 text-[#5c3d2e] leading-7 text-[15px]">
+            <p>
+              What truly sets Mughar Club apart is not just the product — it is the philosophy behind every piece.
+              Each mudgar is carefully shaped, balanced, and finished by skilled hands that understand the
+              importance of precision in movement and design.
+            </p>
+
+            <p>
+              The wood is not simply chosen — it is selected with intent. Grain, weight, and durability are all
+              considered to ensure that every tool delivers a seamless training experience while carrying a sense
+              of timeless elegance.
+            </p>
+
+            <p>
+              This commitment to detail transforms every product into more than fitness equipment. It becomes a
+              statement — a reflection of discipline, heritage, and refined strength.
+            </p>
+
+            <p>
+              For those who seek more than ordinary workouts, Mughar Club offers an experience that feels
+              exclusive, powerful, and deeply connected to tradition — crafted for individuals who value both
+              performance and prestige.
+            </p>
+          </div>
+
+          <div>
+            <img
+              src="/images/imageofhero.png"
+              className="w-full h-[520px] object-cover"
+            />
+          </div>
+
+        </div>
+      </section>
+
+      {/* FINAL STORY BLOCK */}
+      <section className="px-6 md:px-20 pb-24">
+        <div className="max-w-4xl mx-auto text-[#5c3d2e] space-y-6 leading-7 text-[15px]">
+
+          <p>
+            As demand increased, so did the challenges. Early manufacturing collaborations
+            often failed to meet expectations, pushing the brand to take full control of production.
+          </p>
+
+          <p>
+            By shifting focus to craftsmanship and using premium wood, each piece became more than
+            equipment — it became a work of art built for durability and performance.
+          </p>
+
+          <p>
+            Every challenge strengthened the connection with the growing community. The journey
+            became about more than products — it became about building something meaningful.
+          </p>
+
+          <p>
+            Today, Mughar Club stands as a reflection of resilience, passion, and a shared love
+            for traditional strength practices carried into the modern world.
+          </p>
+
         </div>
       </section>
 
