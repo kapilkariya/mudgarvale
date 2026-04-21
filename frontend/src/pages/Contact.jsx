@@ -14,10 +14,10 @@ const ContactPage = () => {
         <h1 className="text-4xl font-serif text-[#5D3A1A] mb-8">Contact Us</h1>
         
         <div className="text-[#5D3A1A] space-y-1 text-sm md:text-base leading-relaxed">
-          <p>30, Haridwar Rd, Upper Kuanwala, Dharampur, Dehradun, Uttarakhand</p>
-          <p>248001</p>
+          <p>39 krishna nagar near shanti nagar udhana, Surat
+</p>
           <p className="underline pt-2">
-            <a href="tel:+917455078559">+91 7455078559</a>
+            <a href="tel:+918799357438">+91 8799357438</a>
           </p>
           <p className="underline">
             <a href="mailto:support@mudgarclub.com">support@mudgarclub.com</a>

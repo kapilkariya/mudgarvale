@@ -145,7 +145,8 @@ export default function MudgarFooter() {
         <div>
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2e1503", margin: "0 0 18px 0" }}>Contact Us</h3>
           <p style={{ fontSize: "14px", color: "#4a2800", lineHeight: "1.6", marginBottom: "14px" }}>
-            30, Haridwar Rd, Upper Kuanwala, Dharampur,<br />Dehradun, Uttarakhand 248001
+            39 krishna nagar ,<br />near shanti nagar udhana,<br /> Surat
++91 87993 57438,
           </p>
           <a href="mailto:support@mudgarclub.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>support@mudgarclub.com</a>
           
