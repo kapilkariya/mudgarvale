@@ -4,6 +4,7 @@ import { blogs } from "../lib/blogs-data";
 function BlogsPage() {
   return (
     <div className="bg-[#f3ede3] min-h-screen text-[#3a2d28]">
+      <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       {/* Header */}
       <div className="text-center py-16 border-b border-[#e4dbcf] mt-20">

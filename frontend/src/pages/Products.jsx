@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { productAPI } from '../config/api';
 
 const Products = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,7 +54,7 @@ const Products = () => {
   return (
     <div>
       {/* Header Spacer */}
-      <div className="w-full" style={{ height: '70px', backgroundColor: '#5C3A21' }}></div>
+      <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       {/* Hero Section */}
       <div
@@ -144,6 +146,7 @@ const Products = () => {
                 {products.map((product) => (
                   <div
                     key={product._id}
+                    onClick={() => navigate(`/product/${product._id}`)}
                     className="flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
                   >
                     {/* Product Image */}

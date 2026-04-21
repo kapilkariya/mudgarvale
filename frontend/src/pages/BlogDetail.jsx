@@ -11,7 +11,9 @@ function BlogDetail() {
     return <div className="p-10 text-center">Blog not found</div>;
   }
 
-  return (
+  return (<>          
+  <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
+
     <div className="bg-[#f3ede3] min-h-screen text-[#3a2d28] px-4 md:px-20 py-12">
 
       {/* Title */}
@@ -36,7 +38,8 @@ function BlogDetail() {
         {blog.content}
       </div>
 
-    </div>
+    </div></>
+
   );
 }
 

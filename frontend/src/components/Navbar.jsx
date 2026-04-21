@@ -1,11 +1,17 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 const Navbar = () => {
   const [isHovered, setIsHovered] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { getCartCount } = useCart()
+  const cartCount = getCartCount()
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -18,10 +24,31 @@ const Navbar = () => {
   const handleNavigation = (path) => {
     navigate(path)
     setIsMobileMenuOpen(false)
+    setIsProfileDropdownOpen(false)
   }
 
   const isActive = (path) => {
     return location.pathname === path
+  }
+
+  const handleProfileClick = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen)
+  }
+
+  const handleProfileAction = async (action) => {
+    if (action === 'signin') {
+      navigate('/login')
+    } else if (action === 'signup') {
+      navigate('/signup')
+    } else if (action === 'logout') {
+      await logout()
+      navigate('/')
+    } else if (action === 'myorders') {
+      navigate('/my-orders')
+    } else if (action === 'admin') {
+      navigate('/admin-dashboard')
+    }
+    setIsProfileDropdownOpen(false)
   }
 
   return (
@@ -50,7 +77,7 @@ const Navbar = () => {
           margin: '0 auto'
         }}>
 
-          {/* ✅ FIXED LOGO */}
+          {/* Logo */}
           <div 
             onClick={() => handleNavigation('/')}
             style={{
@@ -95,14 +122,178 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Side */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Right Side - Cart & Profile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            {/* Cart Icon with Badge */}
             <span
               onClick={() => handleNavigation('/cart')}
-              style={{ color: 'white', fontSize: '1.4rem', cursor: 'pointer' }}
+              style={{ color: 'white', fontSize: '1.4rem', cursor: 'pointer', position: 'relative' }}
             >
               🛒
+              {cartCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    backgroundColor: '#D4A373',
+                    color: '#3B1408',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+              )}
             </span>
+
+            {/* Profile Icon with Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <span
+                onClick={handleProfileClick}
+                onMouseEnter={() => setIsProfileDropdownOpen(true)}
+                style={{ 
+                  color: 'white', 
+                  fontSize: '1.4rem', 
+                  cursor: 'pointer',
+                  transition: 'color 0.3s ease'
+                }}
+              >
+                👤
+              </span>
+
+              {/* Dropdown Menu - Fixed to only show when profile dropdown is open */}
+              {isProfileDropdownOpen && (
+                <div
+                  onMouseLeave={() => setIsProfileDropdownOpen(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '35px',
+                    right: '0',
+                    backgroundColor: '#5C3A21',
+                    minWidth: '200px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    zIndex: 101
+                  }}
+                >
+                  {/* User Info (if logged in) */}
+                  {isAuthenticated() && user && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        color: '#D4A373',
+                        borderBottom: '1px solid rgba(255,255,255,0.2)',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      👋 {user.name || user.email}
+                    </div>
+                  )}
+
+                  {/* Menu - Login when logged out, Orders/Admin/Logout when logged in */}
+                  {!isAuthenticated() ? (
+                    /* Login Button */
+                    <div
+                      onClick={() => handleProfileAction('signin')}
+                      style={{
+                        padding: '12px 16px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#D4A373'
+                        e.target.style.color = '#3B1408'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent'
+                        e.target.style.color = 'white'
+                      }}
+                    >
+                      🔐 Login
+                    </div>
+                  ) : (
+                    /* Logged In Menu */
+                    <>
+                      {/* My Orders */}
+                      <div
+                        onClick={() => handleProfileAction('myorders')}
+                        style={{
+                          padding: '12px 16px',
+                          color: 'white',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          borderBottom: '1px solid rgba(255,255,255,0.1)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#D4A373'
+                          e.target.style.color = '#3B1408'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent'
+                          e.target.style.color = 'white'
+                        }}
+                      >
+                        📦 My Orders
+                      </div>
+
+                      {/* Admin Panel - Only for Admins */}
+                      {isAdmin() && (
+                        <div
+                          onClick={() => handleProfileAction('admin')}
+                          style={{
+                            padding: '12px 16px',
+                            color: '#FFD700',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = '#D4A373'
+                            e.target.style.color = '#3B1408'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent'
+                            e.target.style.color = '#FFD700'
+                          }}
+                        >
+                          ⚙️ Admin Panel
+                        </div>
+                      )}
+
+                      {/* Logout */}
+                      <div
+                        onClick={() => handleProfileAction('logout')}
+                        style={{
+                          padding: '12px 16px',
+                          color: 'white',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#D4A373'
+                          e.target.style.color = '#3B1408'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent'
+                          e.target.style.color = 'white'
+                        }}
+                      >
+                        🚪 Logout
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -112,7 +303,9 @@ const Navbar = () => {
                 display: 'none',
                 background: 'none',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontSize: '1.5rem',
+                color: 'white'
               }}
             >
               ☰
@@ -131,7 +324,10 @@ const Navbar = () => {
           backgroundColor: '#5C3A21',
           transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(-150%)',
           transition: '0.3s',
-          zIndex: 99
+          zIndex: 99,
+          padding: '1rem 0',
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 70px)'
         }}
       >
         {navItems.map((item) => (
@@ -139,14 +335,48 @@ const Navbar = () => {
             key={item.name}
             onClick={() => handleNavigation(item.path)}
             style={{
-              padding: '1rem',
+              padding: '1rem 1.5rem',
               color: isActive(item.path) ? '#D4A373' : 'white',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              borderBottom: '1px solid rgba(255,255,255,0.1)'
             }}
           >
             {item.name}
           </div>
         ))}
+        
+        {/* Mobile menu profile options */}
+        {!isAuthenticated() ? (
+          <div
+            onClick={() => handleProfileAction('signin')}
+            style={{ padding: '1rem 1.5rem', color: 'white', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            🔐 Login
+          </div>
+        ) : (
+          <>
+            <div
+              onClick={() => handleProfileAction('myorders')}
+              style={{ padding: '1rem 1.5rem', color: 'white', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              📦 My Orders
+            </div>
+            {isAdmin() && (
+              <div
+                onClick={() => handleProfileAction('admin')}
+                style={{ padding: '1rem 1.5rem', color: '#FFD700', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                ⚙️ Admin Panel
+              </div>
+            )}
+            <div
+              onClick={() => handleProfileAction('logout')}
+              style={{ padding: '1rem 1.5rem', color: 'white', cursor: 'pointer' }}
+            >
+              🚪 Logout
+            </div>
+          </>
+        )}
       </div>
 
       {/* Responsive CSS */}

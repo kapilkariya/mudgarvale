@@ -88,3 +88,25 @@ export const productAPI = {
   
   delete: (id) => fetchWithAuth(`${API_URL}/products/${id}`, { method: 'DELETE' }),
 };
+
+// Orders API calls
+export const orderAPI = {
+  create: (data) => fetchWithAuth(`${API_URL}/orders`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  verifyPayment: (data) => fetchWithAuth(`${API_URL}/orders/verify-payment`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  getMyOrders: () => fetchWithAuth(`${API_URL}/orders/my-orders`),
+
+  getOrderById: (id) => fetchWithAuth(`${API_URL}/orders/${id}`),
+};
+
+// Config API calls
+export const configAPI = {
+  get: () => fetchWithAuth(`${API_URL}/config`),
+};

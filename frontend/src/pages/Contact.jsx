@@ -8,7 +8,9 @@ const ContactPage = () => {
   const inputStyle =
     "w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#8B5E3C] placeholder-gray-400 bg-white";
 
-  return (
+  return (<>
+    <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
+
     <div className="min-h-screen bg-[#FDF8EE] flex flex-col items-center py-12 px-4 font-sans">
       
       {/* Header Section */}
@@ -109,7 +111,7 @@ const ContactPage = () => {
           border-right: 1px solid #e5e7eb;
         }
       `}</style>
-    </div>
+    </div></>
   );
 };
 

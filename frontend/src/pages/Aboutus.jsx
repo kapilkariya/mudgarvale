@@ -3,6 +3,7 @@ import React from "react";
 const About = () => {
   return (
     <div className="bg-[#f3eadf] text-[#3a1f0f]">
+      <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       {/* HERO */}
       <section className="relative h-[85vh] flex items-center justify-center mt-19">

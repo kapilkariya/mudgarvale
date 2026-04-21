@@ -14,6 +14,8 @@ connectDB();
 // Route files
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const configRoutes = require('./routes/configRoutes');
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use(
 // Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

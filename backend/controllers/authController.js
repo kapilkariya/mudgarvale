@@ -25,16 +25,27 @@ const sendSignupOTP = async (req, res) => {
     // Generate OTP
     const otp = generateOTP();
 
+    // Auto-generate password if not provided (for passwordless login)
+    const userPassword = password || Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+
     // Save OTP to database with user data
     await OTP.create({
       email,
       otp,
       purpose: 'signup',
-      userData: { name, password },
+      userData: { name, password: userPassword },
     });
 
     // Send OTP email
-    await sendOTPEmail(email, otp, 'signup');
+    try {
+      await sendOTPEmail(email, otp, 'signup');
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send email. Please check server email configuration.',
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -110,7 +121,7 @@ const sendLoginOTP = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'No account found with this email',
+        message: 'No account found with this email. Please sign up first.',
       });
     }
 
@@ -128,7 +139,15 @@ const sendLoginOTP = async (req, res) => {
     });
 
     // Send OTP email
-    await sendOTPEmail(email, otp, 'login');
+    try {
+      await sendOTPEmail(email, otp, 'login');
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send email. Please check server email configuration.',
+      });
+    }
 
     res.status(200).json({
       success: true,

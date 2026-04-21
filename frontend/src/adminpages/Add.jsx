@@ -125,7 +125,9 @@ const Add = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf6ec] py-8 px-4">
+    <div className="min-h-screen bg-[#fdf6ec] ">
+      <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
+
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-[#5C3A21] mb-8 text-center" style={{ fontFamily: 'Georgia, serif' }}>
           Add New Product
@@ -133,9 +135,8 @@ const Add = () => {
 
         {message.text && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
+            className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}
           >
             {message.text}
           </div>
