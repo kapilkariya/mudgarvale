@@ -1,8 +1,12 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { blogs } from "../lib/blogs-data";
+import { useEffect } from "react";
 
 function BlogDetail() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { slug } = useParams();
 
   const blog = blogs.find((b) => b.slug === slug);

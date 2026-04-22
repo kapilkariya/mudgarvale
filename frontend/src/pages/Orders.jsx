@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { orderAPI } from '../config/api';
 
 const Orders = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const [orders, setOrders] = useState([]);

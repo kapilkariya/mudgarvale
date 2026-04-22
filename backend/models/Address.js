@@ -56,10 +56,10 @@ const addressSchema = new mongoose.Schema(
 // Index for faster queries
 addressSchema.index({ userId: 1 });
 
-// Ensure user can have maximum 2 addresses
+// Ensure user can have maximum 1 address
 addressSchema.statics.canAddAddress = async function (userId) {
   const count = await this.countDocuments({ userId });
-  return count < 2;
+  return count < 1;
 };
 
 module.exports = mongoose.model('Address', addressSchema);

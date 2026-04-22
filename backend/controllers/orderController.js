@@ -127,25 +127,47 @@ const verifyPayment = async (req, res) => {
   }
 };
 
-// @desc    Get user's orders
+// @desc    Get logged in user's orders
 // @route   GET /api/orders/my-orders
 // @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user.id })
+    const orders = await Order.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
-      .populate('items.productId', 'name image category');
+      .lean();
+
+    // Format orders to ensure all fields are present
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        name: item.name || 'Unknown Product',
+        image: item.image || '/placeholder-product.png',
+        selectedWeight: item.selectedWeight || '',
+        price: item.price || 0,
+        quantity: item.quantity || 1,
+      })),
+      address: {
+        name: order.address?.name || '',
+        email: order.address?.email || '',
+        phone: order.address?.phone || '',
+        address: order.address?.address || '',
+        city: order.address?.city || '',
+        state: order.address?.state || '',
+        pincode: order.address?.pincode || '',
+      },
+    }));
 
     res.status(200).json({
       success: true,
-      count: orders.length,
-      data: orders,
+      count: formattedOrders.length,
+      data: formattedOrders,
     });
   } catch (error) {
     console.error('Get my orders error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch orders',
+      error: error.message,
     });
   }
 };

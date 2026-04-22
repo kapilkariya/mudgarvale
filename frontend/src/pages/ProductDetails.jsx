@@ -4,6 +4,9 @@ import { productAPI } from '../config/api';
 import { useCart } from '../context/CartContext';
 
 const ProductDetails = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();

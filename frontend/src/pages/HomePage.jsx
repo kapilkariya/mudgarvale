@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const reviews = [
   {
@@ -25,6 +26,10 @@ const reviews = [
 ]
 
 const HomePage = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  const navigate = useNavigate();
   const [current, setCurrent] = useState(0)
 
   const prev = () => setCurrent((c) => (c - 1 + reviews.length) % reviews.length)
@@ -39,7 +44,12 @@ const HomePage = () => {
 
   const review = reviews[current]
 
+  const handleProductClick = (category) => {
+    navigate(`/products?category=${category}`);
+  };
+
   return (
+    
     <div style={{ backgroundColor: '#F5EDE0' }}>
       {/* Section 1 - Video Hero */}
       <div style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', overflow: 'hidden' }}>
@@ -51,7 +61,10 @@ const HomePage = () => {
           <h1 style={{ fontSize: 'clamp(1.5rem, 6vw, 3.5rem)', fontWeight: 'bold', color: 'white', lineHeight: 1.3, marginBottom: '1.5rem', padding: '0 0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
             ELEVATE YOUR FITNESS JOURNEY<br />WITH Mudgarvale
           </h1>
-          <button style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', color: 'white', fontWeight: 'bold', padding: '0.8rem 2rem', borderRadius: '9999px', border: '1px solid rgba(255, 255, 255, 0.6)', cursor: 'pointer', fontSize: 'clamp(0.9rem, 4vw, 1.125rem)', transition: 'all 0.3s ease', backdropFilter: 'blur(8px)' }}>
+          <button 
+            onClick={() => navigate('/products')}
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', color: 'white', fontWeight: 'bold', padding: '0.8rem 2rem', borderRadius: '9999px', border: '1px solid rgba(255, 255, 255, 0.6)', cursor: 'pointer', fontSize: 'clamp(0.9rem, 4vw, 1.125rem)', transition: 'all 0.3s ease', backdropFilter: 'blur(8px)' }}
+          >
             SHOP NOW →
           </button>
         </div>
@@ -72,7 +85,10 @@ const HomePage = () => {
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-8 sm:mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
             Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
           </p>
-          <button className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 rounded-full text-white text-base sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}>
+          <button 
+            onClick={() => navigate('/about')}
+            className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 rounded-full text-white text-base sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}
+          >
             Step Into Our Story
           </button>
         </div>
@@ -94,75 +110,99 @@ const HomePage = () => {
             }}
           >
             {/* First set of products */}
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('senaboard')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('mudgar')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('gada')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('samtola')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Samtola
               </p>
             </div>
 
             {/* Duplicate set for seamless loop */}
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('senaboard')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('mudgar')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('gada')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada
               </p>
             </div>
 
-            <div className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div 
+              onClick={() => handleProductClick('samtola')}
+              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+            >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+                <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Samtola
               </p>
             </div>

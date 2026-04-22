@@ -1,7 +1,11 @@
 import React from "react";
 import { blogs } from "../lib/blogs-data";
+import { useEffect } from "react";
 
 function BlogsPage() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="bg-[#f3ede3] min-h-screen text-[#3a2d28]">
       <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>

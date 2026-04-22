@@ -1,6 +1,8 @@
-import React from "react";
-
+import React, { useEffect, useState } from 'react';
 const About = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="bg-[#f3eadf] text-[#3a1f0f]">
       <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>

@@ -1,15 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { productAPI } from '../config/api';
 
 const Products = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard'];
+
+  // Read category from URL on initial load
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categories.includes(categoryParam)) {
+      setSelectedCategory(categoryParam);
+    }
+  }, []);
+
+  // Update URL when category changes
+  useEffect(() => {
+    if (selectedCategory === 'all') {
+      searchParams.delete('category');
+    } else {
+      searchParams.set('category', selectedCategory);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [selectedCategory]);
 
   useEffect(() => {
     fetchProducts();

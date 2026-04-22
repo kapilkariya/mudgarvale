@@ -4,6 +4,9 @@ import { useCart } from '../context/CartContext';
 import { configAPI } from '../config/api';
 
 const Cart = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
   const { cart, getCartTotal, updateQuantity, removeFromCart } = useCart();
   const [deliveryCharge, setDeliveryCharge] = useState(400);

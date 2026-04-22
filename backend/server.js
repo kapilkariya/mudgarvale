@@ -17,6 +17,7 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const configRoutes = require('./routes/configRoutes');
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/config', configRoutes);
 
 // Health check route

@@ -84,4 +84,33 @@ const sendOTPEmail = async (email, otp, purpose) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { generateOTP, sendOTPEmail };
+// Send contact form email
+const sendContactEmail = async (name, email, subject, message) => {
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: `"Mudgarvale Contact" <${process.env.EMAIL_USER}>`,
+    to: process.env.EMAIL_USER, // Send to your email
+    replyTo: email,
+    subject: `Contact Form: ${subject}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #5C3A21;">New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <hr>
+        <p><strong>Message:</strong></p>
+        <div style="background: #f4f4f4; padding: 20px; border-radius: 5px;">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        <hr>
+        <p style="color: #666; font-size: 12px;">Sent from Mudgarvale Contact Form</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { generateOTP, sendOTPEmail, sendContactEmail };

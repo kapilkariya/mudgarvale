@@ -4,6 +4,9 @@ import { useCart } from '../context/CartContext';
 import { orderAPI, configAPI, addressAPI } from '../config/api';
 
 const Checkout = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const navigate = useNavigate();
   const { cart, getCartTotal, clearCart } = useCart();
 
@@ -16,6 +19,7 @@ const Checkout = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [useNewAddress, setUseNewAddress] = useState(false);
+  const [saveAddress, setSaveAddress] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -136,6 +140,25 @@ const Checkout = () => {
         paymentMethod: paymentMethod,
         address: address,
       };
+
+      // Save address if checkbox is checked (and user is using new address)
+      if (saveAddress && useNewAddress) {
+        try {
+          await addressAPI.add({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            isDefault: true,
+          });
+        } catch (addrErr) {
+          console.error('Failed to save address:', addrErr);
+          // Don't block order if address save fails
+        }
+      }
 
       // Create order
       const response = await orderAPI.create(orderData);
@@ -410,6 +433,22 @@ const Checkout = () => {
                         placeholder="Enter your pincode"
                       />
                     </div>
+
+                    {/* Save this address checkbox - only if no saved address exists */}
+                    {savedAddresses.length === 0 && (
+                      <div className="flex items-center pt-2">
+                        <input
+                          type="checkbox"
+                          id="saveAddress"
+                          checked={saveAddress}
+                          onChange={(e) => setSaveAddress(e.target.checked)}
+                          className="w-4 h-4 text-[#5C3A21] border-gray-300 rounded focus:ring-[#5C3A21]"
+                        />
+                        <label htmlFor="saveAddress" className="ml-2 text-gray-700 text-sm cursor-pointer">
+                          Save this address for future orders
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )}
 
