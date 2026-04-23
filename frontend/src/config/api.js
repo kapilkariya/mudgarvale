@@ -148,3 +148,22 @@ export const cartAPI = {
 export const configAPI = {
   get: () => fetchWithAuth(`${API_URL}/config`),
 };
+
+// Admin API calls
+export const adminAPI = {
+  // Products
+  getAllProducts: () => fetchWithAuth(`${API_URL}/admin/products`),
+  updateProduct: (id, data) => fetchWithAuth(`${API_URL}/admin/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteProduct: (id) => fetchWithAuth(`${API_URL}/admin/products/${id}`, { method: 'DELETE' }),
+  
+  // Orders
+  getAllOrders: () => fetchWithAuth(`${API_URL}/admin/orders`),
+  getOrderStats: () => fetchWithAuth(`${API_URL}/admin/orders/stats`),
+  updateOrderStatus: (id, status) => fetchWithAuth(`${API_URL}/admin/orders/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ orderStatus: status }),
+  }),
+};

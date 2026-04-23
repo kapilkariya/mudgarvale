@@ -11,7 +11,7 @@ const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
 
   const [deliveryCharge, setDeliveryCharge] = useState(400);
-  const [codAdvanceAmount, setCodAdvanceAmount] = useState(200);
+  const [codAdvanceAmount, setCodAdvanceAmount] = useState(400);
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
 
@@ -46,7 +46,7 @@ const Checkout = () => {
 
         if (configResponse.success) {
           setDeliveryCharge(configResponse.data.deliveryCharge || 400);
-          setCodAdvanceAmount(configResponse.data.codAdvanceAmount || 200);
+          setCodAdvanceAmount(configResponse.data.codAdvanceAmount || 400);
           setRazorpayKeyId(configResponse.data.razorpayKeyId || '');
         }
 
@@ -169,8 +169,8 @@ const Checkout = () => {
 
       const { order, razorpayOrder } = response.data;
 
-      if (paymentMethod === 'online' && razorpayOrder) {
-        // Initialize Razorpay payment
+      if (razorpayOrder) {
+        // Initialize Razorpay payment for both online and COD
         const options = {
           key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: razorpayOrder.amount,
@@ -214,9 +214,8 @@ const Checkout = () => {
           setError('Payment failed. Please try again.');
         });
       } else {
-        // COD order - no immediate payment needed
-        clearCart();
-        navigate('/my-orders', { state: { success: true } });
+        // No Razorpay order - should not happen now
+        setError('Payment initialization failed. Please try again.');
       }
     } catch (err) {
       console.error('Checkout error:', err);

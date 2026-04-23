@@ -62,7 +62,7 @@ function BlogsPage() {
 
                 {/* Meta */}
                 <p className="mt-5 text-[13px] text-[#8a7a6a] font-[Inter]">
-                  {blog.date} — {blog.author}
+                  {blog.date} — MudgarVale
                 </p>
 
               </div>

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -20,6 +20,11 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Add from "./adminpages/Add";
+import AdminLayout from "./adminpages/AdminLayout";
+import AdminDashboard from "./adminpages/AdminDashboard";
+import AdminProducts from "./adminpages/AdminProducts";
+import EditProduct from "./adminpages/EditProduct";
+import AdminOrders from "./adminpages/AdminOrders";
 
 function App() {
   return (
@@ -29,44 +34,54 @@ function App() {
           <ToastContainer />
           <Navbar />
 
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/blogs" element={<BlogsPage />} />
-          <Route path="/blogs/:slug" element={<BlogDetail />} /> 
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/products" element={<Products/>} />
-          <Route path="/product/:id" element={<ProductDetails/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<Signup/>} />
-          <Route path="/cart" element={<Cart/>} />
-          <Route 
-            path="/checkout" 
-            element={
-              <ProtectedRoute>
-                <Checkout/>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-orders" 
-            element={
-              <ProtectedRoute>
-                <Orders/>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin-dashboard" 
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <Add/>
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/blogs" element={<BlogsPage />} />
+            <Route path="/blogs/:slug" element={<BlogDetail />} /> 
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/products" element={<Products/>} />
+            <Route path="/product/:id" element={<ProductDetails/>} />
+            <Route path="/login" element={<Login/>} />
+            <Route path="/signup" element={<Signup/>} />
+            <Route path="/cart" element={<Cart/>} />
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout/>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-orders" 
+              element={
+                <ProtectedRoute>
+                  <Orders/>
+                </ProtectedRoute>
+              } 
+            />
+            {/* Admin Routes with Layout */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="products/add" element={<Add />} />
+              <Route path="products/edit/:id" element={<EditProduct />} />
+              <Route path="orders" element={<AdminOrders />} />
+            </Route>
+            
+            {/* Legacy admin route - redirect to new /admin */}
+            <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+          </Routes>
 
-        <MudgarFooter />
+          <MudgarFooter />
         </Router>
       </CartProvider>
     </AuthProvider>

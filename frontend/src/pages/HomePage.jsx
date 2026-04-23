@@ -3,28 +3,27 @@ import { useNavigate } from 'react-router-dom';
 
 const reviews = [
   {
-    image: '/cust1.jpg',
-    name: 'Anjana Brijesh',
+    image: '/cust1.jpeg',
+    name: 'Amit Brijesh',
     location: 'Mumbai',
     stars: 5,
-    text: 'A great way to learn from our ancient practices. Mudgar– a hand held club for upper body fitness and great for shoulder swings. Recently purchased from Mudgar club, this Mudgar can be used for men as well as women. The quality of the wood is exemplary and sturdy. Totally satisfied with Mudgar club. Eagerly waiting for the classes . Keep swinging',
+    text: 'A great way to learn from our ancient practices. Mudgar– a hand held club for upper body fitness and great for shoulder swings. Recently purchased from Mudgar club, this Mudgar can be used for men as well as women. The quality of the wood is exemplary and sturdy. Totally satisfied with Mudgar club. Eagerly waiting for the classes. Keep swinging',
   },
   {
-    image: '/cust2.jpg',
+    image: '/cust2.jpeg',
     name: 'Rahul Sharma',
     location: 'Delhi',
     stars: 5,
     text: 'Absolutely love the craftsmanship. The wood quality is top notch and the weight feels perfect for training. This is a product rooted in tradition and it shows in every detail. Highly recommend Mudgarvale to anyone serious about fitness.',
   },
   {
-    image: '/cust3.jpg',
-    name: 'Priya Menon',
+    image: '/cust3.jpeg',
+    name: 'Arjun Menon',
     location: 'Bangalore',
     stars: 5,
     text: 'I was skeptical at first but after using the Mudgar for a month I can feel a huge difference in my shoulder and core strength. Beautiful product, great packaging, and fast delivery. Will definitely buy again.',
   },
 ]
-
 const HomePage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -115,7 +114,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod3.jpeg" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
@@ -127,7 +126,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod1.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
@@ -139,7 +138,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod2.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada
@@ -164,7 +163,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod1.png" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod3.jpeg" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
@@ -176,7 +175,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod2.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod1.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
@@ -188,7 +187,7 @@ const HomePage = () => {
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
               <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
-                <img src="/prod3.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                <img src="/prod2.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada

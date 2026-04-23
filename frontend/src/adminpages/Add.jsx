@@ -124,9 +124,9 @@ const Add = () => {
     }
   };
 
-  return (
+  return (<>
+      <div className='h-20'></div>
     <div className="min-h-screen bg-[#fdf6ec] ">
-      <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-[#5C3A21] mb-8 text-center" style={{ fontFamily: 'Georgia, serif' }}>
@@ -270,7 +270,7 @@ const Add = () => {
           </button>
         </form>
       </div>
-    </div>
+    </div></>
   );
 };
 

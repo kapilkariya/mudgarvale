@@ -17,13 +17,27 @@ const createOrder = async (req, res) => {
     const userId = req.user.id;
 
     // Get delivery charge from env
-    const deliveryCharge = parseInt(process.env.DELIVERY_CHARGE) || 100;
+    const deliveryCharge = parseInt(process.env.DELIVERY_CHARGE) || 400;
     const codAdvance = parseInt(process.env.COD_ADVANCE_AMOUNT) || 400;
 
-    // Calculate amounts
-    const finalTotal = totalAmount + deliveryCharge;
-    const paidAmount = paymentMethod === 'cod' ? codAdvance : finalTotal;
+    // DEBUG: Log received values
+    console.log('Order Creation Debug:', {
+      receivedTotalAmount: totalAmount,
+      deliveryCharge,
+      paymentMethod,
+      codAdvance,
+    });
+
+    // totalAmount from frontend already includes deliveryCharge
+    // So we use it directly as the final total
+    const finalTotal = totalAmount;
+    
+    // Calculate amounts based on payment method
+    const amountToPayNow = paymentMethod === 'cod' ? codAdvance : finalTotal;
     const remainingAmount = paymentMethod === 'cod' ? finalTotal - codAdvance : 0;
+
+    // Determine initial payment status
+    const initialPaymentStatus = paymentMethod === 'cod' ? 'pending' : 'pending';
 
     // Create order in database
     const order = await Order.create({
@@ -32,16 +46,26 @@ const createOrder = async (req, res) => {
       totalAmount: finalTotal,
       deliveryCharge,
       paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
+      paymentStatus: initialPaymentStatus,
       orderStatus: 'pending',
       address,
-      paidAmount: 0, // Will update after payment
+      paidAmount: 0, // Will update after payment verification
       remainingAmount,
     });
 
-    // If online payment, create Razorpay order
+    console.log('Order created:', {
+      orderId: order._id,
+      totalAmount: finalTotal,
+      paymentMethod,
+      amountToPayNow,
+      remainingAmount,
+    });
+
+    // Create Razorpay order for payment
     let razorpayOrder = null;
+    
     if (paymentMethod === 'online') {
+      // Online: Full amount via Razorpay
       razorpayOrder = await razorpay.orders.create({
         amount: finalTotal * 100, // Razorpay expects amount in paise
         currency: 'INR',
@@ -49,6 +73,17 @@ const createOrder = async (req, res) => {
       });
 
       // Update order with Razorpay order ID
+      order.razorpayOrderId = razorpayOrder.id;
+      await order.save();
+    } else if (paymentMethod === 'cod') {
+      // COD: Only advance amount via Razorpay
+      razorpayOrder = await razorpay.orders.create({
+        amount: codAdvance * 100, // Only COD advance in paise
+        currency: 'INR',
+        receipt: `COD-${order.orderNumber}`,
+      });
+
+      // Update order with Razorpay order ID for COD advance
       order.razorpayOrderId = razorpayOrder.id;
       await order.save();
     }
@@ -96,11 +131,21 @@ const verifyPayment = async (req, res) => {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
-      // Update order payment status
-      order.paymentStatus = 'paid';
+      // Handle payment verification based on payment method
+      if (order.paymentMethod === 'cod') {
+        // COD: Only advance was paid (codAdvance is stored in deliveryCharge or we need to get from env)
+        const codAdvance = parseInt(process.env.COD_ADVANCE_AMOUNT) || 400;
+        order.paymentStatus = 'partial_paid';
+        order.paidAmount = codAdvance;
+        // remainingAmount stays as is (to be paid on delivery)
+      } else {
+        // Online: Full amount paid
+        order.paymentStatus = 'paid';
+        order.paidAmount = order.totalAmount;
+        order.remainingAmount = 0;
+      }
+      
       order.razorpayPaymentId = razorpay_payment_id;
-      order.paidAmount = order.totalAmount;
-      order.remainingAmount = 0;
       order.orderStatus = 'confirmed';
       await order.save();
 

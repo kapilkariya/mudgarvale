@@ -190,7 +190,14 @@ const verifyLogin = async (req, res) => {
     await otpRecord.save();
 
     // Get user
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
+
+    // Check if user should be admin but isn't
+    const isAdmin = email === process.env.ADMIN_EMAIL;
+    if (isAdmin && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
 
     sendTokenResponse(user, 200, res);
   } catch (error) {

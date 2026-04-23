@@ -153,7 +153,9 @@ const Orders = () => {
                       {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-                      {order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus}
+                      {order.paymentStatus === 'paid' ? 'Paid' : 
+                       order.paymentStatus === 'partial_paid' ? 'Advance Paid' : 
+                       order.paymentStatus}
                     </span>
                   </div>
                 </div>
