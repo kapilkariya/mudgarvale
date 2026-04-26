@@ -22,11 +22,11 @@ const adminRoutes   = require('./routes/adminRoutes');
 
 const app = express();
 
-/* ---------------- DB connection (FIXED) ---------------- */
+/* ---------------- Startup logging ---------------- */
 
-connectDB()
-  .then(() => console.log("✅ DB Connected"))
-  .catch(err => console.error("❌ DB Error:", err));
+console.log('🚀 Starting Mudgarvale server...');
+console.log('📁 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔌 PORT:', process.env.PORT);
 
 /* ---------------- CORS ---------------- */
 
@@ -45,7 +45,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin) || isHostingerDomain(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // allow all in production (Hostinger safe)
+      callback(new Error(`CORS error: origin ${origin} not allowed`));
     }
   },
   credentials: true,
@@ -56,6 +56,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+/* ---------------- DB connection ---------------- */
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
 
 /* ---------------- API routes ---------------- */
 
@@ -72,41 +83,59 @@ app.get('/api/health', (req, res) =>
   res.json({ status: 'OK', message: 'Server is running' })
 );
 
-/* ---------------- Serve React build (FIXED PATH) ---------------- */
+/* ---------------- Serve React build ---------------- */
 
 if (process.env.NODE_ENV === 'production') {
 
-  // IMPORTANT: dist must be inside backend folder
-  const distPath  = path.join(__dirname, 'dist');
+  const distPath  = path.join(__dirname, '../frontend/dist');
   const indexPath = path.join(distPath, 'index.html');
 
   console.log('📂 Checking dist folder:', distPath);
 
-  if (fs.existsSync(indexPath)) {
+  if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
 
     console.log('✅ Frontend build found');
 
     app.use(express.static(distPath));
 
-    app.get('*', (req, res) => {
+    // React SPA fallback
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
       res.sendFile(indexPath);
     });
 
   } else {
 
-    console.error('❌ dist/index.html NOT found');
+    console.error('❌ Frontend build NOT found');
 
-    app.get('/*', (req, res) => {
-      res.status(500).send("Frontend not built properly");
+    app.get('/', (req, res) => {
+      res.status(503).json({
+        error: 'Frontend build not found',
+        message: 'Run: cd frontend && npm run build',
+      });
     });
 
   }
 
+} else {
+
+  app.get('/', (req, res) => {
+    res.json({ status: 'OK', message: 'Mudgarvale API is running 🚀' });
+  });
+
 }
 
-/* ---------------- Error handler ---------------- */
-
 app.use(errorHandler);
+
+/* ---------------- Crash protection ---------------- */
+
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('💥 Unhandled Rejection:', reason);
+});
 
 /* ---------------- Start server ---------------- */
 
