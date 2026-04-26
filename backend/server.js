@@ -96,7 +96,7 @@ if (process.env.NODE_ENV === 'production') {
 
     console.error('❌ dist/index.html NOT found');
 
-    app.get('*', (req, res) => {
+    app.get('/*', (req, res) => {
       res.status(500).send("Frontend not built properly");
     });
 
