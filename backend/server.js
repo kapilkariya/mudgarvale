@@ -29,6 +29,7 @@ connectDB()
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://mudgarvale-rzyy.vercel.app/',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
