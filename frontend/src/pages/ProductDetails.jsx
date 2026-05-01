@@ -175,27 +175,30 @@ const ProductDetails = () => {
             </p>
 
             {/* Weight Selection */}
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-3">Select Weight *</label>
-              <div className="flex flex-wrap gap-2">
-                {product.weights.map((weight) => (
-                  <button
-                    key={weight}
-                    onClick={() => setSelectedWeight(weight)}
-                    className={`px-4 py-2 rounded-lg border-2 transition ${
-                      selectedWeight === weight
-                        ? 'border-[#5C3A21] bg-[#5C3A21] text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
-                    }`}
-                  >
-                    {weight}
-                    <span className="block text-xs opacity-80">
-                      {formatPrice(product.pricePerWeight[weight] || 0)}
-                    </span>
-                  </button>
-                ))}
+            {product.category !== 'senaboard' && (
+              <div className="mb-6">
+                <label className="block text-gray-700 font-medium mb-3">Select Weight *</label>
+                <div className="flex flex-wrap gap-2">
+                  {product.weights.map((weight) => (
+                    <button
+                      key={weight}
+                      onClick={() => setSelectedWeight(weight)}
+                      className={`px-4 py-2 rounded-lg border-2 transition ${selectedWeight === weight
+                          ? 'border-[#5C3A21] bg-[#5C3A21] text-white'
+                          : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
+                        }`}
+                    >
+                      {weight}
+                      <span className="block text-xs opacity-80">
+                        {formatPrice(product.pricePerWeight[weight] || 0)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )
+
+            }
 
             {/* Quantity Selection */}
             <div className="mb-6">

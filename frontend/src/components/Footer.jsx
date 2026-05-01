@@ -194,7 +194,7 @@ export default function MudgarFooter() {
         borderTop: "1px solid #d9c4a0" 
       }}>
         <img
-          src="image_0.png"
+          src="image_0.png" 
           alt="Traditional fitness illustration"
           style={{ 
             width: "100%", 

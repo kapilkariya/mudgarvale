@@ -202,9 +202,9 @@ const Products = () => {
                       </div>
 
                       {/* Available Weights */}
-                      {product.weights && product.weights.length > 0 && (
+                      {product.category !== 'senaboard' && product.weights && product.weights.length > 0 && (
                         <p className="text-[10px] xs:text-xs text-gray-500 text-center mt-1 truncate">
-                          {product.weights.slice(0, 3).join(', ')}
+                          {product.weights.slice(0, 3).map(weight => `${weight} kg`).join(', ')}
                           {product.weights.length > 3 && '...'}
                         </p>
                       )}
