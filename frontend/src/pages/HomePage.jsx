@@ -48,19 +48,43 @@ const HomePage = () => {
   };
 
   return (
-    
+
     <div style={{ backgroundColor: '#F5EDE0' }}>
       {/* Section 1 - Video Hero */}
-      <div style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', overflow: 'hidden' }}>
-        <video style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} autoPlay loop muted playsInline>
-          <source src="/homevid.mp4" type="video/mp4" />
+      <div className="lg:w-[85vw]" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', overflow: 'hidden' }}>
+        <video
+          ref={(videoRef) => {
+            if (videoRef) {
+              videoRef.addEventListener('timeupdate', () => {
+                if (videoRef.currentTime >= 29) {
+                  videoRef.currentTime = 0;
+                  videoRef.play();
+                }
+              });
+            }
+          }}
+          className="sm:object-[50%_20%] md:object-[50%_20%] lg:object-[50%_10%]"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          autoPlay
+          loop={false}
+          muted
+          playsInline
+        >
+          <source src="/homevid2.mp4" type="video/mp4" />
         </video>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.15)' }}></div>
         <div style={{ position: 'relative', zIndex: 2, padding: '0 1rem', maxWidth: '90%', width: '100%', margin: '0 auto' }}>
           <h1 style={{ fontSize: 'clamp(1.5rem, 6vw, 3.5rem)', fontWeight: 'bold', color: 'white', lineHeight: 1.3, marginBottom: '1.5rem', padding: '0 0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
             ELEVATE YOUR FITNESS JOURNEY<br />WITH Mudgarvale
           </h1>
-          <button 
+          <button
             onClick={() => navigate('/products')}
             style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', color: 'white', fontWeight: 'bold', padding: '0.8rem 2rem', borderRadius: '9999px', border: '1px solid rgba(255, 255, 255, 0.6)', cursor: 'pointer', fontSize: 'clamp(0.9rem, 4vw, 1.125rem)', transition: 'all 0.3s ease', backdropFilter: 'blur(8px)' }}
           >
@@ -84,7 +108,7 @@ const HomePage = () => {
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-8 sm:mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
             Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
           </p>
-          <button 
+          <button
             onClick={() => navigate('/about')}
             className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 rounded-full text-white text-base sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}
           >
@@ -109,7 +133,7 @@ const HomePage = () => {
             }}
           >
             {/* First set of products */}
-            <div 
+            <div
               onClick={() => handleProductClick('senaboard')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -121,7 +145,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('mudgar')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -133,7 +157,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('gada')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -145,7 +169,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('samtola')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -158,7 +182,7 @@ const HomePage = () => {
             </div>
 
             {/* Duplicate set for seamless loop */}
-            <div 
+            <div
               onClick={() => handleProductClick('senaboard')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -170,7 +194,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('mudgar')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -182,7 +206,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('gada')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -194,7 +218,7 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div 
+            <div
               onClick={() => handleProductClick('samtola')}
               className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
@@ -259,39 +283,43 @@ const HomePage = () => {
           <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
         <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
-            <div className="flex items-start gap-1 mb-3">
-              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                It Starts with Premium Wood
-              </h2>
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
+            <div className="max-w-[160px] sm:max-w-[200px] md:max-w-[320px] lg:max-w-[380px]">
+              <div className="flex items-start gap-1 ml-10 md:ml-17 mb-1 sm:mb-2 md:mb-3">
+                <span className="text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
+                <h2 className="text-xs sm:text-sm md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                  It Starts with Premium Wood
+                </h2>
+              </div>
+              <p className="text-[9px] sm:text-[11px] ml-10 md:ml-18 md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+                We handpick kiln-dried African Mahogany wood—dense, seasoned, and perfect for strength training. No shortcuts, just the best wood we can find.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-              We handpick kiln-dried African Mahogany wood—dense, seasoned, and perfect for strength training. No shortcuts, just the best wood we can find.
-            </p>
           </div>
         </div>
       </div>
 
       {/* Section 6 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col-reverse md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
-            <div className="flex items-start gap-1 mb-3">
-              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                Shaped with Precision
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-              Each piece is turned on a lathe by skilled hands to achieve the perfect shape, balance, and proportions—no CNC, just craftsmanship.
-            </p>
-          </div>
-        </div>
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
         <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+        </div>
+        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
+            <div className="max-w-[160px] sm:max-w-[200px] md:max-w-[320px] lg:max-w-[380px]">
+              <div className="flex items-start gap-1 ml-10 md:ml-17 mb-1 sm:mb-2 md:mb-3">
+                <span className="text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
+                <h2 className="text-xs sm:text-sm md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                  Shaped with Precision
+                </h2>
+              </div>
+              <p className="text-[9px] sm:text-[11px] ml-10 md:ml-18 md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+                Each piece is turned on a lathe by skilled hands to achieve the perfect shape, balance, and proportions—no CNC, just craftsmanship.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -301,39 +329,43 @@ const HomePage = () => {
           <img src="/sam3.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
         <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
-            <div className="flex items-start gap-1 mb-3">
-              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                Finished by Hand
-              </h2>
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
+            <div className="max-w-[160px] sm:max-w-[200px] md:max-w-[320px] lg:max-w-[380px]">
+              <div className="flex items-start gap-1 ml-10 md:ml-17 mb-1 sm:mb-2 md:mb-3">
+                <span className="text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
+                <h2 className="text-xs sm:text-sm md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                  Finished by Hand
+                </h2>
+              </div>
+              <p className="text-[9px] sm:text-[11px] ml-10 md:ml-18 md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+                After shaping, every product is hand-sanded, oiled, and polished to bring out the natural grain and ensure a smooth, durable finish.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-              After shaping, every product is hand-sanded, oiled, and polished to bring out the natural grain and ensure a smooth, durable finish
-            </p>
           </div>
         </div>
       </div>
 
       {/* Section 8 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col-reverse md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-          <div className="relative z-10 px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-12 max-w-[420px]">
-            <div className="flex items-start gap-1 mb-3">
-              <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-snug mt-2 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                Packed with Care
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-              Before dispatch, every item is quality-checked, hand-oiled once more, and securely packed to travel safely to your home or gym.
-            </p>
-          </div>
-        </div>
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
         <div className="flex-shrink-0 w-[120px] sm:w-[150px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+        </div>
+        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[280px] sm:w-[350px] md:w-[500px] lg:w-[600px] h-[220px] sm:h-[280px] md:h-[400px] lg:h-[500px]">
+          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
+            <div className="max-w-[160px] sm:max-w-[200px] md:max-w-[320px] lg:max-w-[380px]">
+              <div className="flex items-start gap-1 ml-10 md:ml-17 mb-1 sm:mb-2 md:mb-3">
+                <span className="text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
+                <h2 className="text-xs sm:text-sm md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                  Packed with Care
+                </h2>
+              </div>
+              <p className="text-[9px] sm:text-[11px] ml-10 md:ml-18 md:text-base leading-relaxed" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+                Before dispatch, every item is quality-checked, hand-oiled once more, and securely packed to travel safely to your home or gym.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

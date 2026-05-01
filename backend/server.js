@@ -20,16 +20,14 @@ const adminRoutes   = require('./routes/adminRoutes');
 
 const app = express();
 
-/* ---------------- DB connection (ONLY ONCE) ---------------- */
 connectDB()
   .then(() => console.log("✅ DB connected"))
   .catch(err => console.log("❌ DB error:", err));
 
-/* ---------------- CORS ---------------- */
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://mudgarvale-rzyy.vercel.app/',
+  'https://mudgarvale-rzyy.vercel.app',  // ✅ remove trailing slash
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -44,19 +42,12 @@ app.use(cors({
   credentials: true,
 }));
 
-/* ---------------- Middleware ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-/* ---------------- Routes ---------------- */
-app.get('/', (req, res) => {
-  res.json({ message: 'Mudgarvale API running 🚀' });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK' });
-});
+app.get('/', (req, res) => res.json({ message: 'Mudgarvale API running 🚀' }));
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
 app.use('/api/auth',      authRoutes);
 app.use('/api/products',  productRoutes);
@@ -67,9 +58,12 @@ app.use('/api/contact',   contactRoutes);
 app.use('/api/config',    configRoutes);
 app.use('/api/admin',     adminRoutes);
 
-/* ---------------- Error Handler ---------------- */
 app.use(errorHandler);
 
-/* ❌ NO app.listen HERE */
+// ✅ Only listen locally, not on Vercel
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
 
 module.exports = app;
