@@ -135,48 +135,48 @@ const HomePage = () => {
             {/* First set of products */}
             <div
               onClick={() => handleProductClick('senaboard')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod3.jpeg" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('mudgar')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod1.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('gada')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod2.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('samtola')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Samtola
               </p>
             </div>
@@ -184,48 +184,48 @@ const HomePage = () => {
             {/* Duplicate set for seamless loop */}
             <div
               onClick={() => handleProductClick('senaboard')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod3.jpeg" alt="Sena Push-up Board" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Sena Push-up Board
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('mudgar')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod1.png" alt="Traditional Mudgar" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Traditional Mudgar
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('gada')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod2.png" alt="Indian Hanuman Gada" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Hanuman Gada
               </p>
             </div>
 
             <div
               onClick={() => handleProductClick('samtola')}
-              className="flex flex-col w-[calc(50vw-2rem)] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
+              className="flex flex-col w-[280px] sm:w-[280px] md:w-[320px] lg:w-[380px] xl:w-[420px] flex-shrink-0 cursor-pointer group"
             >
-              <div className="rounded-2xl overflow-hidden h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
+              <div className="rounded-2xl overflow-hidden h-[40vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh]">
                 <img src="/prod4.png" alt="Indian Samtola" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               </div>
-              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+              <p className="text-center mt-3 sm:mt-4 md:mt-6 lg:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-medium group-hover:underline transition" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
                 Indian Samtola
               </p>
             </div>
@@ -277,8 +277,8 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Section 5 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+      {/* Section 5 - Left */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
         <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
@@ -300,12 +300,9 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Section 6 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
-          <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
-        </div>
-        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
+      {/* Section 6 - Right */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
           <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
           <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
             <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
@@ -321,10 +318,13 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0 order-1 md:order-2">
+          <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+        </div>
       </div>
 
-      {/* Section 7 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+      {/* Section 7 - Left */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
         <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam3.webp" alt="Wood logs" className="w-full h-auto object-contain" />
         </div>
@@ -346,12 +346,9 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Section 8 */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-center px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
-          <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
-        </div>
-        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
+      {/* Section 8 - Right */}
+      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
           <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
           <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
             <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
@@ -367,8 +364,12 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0 order-1 md:order-2">
+          <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+        </div>
       </div>
 
+      
       {/* Section 9 - With Crossfade Animation */}
       <div className="w-full min-h-[80vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6 md:px-8 lg:px-16" style={{ backgroundColor: '#F5EDE0' }}>
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 text-center" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
