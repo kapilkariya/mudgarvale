@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== 'production') {
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
@@ -28,7 +29,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://mudgarvale-rzyy.vercel.app',
-  'https://mudgarvale-rzyy.vercel.app',  
+  'https://sandybrown-pony-153467.hostingersite.com',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -47,7 +48,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.get('/', (req, res) => res.json({ message: 'Mudgarvale API running 🚀' }));
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
 app.use('/api/auth',      authRoutes);
@@ -59,12 +59,17 @@ app.use('/api/contact',   contactRoutes);
 app.use('/api/config',    configRoutes);
 app.use('/api/admin',     adminRoutes);
 
+// Serve React frontend (must be after API routes)
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+});
+
 app.use(errorHandler);
 
-// ✅ Only listen locally, not on Vercel
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-}
+// ✅ Always listen — Hostinger requires app.listen() in production
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 module.exports = app;
