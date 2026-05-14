@@ -76,20 +76,37 @@ const Navbar = () => {
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
-
-          {/* Logo */}
-          <div 
-            onClick={() => handleNavigation('/')}
-            style={{
-              fontSize: 'clamp(1.2rem, 5vw, 1.8rem)',
-              fontWeight: 'bold',
-              color: '#D4A373',
-              letterSpacing: '1px',
-              cursor: 'pointer'
-            }}
-          >
-            Mudgarvale
-          </div>
+{/* Logo */}
+<div 
+  onClick={() => handleNavigation('/')}
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer'
+  }}
+>
+  <img 
+    src="logo.png" 
+    alt="Mudgarvale Logo" 
+    style={{ 
+      width: '40px', 
+      height: '40px', 
+      objectFit: 'contain',
+      borderRadius: '4px'
+    }} 
+  />
+  <span
+    style={{
+      fontSize: 'clamp(1.2rem, 5vw, 1.8rem)',
+      fontWeight: 'bold',
+      color: '#D4A373',
+      letterSpacing: '1px'
+    }}
+  >
+    Mudgarvale
+  </span>
+</div>
 
           {/* Desktop Navigation */}
           <div

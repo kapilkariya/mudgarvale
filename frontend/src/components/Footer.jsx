@@ -1,10 +1,5 @@
 import { useState } from "react";
 
-const FacebookIcon = () => (
-  <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-  </svg>
-);
 
 const YoutubeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -20,11 +15,6 @@ const InstagramIcon = () => (
   </svg>
 );
 
-const PinterestIcon = () => (
-  <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.18-.77 1.23-5.22 1.23-5.22s-.31-.63-.31-1.56c0-1.46.85-2.55 1.9-2.55.9 0 1.33.67 1.33 1.48 0 .9-.57 2.26-.87 3.51-.25 1.05.52 1.9 1.55 1.9 1.86 0 3.12-2.4 3.12-5.24 0-2.16-1.46-3.68-3.54-3.68-2.41 0-3.83 1.81-3.83 3.68 0 .73.28 1.51.63 1.94.06.08.07.15.05.23-.06.27-.21.85-.24.97-.04.16-.13.19-.3.12-1.12-.52-1.82-2.17-1.82-3.49 0-2.84 2.06-5.44 5.94-5.44 3.12 0 5.55 2.22 5.55 5.19 0 3.1-1.95 5.59-4.66 5.59-.91 0-1.77-.47-2.06-1.03l-.56 2.09c-.2.78-.75 1.76-1.12 2.36.84.26 1.73.4 2.65.4 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
-  </svg>
-);
 
 export default function MudgarFooter() {
   const [email, setEmail] = useState("");
@@ -53,21 +43,12 @@ export default function MudgarFooter() {
       }}>
         {/* Logo */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <svg width="58" height="58" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#b5722a" />
-                <stop offset="50%" stopColor="#d4904e" />
-                <stop offset="100%" stopColor="#7a4018" />
-              </linearGradient>
-            </defs>
-            <line x1="10" y1="48" x2="28" y2="10" stroke="url(#lg1)" strokeWidth="6" strokeLinecap="round" />
-            <ellipse cx="10" cy="48" rx="8" ry="5.5" fill="url(#lg1)" />
-            <line x1="46" y1="48" x2="28" y2="10" stroke="url(#lg1)" strokeWidth="6" strokeLinecap="round" />
-            <ellipse cx="46" cy="48" rx="8" ry="5.5" fill="url(#lg1)" />
-            <circle cx="28" cy="9" r="5.5" fill="url(#lg1)" />
-          </svg>
-          <span style={{ marginTop: "5px", fontSize: "13px", letterSpacing: "0.05em", color: "#2e1503", fontStyle: "italic" }}>Mudgarvale</span>
+          <img 
+            src="logo.png" 
+            alt="Mudgarvale Logo" 
+            style={{ width: "58px", height: "58px", objectFit: "contain" }}
+          />
+          <span style={{ marginTop: "5px", fontSize: "13px", letterSpacing: "0.05em", color: "#2e1503", fontStyle: "italic" }}>mudgarvale</span>
         </div>
 
         {/* Amazon Badge */}
@@ -109,12 +90,10 @@ export default function MudgarFooter() {
             like Mudgar, Gada, Samtola, Shena Push-Up Board and Indian Clubs.
           </p>
           <div style={{ display: "flex", gap: "16px" }}>
-            <a href="#" style={{ color: "#2e1503" }}><FacebookIcon /></a>
             <a href="#" style={{ color: "#2e1503" }}><YoutubeIcon /></a>
             <a href="https://www.instagram.com/mudgarvale" target="_blank" rel="noopener noreferrer" style={{ color: "#2e1503" }}>
               <InstagramIcon />
             </a>
-            <a href="#" style={{ color: "#2e1503" }}><PinterestIcon /></a>
           </div>
         </div>
 
@@ -145,9 +124,9 @@ export default function MudgarFooter() {
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2e1503", margin: "0 0 18px 0" }}>Contact Us</h3>
           <p style={{ fontSize: "14px", color: "#4a2800", lineHeight: "1.6", marginBottom: "14px" }}>
             39 krishna nagar ,<br />near shanti nagar udhana,<br /> Surat
-+91 87993 57438,
++91 7016243133,
           </p>
-          <a href="mailto:support@mudgarvale.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>support@mudgarvale.com</a>
+          <a href="mailto:mudgarvale@gmail.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>mudgarvale@gmail.com</a>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <input
