@@ -25,6 +25,11 @@ import AdminDashboard from "./adminpages/AdminDashboard";
 import AdminProducts from "./adminpages/AdminProducts";
 import EditProduct from "./adminpages/EditProduct";
 import AdminOrders from "./adminpages/AdminOrders";
+import Reviews from "./pages/Reviews";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cancellation from "./pages/Cancellation";
+import Shipping from "./pages/Shipping";
 
 function App() {
   return (
@@ -45,6 +50,11 @@ function App() {
             <Route path="/login" element={<Login/>} />
             <Route path="/signup" element={<Signup/>} />
             <Route path="/cart" element={<Cart/>} />
+            <Route path="/review" element={<Reviews/>} />
+            <Route path="/privacy" element={<Privacy/>} />
+            <Route path="/terms" element={<Terms/>} />
+            <Route path="/cancellation" element={<Cancellation/>} />
+            <Route path="/shipping" element={<Shipping/>} />
             <Route 
               path="/checkout" 
               element={

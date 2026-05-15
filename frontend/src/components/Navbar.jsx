@@ -18,7 +18,8 @@ const Navbar = () => {
     { name: 'Products', path: '/products' },
     { name: 'Blogs', path: '/blogs' },
     { name: 'About Us', path: '/about' },
-    { name: 'Contact', path: '/contact' }
+    { name: 'Contact', path: '/contact' },
+    { name: 'Reviews', path: '/review' }
   ]
 
   const handleNavigation = (path) => {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 
 const YoutubeIcon = () => (
@@ -18,6 +19,7 @@ const InstagramIcon = () => (
 
 export default function MudgarFooter() {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const quickLinks = [
     { name: "Home", href: "/" },
@@ -29,23 +31,23 @@ export default function MudgarFooter() {
 
   return (
     <footer style={{ backgroundColor: "#f2e0c0", fontFamily: "'Georgia', 'Times New Roman', serif", color: "#2e1503" }}>
-      
+
       {/* Top Header Section */}
-      <div style={{ 
-        maxWidth: "1280px", 
-        margin: "0 auto", 
-        padding: "36px 20px 0", 
-        display: "flex", 
-        flexWrap: "wrap", 
-        justifyContent: "space-between", 
+      <div style={{
+        maxWidth: "1280px",
+        margin: "0 auto",
+        padding: "36px 20px 0",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
         alignItems: "center",
         gap: "20px"
       }}>
         {/* Logo */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <img 
-            src="logo.png" 
-            alt="Mudgarvale Logo" 
+          <img
+            src="logo.png"
+            alt="Mudgarvale Logo"
             style={{ width: "58px", height: "58px", objectFit: "contain" }}
           />
           <span style={{ marginTop: "5px", fontSize: "13px", letterSpacing: "0.05em", color: "#2e1503", fontStyle: "italic" }}>mudgarvale</span>
@@ -74,13 +76,13 @@ export default function MudgarFooter() {
       </div>
 
       {/* Main Content Grid */}
-      <div style={{ 
-        maxWidth: "1280px", 
-        margin: "0 auto", 
-        padding: "40px 20px 56px", 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", 
-        gap: "40px" 
+      <div style={{
+        maxWidth: "1280px",
+        margin: "0 auto",
+        padding: "40px 20px 56px",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gap: "40px"
       }}>
         {/* About Us */}
         <div style={{ maxWidth: "400px" }}>
@@ -109,13 +111,41 @@ export default function MudgarFooter() {
           </ul>
         </div>
 
-        {/* Information */}
         <div>
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2e1503", margin: "0 0 18px 0" }}>Information</h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
-            {["Privacy Policy", "Terms & Conditions", "Shipping Policy", "Warranty", "Returns & Refunds"].map((link) => (
-              <li key={link}><a href="#" style={{ fontSize: "14px", color: "#4a2800", textDecoration: "none", lineHeight: "1.4" }}>{link}</a></li>
-            ))}
+            <li>
+              <span
+                onClick={() => navigate('/privacy')}
+                style={{ fontSize: "14px", color: "#4a2800", textDecoration: "none", lineHeight: "1.4", cursor: "pointer", display: "inline-block" }}
+              >
+                Privacy Policy
+              </span>
+            </li>
+            <li>
+              <span
+                onClick={() => navigate('/terms')}
+                style={{ fontSize: "14px", color: "#4a2800", textDecoration: "none", lineHeight: "1.4", cursor: "pointer", display: "inline-block" }}
+              >
+                Terms & Conditions
+              </span>
+            </li>
+            <li>
+              <span
+                onClick={() => navigate('/shipping')}
+                style={{ fontSize: "14px", color: "#4a2800", textDecoration: "none", lineHeight: "1.4", cursor: "pointer", display: "inline-block" }}
+              >
+                Shipping Policy
+              </span>
+            </li>
+            <li>
+              <span
+                onClick={() => navigate('/cancellation')}
+                style={{ fontSize: "14px", color: "#4a2800", textDecoration: "none", lineHeight: "1.4", cursor: "pointer", display: "inline-block" }}
+              >
+                Cancellation Policy
+              </span>
+            </li>
           </ul>
         </div>
 
@@ -124,40 +154,40 @@ export default function MudgarFooter() {
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2e1503", margin: "0 0 18px 0" }}>Contact Us</h3>
           <p style={{ fontSize: "14px", color: "#4a2800", lineHeight: "1.6", marginBottom: "14px" }}>
             39 krishna nagar ,<br />near shanti nagar udhana,<br /> Surat
-+91 7016243133,
+            +91 7016243133,
           </p>
           <a href="mailto:mudgarvale@gmail.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>mudgarvale@gmail.com</a>
-          
+
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <input
               type="email"
               placeholder="Your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ 
-                width: "100%", 
-                padding: "12px", 
-                fontSize: "14px", 
-                border: "none", 
-                borderRadius: "4px", 
-                backgroundColor: "#d9c4a0", 
-                color: "#2e1503", 
-                boxSizing: "border-box" 
+              style={{
+                width: "100%",
+                padding: "12px",
+                fontSize: "14px",
+                border: "none",
+                borderRadius: "4px",
+                backgroundColor: "#d9c4a0",
+                color: "#2e1503",
+                boxSizing: "border-box"
               }}
             />
             <button
               onClick={() => email && alert(`Subscribed: ${email}`)}
-              style={{ 
-                width: "100%", 
-                padding: "12px", 
-                fontSize: "12px", 
-                fontWeight: "700", 
-                letterSpacing: "0.1em", 
-                backgroundColor: "#2e1503", 
-                color: "#f2e0c0", 
-                border: "none", 
-                borderRadius: "4px", 
-                cursor: "pointer" 
+              style={{
+                width: "100%",
+                padding: "12px",
+                fontSize: "12px",
+                fontWeight: "700",
+                letterSpacing: "0.1em",
+                backgroundColor: "#2e1503",
+                color: "#f2e0c0",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
               }}
             >
               SUBSCRIBE
@@ -167,18 +197,18 @@ export default function MudgarFooter() {
       </div>
 
       {/* Responsive Illustration Strip */}
-      <div style={{ 
-        backgroundColor: "#f2e0c0", 
-        overflow: "hidden", 
-        borderTop: "1px solid #d9c4a0" 
+      <div style={{
+        backgroundColor: "#f2e0c0",
+        overflow: "hidden",
+        borderTop: "1px solid #d9c4a0"
       }}>
         <img
-          src="image_0.png" 
+          src="image_0.png"
           alt="Traditional fitness illustration"
-          style={{ 
-            width: "100%", 
-            minWidth: "800px", 
-            height: "auto", 
+          style={{
+            width: "100%",
+            minWidth: "800px",
+            height: "auto",
             display: "block",
             margin: "0 auto"
           }}

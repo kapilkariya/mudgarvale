@@ -125,10 +125,10 @@ const ContactPage = () => {
               <div>
                 <p className="font-semibold tracking-wide">Phone</p>
                 <a
-                  href="tel:+918799357438"
+                  href="tel:+917016243133"
                   className="underline hover:text-[#8B5E3C] transition"
                 >
-                  +91 8799357438
+                  +91 7016243133
                 </a>
               </div>
 
@@ -136,10 +136,10 @@ const ContactPage = () => {
               <div>
                 <p className="font-semibold tracking-wide">Email</p>
                 <a
-                  href="mailto:support@mudgarvale.com"
+                  href="mailto:mudgarvale@gmail.com"
                   className="underline hover:text-[#8B5E3C] transition"
                 >
-                  support@mudgarvale.com
+                  mudgarvale@gmail.com
                 </a>
               </div>
             </div>
