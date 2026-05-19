@@ -70,7 +70,16 @@ const Products = () => {
   const formatPrice = (price) => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
+const categoryOrder = {
+  mudgar: 1,
+  gada: 2,
+  samtola: 3,
+  senaboard: 4,
+};
 
+const sortedProducts = [...products].sort((a, b) => {
+  return categoryOrder[a.category] - categoryOrder[b.category];
+});
   return (
     <div>
       {/* Header Spacer */}
@@ -169,7 +178,7 @@ const Products = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 xs:gap-4 sm:gap-5 md:gap-6 lg:gap-7">
-                {products.map((product) => (
+                {sortedProducts.map((product) => (
                   <div
                     key={product._id}
                     onClick={() => navigate(`/product/${product._id}`)}
