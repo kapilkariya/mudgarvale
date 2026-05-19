@@ -141,9 +141,9 @@ const Reviews = () => {
           <div className="absolute bottom-20 right-10 w-60 h-60 rounded-full border-4 border-[#5C3A21]"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border-4 border-[#5C3A21]"></div>
         </div>
-        
+
         <div className="absolute inset-0 bg-gradient-to-b from-[#5C3A21]/40 to-[#3a1f0f]/60"></div>
-        
+
         <div className="relative text-center max-w-3xl mx-auto px-6 z-10">
           <div className="flex justify-center mb-8 animate-bounce">
             <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-sm border-2 border-[#d4a96a] flex items-center justify-center text-4xl shadow-2xl">
@@ -151,7 +151,7 @@ const Reviews = () => {
             </div>
           </div>
           <h1 className="text-white font-serif text-5xl md:text-7xl leading-tight mb-6 drop-shadow-2xl">
-            What Our <br /> 
+            What Our <br />
             <span className="text-[#d4a96a]">Pehelwans</span> Say
           </h1>
           <p className="text-white/90 text-xl mt-4 font-light max-w-2xl mx-auto">
@@ -166,7 +166,7 @@ const Reviews = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Decorative bottom wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" className="w-full">
@@ -201,7 +201,7 @@ const Reviews = () => {
             <div className="text-center p-6 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
               <div className="text-5xl font-serif text-[#5C3A21] mb-2">{stats.averageRating}</div>
               <div className="flex justify-center mb-2">
-                {[1,2,3,4,5].map(star => (
+                {[1, 2, 3, 4, 5].map(star => (
                   <span key={star} className="text-[#f59e0b] text-lg">★</span>
                 ))}
               </div>
@@ -252,13 +252,27 @@ const Reviews = () => {
                     alt="Instagram Reel"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
+
+                  {/* SOLID STRIP AT TOP TO COVER LOGO */}
+                  <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+
+                  {/* Optional: Add your own brand text on the strip */}
+                  <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                        <span className="text-white text-[10px]">▶</span>
+                      </div>
+                      <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                    </div>
+                  </div>
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
                       <span className="text-white text-2xl ml-1">▶</span>
                     </div>
                   </div>
-                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md">
+                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
                     Reel
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
@@ -271,54 +285,67 @@ const Reviews = () => {
         </div>
       </section>
 
-      {/* YouTube Shorts Section - Enhanced */}
-      <section className="py-20 px-6 md:px-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-4 mb-12">
-            <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center text-2xl shadow-lg">
-              📺
-            </div>
-            <div>
-              <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">YouTube Shorts</h2>
-              <p className="text-[#6b4b3a] text-base">Quick tutorials • Form guides • Expert tips</p>
-            </div>
-          </div>
+    {/* YouTube Shorts Section - Enhanced */}
+<section className="py-20 px-6 md:px-20">
+  <div className="max-w-6xl mx-auto">
+    <div className="flex items-center gap-4 mb-12">
+      <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center text-2xl shadow-lg">
+        📺
+      </div>
+      <div>
+        <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">YouTube Shorts</h2>
+        <p className="text-[#6b4b3a] text-base">Quick tutorials • Form guides • Expert tips</p>
+      </div>
+    </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {youtubeShorts.map((video, index) => (
-              <a
-                key={video.id}
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-                style={{ background: '#fff' }}
-              >
-                <div className="relative aspect-[9/16] overflow-hidden">
-                  <img
-                    src={video.thumbnail}
-                    alt="YouTube Short"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                      <span className="text-white text-2xl ml-1">▶</span>
-                    </div>
-                  </div>
-                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white shadow-md">
-                    #Shorts
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                    <p className="text-white text-sm">Watch on YouTube →</p>
-                  </div>
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {youtubeShorts.map((video, index) => (
+        <a
+          key={video.id}
+          href={video.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+          style={{ background: '#fff' }}
+        >
+          <div className="relative aspect-[9/16] overflow-hidden">
+            <img
+              src={video.thumbnail}
+              alt="YouTube Short"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+            
+            {/* SOLID STRIP AT TOP TO COVER LOGO */}
+            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-red-500/30 z-10"></div>
+            
+            {/* Optional: Add your own brand text on the strip */}
+            <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center">
+                  <span className="text-white text-[10px]">▶</span>
                 </div>
-              </a>
-            ))}
+                <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+              </div>
+            </div>
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                <span className="text-white text-2xl ml-1">▶</span>
+              </div>
+            </div>
+            <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white shadow-md z-30">
+              #Shorts
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              <p className="text-white text-sm">Watch on YouTube →</p>
+            </div>
           </div>
-        </div>
-      </section>
-
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
       {/* Written Reviews Section - Enhanced Cards */}
       <section className="py-20 px-6 md:px-20 bg-[#ede2d3]">
         <div className="max-w-6xl mx-auto">
@@ -369,17 +396,17 @@ const Reviews = () => {
                     <p className="text-xs text-[#b8a080]">{review.date}</p>
                   </div>
                 </div>
-                
+
                 <div className="relative mb-4">
                   <span className="text-5xl text-[#d4a96a] opacity-30 absolute -top-2 -left-2">"</span>
                   <p className="text-[#5c3d2e] leading-relaxed pl-6 pr-4 py-2">{review.review}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-end pt-4 border-t border-[#f3eadf]">
-                  <button 
-                    onClick={() => handleLike(review.id)} 
+                  <button
+                    onClick={() => handleLike(review.id)}
                     className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all duration-300 hover:scale-105"
-                    style={{ 
+                    style={{
                       background: likedReviews[review.id] ? '#5C3A21' : '#f3eadf',
                       color: likedReviews[review.id] ? '#fff' : '#5C3A21'
                     }}
@@ -394,12 +421,12 @@ const Reviews = () => {
 
           {visibleReviews < reviews.length && (
             <div className="text-center mt-12">
-              <button 
-                onClick={loadMore} 
+              <button
+                onClick={loadMore}
                 className="group px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl"
                 style={{ background: '#5C3A21', color: '#f3eadf' }}
               >
-                Load More Reviews 
+                Load More Reviews
                 <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>
@@ -413,7 +440,7 @@ const Reviews = () => {
           <div className="absolute top-0 left-0 w-64 h-64 rounded-full border-4 border-[#5C3A21]"></div>
           <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full border-4 border-[#5C3A21]"></div>
         </div>
-        
+
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#5C3A21] to-[#8B5E3C] flex items-center justify-center text-3xl shadow-lg mx-auto mb-6">
             📝
@@ -425,17 +452,17 @@ const Reviews = () => {
             Tag us on Instagram or leave a review below.
           </p>
           <div className="flex flex-wrap gap-5 justify-center">
-            <a 
-              href="https://instagram.com/mudgarvale" 
-              target="_blank" 
+            <a
+              href="https://instagram.com/mudgarvale"
+              target="_blank"
               className="group px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
               style={{ background: 'linear-gradient(135deg, #f58529, #dd2a7b, #8134af)', color: '#fff' }}
             >
               📸 Follow on Instagram
               <span className="group-hover:translate-x-1 transition-transform">→</span>
             </a>
-            <a 
-              href="mailto:reviews@mudgarvale.com" 
+            <a
+              href="mailto:reviews@mudgarvale.com"
               className="group px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl inline-flex items-center gap-2"
               style={{ background: '#fff', color: '#5C3A21', border: '2px solid #5C3A21' }}
             >

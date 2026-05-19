@@ -182,47 +182,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* TEAM */}
-      <section className="bg-[#ede2d3] py-24 px-6 md:px-20">
-        <h2 className="text-center font-serif text-4xl mb-16">Our Team</h2>
-
-        <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto text-center">
-
-          <div>
-            <img
-              src="https://images.unsplash.com/photo-1603415526960-f7e0328c63b1"
-              className="w-full h-[320px] object-cover mb-4"
-            />
-            <h3 className="font-semibold text-lg">Founder</h3>
-            <p className="text-sm text-[#6b4b3a]">
-              Focused on building strength through traditional practices and modern awareness.
-            </p>
-          </div>
-
-          <div>
-            <img
-              src="https://images.unsplash.com/photo-1599566150163-29194dcaad36"
-              className="w-full h-[320px] object-cover mb-4"
-            />
-            <h3 className="font-semibold text-lg">Co-Founder</h3>
-            <p className="text-sm text-[#6b4b3a]">
-              Ensuring quality, craftsmanship, and consistency across every product.
-            </p>
-          </div>
-
-          <div>
-            <img
-              src="https://images.unsplash.com/photo-1607746882042-944635dfe10e"
-              className="w-full h-[320px] object-cover mb-4"
-            />
-            <h3 className="font-semibold text-lg">Craft Expert</h3>
-            <p className="text-sm text-[#6b4b3a]">
-              Blending traditional woodworking with precision and durability.
-            </p>
-          </div>
-
-        </div>
-      </section>
 
       {/* WHY CHOOSE */}
       <section className="py-24 px-6 md:px-20">

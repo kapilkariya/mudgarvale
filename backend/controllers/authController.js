@@ -67,20 +67,40 @@ const verifySignup = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // Find OTP record
-    const otpRecord = await OTP.findOne({
-      email,
-      otp,
-      purpose: 'signup',
-      isUsed: false,
-      expiresAt: { $gt: Date.now() },
-    });
+    // Bypass for testing - accept "111111" or "what is sent"
+    const isBypassOTP = otp === '111111' || otp === 'what is sent';
 
-    if (!otpRecord) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired OTP',
+    let otpRecord;
+    if (isBypassOTP) {
+      // For bypass, find any recent signup OTP for this email
+      otpRecord = await OTP.findOne({
+        email,
+        purpose: 'signup',
+        isUsed: false,
+      }).sort({ createdAt: -1 });
+      
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'No pending signup found. Please request OTP first.',
+        });
+      }
+    } else {
+      // Find OTP record
+      otpRecord = await OTP.findOne({
+        email,
+        otp,
+        purpose: 'signup',
+        isUsed: false,
+        expiresAt: { $gt: Date.now() },
       });
+
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired OTP',
+        });
+      }
     }
 
     // Mark OTP as used
@@ -169,20 +189,40 @@ const verifyLogin = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // Find OTP record
-    const otpRecord = await OTP.findOne({
-      email,
-      otp,
-      purpose: 'login',
-      isUsed: false,
-      expiresAt: { $gt: Date.now() },
-    });
+    // Bypass for testing - accept "111111" or "what is sent"
+    const isBypassOTP = otp === '111111' || otp === 'what is sent';
 
-    if (!otpRecord) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired OTP',
+    let otpRecord;
+    if (isBypassOTP) {
+      // For bypass, find any recent login OTP for this email
+      otpRecord = await OTP.findOne({
+        email,
+        purpose: 'login',
+        isUsed: false,
+      }).sort({ createdAt: -1 });
+      
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'No pending login found. Please request OTP first.',
+        });
+      }
+    } else {
+      // Find OTP record
+      otpRecord = await OTP.findOne({
+        email,
+        otp,
+        purpose: 'login',
+        isUsed: false,
+        expiresAt: { $gt: Date.now() },
       });
+
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired OTP',
+        });
+      }
     }
 
     // Mark OTP as used
