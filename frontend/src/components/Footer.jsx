@@ -88,7 +88,7 @@ export default function MudgarFooter() {
         <div style={{ maxWidth: "400px" }}>
           <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "18px", color: "#2e1503" }}>About Us</h3>
           <p style={{ fontSize: "14px", lineHeight: "1.8", color: "#4a2800", marginBottom: "22px" }}>
-            At Mudgarvale Private Limited, we bring you authentic Indian traditional fitness equipment tools
+            At Mudgarvale , we bring you authentic Indian traditional fitness equipment tools
             like Mudgar, Gada, Samtola, Shena Push-Up Board and Indian Clubs.
           </p>
           <div style={{ display: "flex", gap: "16px" }}>
