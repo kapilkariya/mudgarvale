@@ -71,8 +71,13 @@ const ContactPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
           phone,
+          subject: 'Website contact form submission',
+          message: formData.message,
         }),
       });
 
@@ -90,7 +95,7 @@ const ContactPage = () => {
         const data = await response.json();
         setError(data.message || 'Something went wrong. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);

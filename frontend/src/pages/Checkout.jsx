@@ -304,11 +304,10 @@ const Checkout = () => {
                           setSelectedAddressId(addr._id);
                           setUseNewAddress(false);
                         }}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                          selectedAddressId === addr._id && !useNewAddress
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition ${selectedAddressId === addr._id && !useNewAddress
                             ? 'border-[#5C3A21] bg-[#fdf6ec]'
                             : 'border-gray-200 hover:border-[#D4A373]'
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-start">
                           <div>
@@ -333,11 +332,10 @@ const Checkout = () => {
                         setUseNewAddress(true);
                         setSelectedAddressId(null);
                       }}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${
-                        useNewAddress
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${useNewAddress
                           ? 'border-[#5C3A21] bg-[#fdf6ec]'
                           : 'border-gray-200 hover:border-[#D4A373]'
-                      }`}
+                        }`}
                     >
                       <p className="font-medium text-gray-800">+ Use New Address</p>
                     </div>
@@ -553,6 +551,22 @@ const Checkout = () => {
                   <p>Remaining <strong>{formatPrice(total - codAdvance)}</strong> to be paid on delivery.</p>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl border-2 border-amber-400 shadow-md">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <span className="text-2xl">📞</span>
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-700">For any queries, contact us at</p>
+                <a
+                  href="tel:7016243133"
+                  className="text-xl md:text-2xl font-bold text-[#5C3A21] hover:text-[#4a2e1a] transition-colors block"
+                >
+                  +91 7016243133
+                </a>
+              </div>
+              <span className="text-2xl">💬</span>
             </div>
           </div>
         </div>

@@ -84,25 +84,39 @@ const sendOTPEmail = async (email, otp, purpose) => {
   await transporter.sendMail(mailOptions);
 };
 
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // Send contact form email
-const sendContactEmail = async (name, email, subject, message) => {
+const sendContactEmail = async ({ name, email, phone, subject, message }) => {
   const transporter = createTransporter();
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safePhone = escapeHtml(phone || 'Not provided');
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
   const mailOptions = {
     from: `"Mudgarvale Contact" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_USER, // Send to your email
+    to: process.env.ADMIN_EMAIL,
     replyTo: email,
     subject: `Contact Form: ${subject}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #5C3A21;">New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> ${safeEmail}</p>
+        <p><strong>Phone:</strong> ${safePhone}</p>
+        <p><strong>Subject:</strong> ${safeSubject}</p>
         <hr>
         <p><strong>Message:</strong></p>
         <div style="background: #f4f4f4; padding: 20px; border-radius: 5px;">
-          ${message.replace(/\n/g, '<br>')}
+          ${safeMessage}
         </div>
         <hr>
         <p style="color: #666; font-size: 12px;">Sent from Mudgarvale Contact Form</p>

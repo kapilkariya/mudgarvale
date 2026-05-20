@@ -5,10 +5,11 @@ const { sendContactEmail } = require('../utils/email');
 // @access  Public
 const submitContact = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    const { firstName, lastName, name, email, phone, subject, message } = req.body;
+    const fullName = name || [firstName, lastName].filter(Boolean).join(' ').trim();
 
     // Validation
-    if (!name || !email || !subject || !message) {
+    if (!fullName || !email || !message) {
       return res.status(400).json({
         success: false,
         message: 'Please provide all required fields',
@@ -24,8 +25,21 @@ const submitContact = async (req, res) => {
       });
     }
 
+    if (!process.env.ADMIN_EMAIL) {
+      return res.status(500).json({
+        success: false,
+        message: 'Contact email is not configured',
+      });
+    }
+
     // Send email
-    await sendContactEmail(name, email, subject, message);
+    await sendContactEmail({
+      name: fullName,
+      email,
+      phone,
+      subject: subject || 'Website contact form submission',
+      message,
+    });
 
     res.status(200).json({
       success: true,
