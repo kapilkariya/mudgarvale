@@ -259,7 +259,7 @@ const AdminOrders = () => {
                       <div key={idx} className="bg-white rounded-lg p-2 text-sm">
                         <p className="font-medium text-gray-900">{item.name}</p>
                         <p className="text-gray-600 text-xs">
-                          {item.selectedWeight} × {item.quantity}
+                          {item.selectedWeight} kg × {item.quantity}
                         </p>
                       </div>
                     ))}
