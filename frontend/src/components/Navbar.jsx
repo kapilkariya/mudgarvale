@@ -88,7 +88,7 @@ const Navbar = () => {
   }}
 >
   <img 
-    src="logo.png" 
+    src="/logo.png" 
     alt="Mudgarvale Logo" 
     style={{ 
       width: '40px', 
