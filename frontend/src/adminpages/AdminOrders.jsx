@@ -55,18 +55,18 @@ const AdminOrders = () => {
 
   const filterOrders = () => {
     let filtered = [...orders];
-    
-    switch(activeFilter) {
+
+    switch (activeFilter) {
       case 'pending_delivery':
-        filtered = orders.filter(o => 
-          o.orderStatus !== 'delivered' && 
+        filtered = orders.filter(o =>
+          o.orderStatus !== 'delivered' &&
           o.orderStatus !== 'cancelled'
         );
         break;
       case 'action_taken':
-        filtered = orders.filter(o => 
-          o.orderStatus === 'confirmed' || 
-          o.orderStatus === 'processing' || 
+        filtered = orders.filter(o =>
+          o.orderStatus === 'confirmed' ||
+          o.orderStatus === 'processing' ||
           o.orderStatus === 'shipped'
         );
         break;
@@ -79,7 +79,7 @@ const AdminOrders = () => {
       default:
         filtered = orders;
     }
-    
+
     setFilteredOrders(filtered);
   };
 
@@ -88,8 +88,8 @@ const AdminOrders = () => {
       setUpdatingId(orderId);
       const response = await adminAPI.updateOrderStatus(orderId, newStatus);
       if (response.success) {
-        const updatedOrders = orders.map(order => 
-          order._id === orderId 
+        const updatedOrders = orders.map(order =>
+          order._id === orderId
             ? { ...order, orderStatus: newStatus }
             : order
         );
@@ -156,8 +156,8 @@ const AdminOrders = () => {
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-800 rounded-lg text-sm">
           {error}
-          <button 
-            onClick={() => setError('')} 
+          <button
+            onClick={() => setError('')}
             className="ml-4 text-red-600 underline"
           >
             Dismiss
@@ -169,23 +169,22 @@ const AdminOrders = () => {
       <div className="mb-6 overflow-x-auto pb-2 -mx-4 px-4">
         <div className="flex gap-2 min-w-max">
           {filterOptions.map(filter => {
-            const count = filter.value === 'all' 
-              ? orders.length 
+            const count = filter.value === 'all'
+              ? orders.length
               : filter.value === 'pending_delivery'
-              ? orders.filter(o => o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled').length
-              : filter.value === 'action_taken'
-              ? orders.filter(o => ['confirmed', 'processing', 'shipped'].includes(o.orderStatus)).length
-              : orders.filter(o => o.orderStatus === filter.value).length;
-            
+                ? orders.filter(o => o.orderStatus !== 'delivered' && o.orderStatus !== 'cancelled').length
+                : filter.value === 'action_taken'
+                  ? orders.filter(o => ['confirmed', 'processing', 'shipped'].includes(o.orderStatus)).length
+                  : orders.filter(o => o.orderStatus === filter.value).length;
+
             return (
               <button
                 key={filter.value}
                 onClick={() => setActiveFilter(filter.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
-                  activeFilter === filter.value
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${activeFilter === filter.value
                     ? 'bg-[#5C3A21] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {filter.label} ({count})
               </button>
@@ -199,7 +198,7 @@ const AdminOrders = () => {
         {filteredOrders.map((order) => (
           <div key={order._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {/* Order Header */}
-            <div 
+            <div
               className="p-4 cursor-pointer active:bg-gray-50"
               onClick={() => toggleExpand(order._id)}
             >
@@ -213,10 +212,10 @@ const AdminOrders = () => {
                     <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
                   </div>
                 </div>
-                <svg 
+                <svg
                   className={`w-5 h-5 text-gray-400 transition-transform ${expandedOrder === order._id ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -259,7 +258,10 @@ const AdminOrders = () => {
                       <div key={idx} className="bg-white rounded-lg p-2 text-sm">
                         <p className="font-medium text-gray-900">{item.name}</p>
                         <p className="text-gray-600 text-xs">
-                          {item.selectedWeight} kg × {item.quantity}
+                          <>
+                            {item.category !== 'senaboard' && `${item.selectedWeight} kg × `}
+                            {item.quantity}
+                          </>
                         </p>
                       </div>
                     ))}
@@ -290,10 +292,9 @@ const AdminOrders = () => {
                       <>
                         <p className="flex justify-between">
                           <span className="text-gray-600">Payment Status:</span>
-                          <span className={`font-medium ${
-                            order.paymentStatus === 'paid' ? 'text-green-600' : 
-                            order.paymentStatus === 'partial_paid' ? 'text-blue-600' : 'text-yellow-600'
-                          }`}>
+                          <span className={`font-medium ${order.paymentStatus === 'paid' ? 'text-green-600' :
+                              order.paymentStatus === 'partial_paid' ? 'text-blue-600' : 'text-yellow-600'
+                            }`}>
                             {order.paymentStatus === 'partial_paid' ? 'Advance Paid' : order.paymentStatus}
                           </span>
                         </p>
