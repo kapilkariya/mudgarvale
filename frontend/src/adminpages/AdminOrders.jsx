@@ -24,7 +24,6 @@ const AdminOrders = () => {
   const filterOptions = [
     { value: 'all', label: 'All Orders' },
     { value: 'pending_delivery', label: 'Not Delivered' },
-    { value: 'action_taken', label: 'Action Taken' },
     { value: 'delivered', label: 'Delivered' },
     { value: 'cancelled', label: 'Cancelled' },
   ];
