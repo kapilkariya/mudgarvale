@@ -5,7 +5,7 @@ const getPublicConfig = async (req, res) => {
   try {
     // Only expose non-sensitive values
     const config = {
-      deliveryCharge: parseInt(process.env.DELIVERY_CHARGE) || 400,
+      deliveryCharge: parseInt(process.env.DELIVERY_CHARGE) || 200,
       codAdvanceAmount: parseInt(process.env.COD_ADVANCE_AMOUNT) || 200,
       razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
     };

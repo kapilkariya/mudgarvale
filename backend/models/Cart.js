@@ -28,6 +28,10 @@ const cartItemSchema = new mongoose.Schema({
     min: 1,
     default: 1,
   },
+  category: {
+    type: String,
+    default: '',
+  },
 });
 
 const cartSchema = new mongoose.Schema(

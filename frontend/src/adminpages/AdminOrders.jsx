@@ -18,24 +18,24 @@ const AdminOrders = () => {
   ];
 
   useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await adminAPI.getAllOrders();
+        if (response.success) {
+          setOrders(response.data);
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError(err.message || 'Failed to fetch orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOrders();
   }, []);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await adminAPI.getAllOrders();
-      if (response.success) {
-        setOrders(response.data);
-      }
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError(err.message || 'Failed to fetch orders');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -162,6 +162,9 @@ const AdminOrders = () => {
                   <td className="px-4 py-4">
                     <div className="text-sm">
                       <p className="font-medium text-gray-900">{formatPrice(order.totalAmount)}</p>
+                      <p className="text-xs text-gray-500">
+                        Delivery: {formatPrice(order.deliveryCharge || 0)}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {order.paymentMethod === 'online' ? 'Online' : 'COD'}
                       </p>

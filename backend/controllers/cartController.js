@@ -1,4 +1,24 @@
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
+
+const getProductId = (item) => String(item.productId?._id || item.productId);
+
+const addCategoriesToItems = async (items = []) => {
+  const productIds = [...new Set(items.map(getProductId).filter(Boolean))];
+  const products = await Product.find({ _id: { $in: productIds } }).select('category').lean();
+  const categoryByProductId = new Map(products.map((product) => [String(product._id), product.category]));
+
+  return items.map((item) => {
+    const plainItem = item.toObject ? item.toObject() : item;
+    const productId = getProductId(plainItem);
+
+    return {
+      ...plainItem,
+      productId,
+      category: plainItem.category || categoryByProductId.get(productId) || '',
+    };
+  });
+};
 
 // @desc    Get user's cart
 // @route   GET /api/cart
@@ -12,9 +32,12 @@ const getCart = async (req, res) => {
       cart = await Cart.create({ userId: req.user.id, items: [] });
     }
 
+    const cartObject = cart.toObject();
+    cartObject.items = await addCategoriesToItems(cart.items);
+
     res.status(200).json({
       success: true,
-      data: cart,
+      data: cartObject,
     });
   } catch (error) {
     console.error('Get cart error:', error);
@@ -30,8 +53,10 @@ const getCart = async (req, res) => {
 // @access  Private
 const addToCart = async (req, res) => {
   try {
-    const { productId, name, image, selectedWeight, price, quantity } = req.body;
+    const { productId, name, image, selectedWeight, price, quantity, category } = req.body;
     const userId = req.user.id;
+    const product = category ? null : await Product.findById(productId).select('category').lean();
+    const itemCategory = category || product?.category || '';
 
     let cart = await Cart.findOne({ userId });
     
@@ -47,6 +72,7 @@ const addToCart = async (req, res) => {
     if (existingItemIndex >= 0) {
       // Update quantity if item exists
       cart.items[existingItemIndex].quantity += quantity || 1;
+      cart.items[existingItemIndex].category = cart.items[existingItemIndex].category || itemCategory;
     } else {
       // Add new item
       cart.items.push({
@@ -56,6 +82,7 @@ const addToCart = async (req, res) => {
         selectedWeight,
         price,
         quantity: quantity || 1,
+        category: itemCategory,
       });
     }
 
@@ -64,7 +91,10 @@ const addToCart = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Item added to cart',
-      data: cart,
+      data: {
+        ...cart.toObject(),
+        items: await addCategoriesToItems(cart.items),
+      },
     });
   } catch (error) {
     console.error('Add to cart error:', error);
@@ -196,9 +226,9 @@ const syncCart = async (req, res) => {
     let cart = await Cart.findOne({ userId });
     
     if (!cart) {
-      cart = await Cart.create({ userId, items: items || [] });
+      cart = await Cart.create({ userId, items: await addCategoriesToItems(items || []) });
     } else {
-      cart.items = items || [];
+      cart.items = await addCategoriesToItems(items || []);
       await cart.save();
     }
 

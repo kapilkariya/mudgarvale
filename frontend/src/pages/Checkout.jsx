@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { orderAPI, configAPI, addressAPI } from '../config/api';
+import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 const Checkout = () => {
   useEffect(() => {
@@ -10,8 +11,6 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { cart, getCartTotal, clearCart } = useCart();
 
-  const [deliveryCharge, setDeliveryCharge] = useState(400);
-  const [codAdvanceAmount, setCodAdvanceAmount] = useState(400);
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
 
@@ -45,8 +44,6 @@ const Checkout = () => {
         ]);
 
         if (configResponse.success) {
-          setDeliveryCharge(configResponse.data.deliveryCharge || 400);
-          setCodAdvanceAmount(configResponse.data.codAdvanceAmount || 400);
           setRazorpayKeyId(configResponse.data.razorpayKeyId || '');
         }
 
@@ -76,7 +73,8 @@ const Checkout = () => {
   };
 
   const subtotal = getCartTotal();
-  const codAdvance = paymentMethod === 'cod' ? codAdvanceAmount : 0;
+  const deliveryCharge = calculateDeliveryCharge(cart);
+  const codAdvance = paymentMethod === 'cod' ? deliveryCharge : 0;
   const total = subtotal + deliveryCharge;
   const amountToPayNow = paymentMethod === 'cod' ? codAdvance : total;
 
@@ -160,14 +158,14 @@ const Checkout = () => {
         }
       }
 
-      // Create order
+      // Create Razorpay order (not DB order yet)
       const response = await orderAPI.create(orderData);
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to create order');
+        throw new Error(response.message || 'Failed to create Razorpay order');
       }
 
-      const { order, razorpayOrder } = response.data;
+      const { razorpayOrder, orderData: savedOrderData } = response.data;
 
       if (razorpayOrder) {
         // Initialize Razorpay payment for both online and COD
@@ -176,16 +174,16 @@ const Checkout = () => {
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
           name: 'Mudgarvale',
-          description: `Order #${order.orderNumber}`,
+          description: paymentMethod === 'cod' ? 'COD Advance Payment' : 'Order Payment',
           order_id: razorpayOrder.id,
           handler: async function (response) {
-            // Verify payment
+            // Verify payment and create DB order
             try {
               const verifyResponse = await orderAPI.verifyPayment({
-                orderId: order._id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
+                orderData: savedOrderData,
               });
 
               if (verifyResponse.success) {
@@ -194,7 +192,7 @@ const Checkout = () => {
               } else {
                 setError('Payment verification failed. Please contact support.');
               }
-            } catch (err) {
+            } catch {
               setError('Payment verification failed. Please contact support.');
             }
           },
@@ -210,12 +208,20 @@ const Checkout = () => {
         const razorpay = new window.Razorpay(options);
         razorpay.open();
 
-        razorpay.on('payment.failed', function (response) {
+        razorpay.on('payment.failed', function () {
           setError('Payment failed. Please try again.');
+          setLoading(false);
+        });
+
+        // Handle modal close/cancel
+        razorpay.on('modal.close', function () {
+          setError('Payment cancelled. No order was created.');
+          setLoading(false);
         });
       } else {
         // No Razorpay order - should not happen now
         setError('Payment initialization failed. Please try again.');
+        setLoading(false);
       }
     } catch (err) {
       console.error('Checkout error:', err);
@@ -481,7 +487,7 @@ const Checkout = () => {
                       />
                       <div>
                         <span className="font-semibold">Cash on Delivery</span>
-                        <p className="text-sm text-gray-500">Pay Rs. {codAdvanceAmount} now, rest on delivery</p>
+                        <p className="text-sm text-gray-500">Pay {formatPrice(deliveryCharge)} now, rest on delivery</p>
                       </div>
                     </label>
                   </div>

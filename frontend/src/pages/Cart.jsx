@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { configAPI } from '../config/api';
+import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 const Cart = () => {
   useEffect(() => {
@@ -9,25 +9,8 @@ const Cart = () => {
   }, []);
   const navigate = useNavigate();
   const { cart, getCartTotal, updateQuantity, removeFromCart } = useCart();
-  const [deliveryCharge, setDeliveryCharge] = useState(400);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch config from backend
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await configAPI.get();
-        if (response.success) {
-          setDeliveryCharge(response.data.deliveryCharge || 400);
-        }
-      } catch (err) {
-        console.error('Failed to fetch config:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchConfig();
-  }, []);
+  const deliveryCharge = calculateDeliveryCharge(cart);
 
   const formatPrice = (price) => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
@@ -35,14 +18,6 @@ const Cart = () => {
 
   const subtotal = getCartTotal();
   const total = subtotal + deliveryCharge;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#fdf6ec] pt-20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]"></div>
-      </div>
-    );
-  }
 
   if (cart.length === 0) {
     return (
@@ -81,7 +56,7 @@ const Cart = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.map((item, index) => (
+            {cart.map((item) => (
               <div
                 key={`${item.productId}-${item.selectedWeight}`}
                 className="bg-white rounded-xl p-4 flex gap-4 shadow-sm"

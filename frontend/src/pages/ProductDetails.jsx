@@ -19,32 +19,32 @@ const ProductDetails = () => {
   const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await productAPI.getById(id);
+
+        if (response.success) {
+          setProduct(response.data);
+          // Auto-select first weight if available
+          if (response.data.weights && response.data.weights.length > 0) {
+            setSelectedWeight(response.data.weights[0]);
+          }
+        } else {
+          throw new Error(response.message || 'Failed to fetch product');
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err.message || 'Failed to load product. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProduct();
   }, [id]);
-
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await productAPI.getById(id);
-
-      if (response.success) {
-        setProduct(response.data);
-        // Auto-select first weight if available
-        if (response.data.weights && response.data.weights.length > 0) {
-          setSelectedWeight(response.data.weights[0]);
-        }
-      } else {
-        throw new Error(response.message || 'Failed to fetch product');
-      }
-    } catch (err) {
-      console.error('Error fetching product:', err);
-      setError(err.message || 'Failed to load product. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Get price for selected weight
   const getPrice = () => {
@@ -75,6 +75,7 @@ const ProductDetails = () => {
       selectedWeight: selectedWeight,
       price: getPrice(),
       quantity: quantity,
+      category: product.category,
     };
 
     addToCart(cartItem);

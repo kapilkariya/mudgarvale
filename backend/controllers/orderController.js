@@ -1,6 +1,8 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
+const { calculateDeliveryCharge, calculateSubtotal } = require('../utils/deliveryCharge');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -8,7 +10,25 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// @desc    Create new order
+const getProductId = (item) => String(item.productId?._id || item.productId);
+
+const addCategoriesToItems = async (items = []) => {
+  const productIds = [...new Set(items.map(getProductId).filter(Boolean))];
+  const products = await Product.find({ _id: { $in: productIds } }).select('category').lean();
+  const categoryByProductId = new Map(products.map((product) => [String(product._id), product.category]));
+
+  return items.map((item) => {
+    const productId = getProductId(item);
+
+    return {
+      ...item,
+      productId,
+      category: item.category || categoryByProductId.get(productId) || '',
+    };
+  });
+};
+
+// @desc    Create Razorpay order (not DB order)
 // @route   POST /api/orders
 // @access  Private
 const createOrder = async (req, res) => {
@@ -16,50 +36,26 @@ const createOrder = async (req, res) => {
     const { items, totalAmount, paymentMethod, address } = req.body;
     const userId = req.user.id;
 
-    // Get delivery charge from env
-    const deliveryCharge = parseInt(process.env.DELIVERY_CHARGE) || 400;
-    const codAdvance = parseInt(process.env.COD_ADVANCE_AMOUNT) || 400;
+    const orderItems = await addCategoriesToItems(items);
+    const deliveryCharge = calculateDeliveryCharge(orderItems);
+    const subtotal = calculateSubtotal(orderItems);
+    
+    const codAdvance = deliveryCharge;
 
     // DEBUG: Log received values
-    console.log('Order Creation Debug:', {
+    console.log('Razorpay Order Creation Debug:', {
       receivedTotalAmount: totalAmount,
-      deliveryCharge,
+      calculatedDeliveryCharge: deliveryCharge,
+      calculatedSubtotal: subtotal,
       paymentMethod,
       codAdvance,
     });
 
-    // totalAmount from frontend already includes deliveryCharge
-    // So we use it directly as the final total
-    const finalTotal = totalAmount;
+    const finalTotal = subtotal + deliveryCharge;
     
     // Calculate amounts based on payment method
     const amountToPayNow = paymentMethod === 'cod' ? codAdvance : finalTotal;
     const remainingAmount = paymentMethod === 'cod' ? finalTotal - codAdvance : 0;
-
-    // Determine initial payment status
-    const initialPaymentStatus = paymentMethod === 'cod' ? 'pending' : 'pending';
-
-    // Create order in database
-    const order = await Order.create({
-      userId,
-      items,
-      totalAmount: finalTotal,
-      deliveryCharge,
-      paymentMethod,
-      paymentStatus: initialPaymentStatus,
-      orderStatus: 'pending',
-      address,
-      paidAmount: 0, // Will update after payment verification
-      remainingAmount,
-    });
-
-    console.log('Order created:', {
-      orderId: order._id,
-      totalAmount: finalTotal,
-      paymentMethod,
-      amountToPayNow,
-      remainingAmount,
-    });
 
     // Create Razorpay order for payment
     let razorpayOrder = null;
@@ -69,57 +65,55 @@ const createOrder = async (req, res) => {
       razorpayOrder = await razorpay.orders.create({
         amount: finalTotal * 100, // Razorpay expects amount in paise
         currency: 'INR',
-        receipt: order.orderNumber,
+        receipt: `ORDER-${Date.now()}`,
       });
-
-      // Update order with Razorpay order ID
-      order.razorpayOrderId = razorpayOrder.id;
-      await order.save();
     } else if (paymentMethod === 'cod') {
       // COD: Only advance amount via Razorpay
       razorpayOrder = await razorpay.orders.create({
         amount: codAdvance * 100, // Only COD advance in paise
         currency: 'INR',
-        receipt: `COD-${order.orderNumber}`,
+        receipt: `COD-${Date.now()}`,
       });
-
-      // Update order with Razorpay order ID for COD advance
-      order.razorpayOrderId = razorpayOrder.id;
-      await order.save();
     }
 
+    console.log('Razorpay order created:', {
+      razorpayOrderId: razorpayOrder.id,
+      amountToPayNow,
+      remainingAmount,
+    });
+
+    // Return only Razorpay order data - DO NOT create DB order yet
     res.status(201).json({
       success: true,
-      message: 'Order created successfully',
+      message: 'Razorpay order created successfully',
       data: {
-        order,
         razorpayOrder,
+        orderData: {
+          userId,
+          items: orderItems,
+          totalAmount: finalTotal,
+          deliveryCharge,
+          paymentMethod,
+          address,
+          remainingAmount,
+        },
       },
     });
   } catch (error) {
-    console.error('Create order error:', error);
+    console.error('Create Razorpay order error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create order',
+      message: 'Failed to create Razorpay order',
     });
   }
 };
 
-// @desc    Verify Razorpay payment
+// @desc    Verify Razorpay payment and create DB order
 // @route   POST /api/orders/verify-payment
 // @access  Private
 const verifyPayment = async (req, res) => {
   try {
-    const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-
-    // Find order
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
-    }
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderData } = req.body;
 
     // Verify signature
     const body = razorpay_order_id + '|' + razorpay_payment_id;
@@ -130,44 +124,67 @@ const verifyPayment = async (req, res) => {
 
     const isAuthentic = expectedSignature === razorpay_signature;
 
-    if (isAuthentic) {
-      // Handle payment verification based on payment method
-      if (order.paymentMethod === 'cod') {
-        // COD: Only advance was paid (codAdvance is stored in deliveryCharge or we need to get from env)
-        const codAdvance = parseInt(process.env.COD_ADVANCE_AMOUNT) || 400;
-        order.paymentStatus = 'partial_paid';
-        order.paidAmount = codAdvance;
-        // remainingAmount stays as is (to be paid on delivery)
-      } else {
-        // Online: Full amount paid
-        order.paymentStatus = 'paid';
-        order.paidAmount = order.totalAmount;
-        order.remainingAmount = 0;
-      }
-      
-      order.razorpayPaymentId = razorpay_payment_id;
-      order.orderStatus = 'confirmed';
-      await order.save();
-
-      res.status(200).json({
-        success: true,
-        message: 'Payment verified successfully',
-        data: order,
-      });
-    } else {
-      order.paymentStatus = 'failed';
-      await order.save();
-
-      res.status(400).json({
+    if (!isAuthentic) {
+      return res.status(400).json({
         success: false,
-        message: 'Invalid signature',
+        message: 'Invalid signature - payment verification failed',
       });
     }
+
+    // Signature is valid - now create the order in database
+    const { items, paymentMethod, address } = orderData;
+    const userId = req.user.id;
+    const orderItems = await addCategoriesToItems(items);
+    const deliveryCharge = calculateDeliveryCharge(orderItems);
+    const subtotal = calculateSubtotal(orderItems);
+    const totalAmount = subtotal + deliveryCharge;
+    
+    const codAdvance = deliveryCharge;
+    const remainingAmount = paymentMethod === 'cod' ? totalAmount - codAdvance : 0;
+
+    // Determine payment status based on payment method
+    let paymentStatus, paidAmount;
+    if (paymentMethod === 'cod') {
+      paymentStatus = 'partial_paid';
+      paidAmount = codAdvance;
+    } else {
+      paymentStatus = 'paid';
+      paidAmount = totalAmount;
+    }
+
+    // Create order in database
+    const order = await Order.create({
+      userId,
+      items: orderItems,
+      totalAmount,
+      deliveryCharge,
+      paymentMethod,
+      paymentStatus,
+      orderStatus: 'confirmed',
+      address,
+      paidAmount,
+      remainingAmount,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+    });
+
+    console.log('Order created after payment verification:', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      paymentStatus,
+      paidAmount,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment verified and order created successfully',
+      data: order,
+    });
   } catch (error) {
     console.error('Verify payment error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to verify payment',
+      message: 'Failed to verify payment or create order',
     });
   }
 };
