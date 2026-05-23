@@ -205,6 +205,7 @@ function BlogDetail() {
           </div>
         </div>
       </article>
+      
     </>
   );
 }

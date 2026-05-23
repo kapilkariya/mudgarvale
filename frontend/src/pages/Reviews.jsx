@@ -472,7 +472,9 @@ const Reviews = () => {
           </div>
         </div>
       </section>
+      
     </div>
+    
   );
 };
 

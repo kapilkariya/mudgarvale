@@ -253,6 +253,7 @@ const ContactPage = () => {
           background: transparent;
         }
       `}</style>
+      
     </>
   );
 };
