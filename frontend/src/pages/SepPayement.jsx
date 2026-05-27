@@ -15,12 +15,12 @@ const SepPayment = () => {
   // Generate UPI payment link
   const upiPaymentLink = `upi://pay?pa=${upiId}&pn=Mudgarvale&cu=INR`;
 
-  return (<>    
-        <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
+  return (<>
+    <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
-  <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 py-8 md:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 py-8 md:py-12">
       {/* Main Content */}
-      
+
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Complete Your Payment</h1>
@@ -34,11 +34,22 @@ const SepPayment = () => {
             <div className="mb-4">
               <span className="bg-amber-100 text-amber-700 text-sm font-semibold px-3 py-1 rounded-full">Scan to Pay</span>
             </div>
+
+            {/* Logo and Brand Name */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img
+                src="/logo.png"
+                alt="MudgarVale Logo"
+                className="h-12 w-auto object-contain"
+              />
+              <h2 className="text-xl font-bold text-gray-800 tracking-wide">MudgarVale</h2>
+            </div>
+
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-white rounded-2xl shadow-lg inline-block">
-                <img 
-                  src="/qr.jpeg" 
-                  alt="UPI QR Code" 
+                <img
+                  src="/qr.jpeg"
+                  alt="UPI QR Code"
                   className="w-48 h-48 md:w-64 md:h-64 object-contain"
                 />
               </div>
@@ -59,12 +70,12 @@ const SepPayment = () => {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">UPI Payment</h2>
               </div>
-              
+
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
                 <p className="text-sm text-gray-500 mb-1">UPI ID</p>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-lg font-mono font-medium text-gray-800 break-all">{upiId}</p>
-                  <button 
+                  <button
                     onClick={copyUpiId}
                     className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                   >
@@ -76,8 +87,6 @@ const SepPayment = () => {
                 </div>
               </div>
 
-             
-              
               <p className="text-xs text-gray-400 mt-4 text-center">
                 After payment, please share screenshot on WhatsApp or email
               </p>
@@ -93,7 +102,7 @@ const SepPayment = () => {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">Contact Us</h2>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="bg-amber-100 p-2 rounded-full">
@@ -108,7 +117,7 @@ const SepPayment = () => {
                     </a>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
                   <div className="bg-red-100 p-2 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,9 +148,8 @@ const SepPayment = () => {
           </div>
         </div>
       </div>
-    </div></>
-
-  );
+    </div>
+  </>);
 };
 
 export default SepPayment;
