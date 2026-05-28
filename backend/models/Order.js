@@ -46,6 +46,10 @@ const addressSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  buildingFlatNo: {
+    type: String,
+    default: '',
+  },
   address: {
     type: String,
     required: true,

@@ -5,7 +5,7 @@ const Address = require('../models/Address');
 // @access  Private
 const addAddress = async (req, res) => {
   try {
-    const { name, email, phone, address, city, state, pincode, isDefault } = req.body;
+    const { name, email, phone, buildingFlatNo, address, city, state, pincode, isDefault } = req.body;
     const userId = req.user.id;
 
     // Check if user already has 2 addresses
@@ -28,6 +28,7 @@ const addAddress = async (req, res) => {
       name,
       email,
       phone,
+      buildingFlatNo: buildingFlatNo || '',
       address,
       city,
       state,

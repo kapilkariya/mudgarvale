@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../config/api';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
@@ -36,7 +35,6 @@ const AdminOrders = () => {
         const response = await adminAPI.getAllOrders();
         if (response.success) {
           setOrders(response.data);
-          setFilteredOrders(response.data);
         }
       } catch (err) {
         console.error('Error fetching orders:', err);
@@ -49,11 +47,7 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
-  useEffect(() => {
-    filterOrders();
-  }, [activeFilter, orders]);
-
-  const filterOrders = () => {
+  const filteredOrders = useMemo(() => {
     let filtered = [...orders];
 
     switch (activeFilter) {
@@ -80,8 +74,8 @@ const AdminOrders = () => {
         filtered = orders;
     }
 
-    setFilteredOrders(filtered);
-  };
+    return filtered;
+  }, [activeFilter, orders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -244,8 +238,11 @@ const AdminOrders = () => {
                     <p><span className="text-gray-600">Name:</span> {order.user?.name || 'N/A'}</p>
                     <p><span className="text-gray-600">Email:</span> {order.user?.email}</p>
                     <p><span className="text-gray-600">Phone:</span> {order.address?.phone}</p>
+                    {order.address?.buildingFlatNo && (
+                      <p><span className="text-gray-600">Building / Flat No.:</span> {order.address.buildingFlatNo}</p>
+                    )}
                     {order.address && (
-                      <p><span className="text-gray-600">Address:</span> {order.address.street}, {order.address.city}, {order.address.state} - {order.address.pincode}</p>
+                      <p><span className="text-gray-600">Address:</span> {order.address.address}, {order.address.city}, {order.address.state} - {order.address.pincode}</p>
                     )}
                   </div>
                 </div>

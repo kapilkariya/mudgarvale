@@ -23,6 +23,11 @@ const addressSchema = new mongoose.Schema(
       required: [true, 'Phone number is required'],
       trim: true,
     },
+    buildingFlatNo: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     address: {
       type: String,
       required: [true, 'Address is required'],

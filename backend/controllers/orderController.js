@@ -212,6 +212,7 @@ const getMyOrders = async (req, res) => {
         name: order.address?.name || '',
         email: order.address?.email || '',
         phone: order.address?.phone || '',
+        buildingFlatNo: order.address?.buildingFlatNo || '',
         address: order.address?.address || '',
         city: order.address?.city || '',
         state: order.address?.state || '',

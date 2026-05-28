@@ -23,6 +23,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    buildingFlatNo: '',
     address: '',
     city: '',
     state: '',
@@ -108,6 +109,7 @@ const Checkout = () => {
           name: selectedAddress.name,
           email: selectedAddress.email,
           phone: selectedAddress.phone,
+          buildingFlatNo: selectedAddress.buildingFlatNo || '',
           address: selectedAddress.address,
           city: selectedAddress.city,
           state: selectedAddress.state,
@@ -146,6 +148,7 @@ const Checkout = () => {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
+            buildingFlatNo: formData.buildingFlatNo,
             address: formData.address,
             city: formData.city,
             state: formData.state,
@@ -313,6 +316,9 @@ const Checkout = () => {
                           <div>
                             <p className="font-semibold text-gray-800">{addr.name}</p>
                             <p className="text-sm text-gray-600">{addr.phone}</p>
+                            {addr.buildingFlatNo && (
+                              <p className="text-sm text-gray-600 mt-1">{addr.buildingFlatNo}</p>
+                            )}
                             <p className="text-sm text-gray-600 mt-1">
                               {addr.address}, {addr.city}, {addr.state} - {addr.pincode}
                             </p>
@@ -381,6 +387,18 @@ const Checkout = () => {
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
                         placeholder="Enter your phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Building / Flat No.</label>
+                      <input
+                        type="text"
+                        name="buildingFlatNo"
+                        value={formData.buildingFlatNo}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Building no., flat no. (optional)"
                       />
                     </div>
 
