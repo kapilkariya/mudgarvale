@@ -190,6 +190,14 @@ const Checkout = () => {
               });
 
               if (verifyResponse.success) {
+                if (typeof gtag !== 'undefined') {
+                  gtag('event', 'conversion', {
+                    'send_to': 'AW-18205627094/adJKCKCO4bgcENalj-lD',
+                    'value': verifyResponse.order?.totalAmount || total,
+                    'currency': 'INR',
+                    'transaction_id': verifyResponse.order?._id || verifyResponse.order?.orderId || '',
+                  });
+                }
                 clearCart();
                 navigate('/my-orders', { state: { success: true } });
               } else {
@@ -308,8 +316,8 @@ const Checkout = () => {
                           setUseNewAddress(false);
                         }}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition ${selectedAddressId === addr._id && !useNewAddress
-                            ? 'border-[#5C3A21] bg-[#fdf6ec]'
-                            : 'border-gray-200 hover:border-[#D4A373]'
+                          ? 'border-[#5C3A21] bg-[#fdf6ec]'
+                          : 'border-gray-200 hover:border-[#D4A373]'
                           }`}
                       >
                         <div className="flex justify-between items-start">
@@ -339,8 +347,8 @@ const Checkout = () => {
                         setSelectedAddressId(null);
                       }}
                       className={`p-4 border-2 rounded-lg cursor-pointer transition ${useNewAddress
-                          ? 'border-[#5C3A21] bg-[#fdf6ec]'
-                          : 'border-gray-200 hover:border-[#D4A373]'
+                        ? 'border-[#5C3A21] bg-[#fdf6ec]'
+                        : 'border-gray-200 hover:border-[#D4A373]'
                         }`}
                     >
                       <p className="font-medium text-gray-800">+ Use New Address</p>
