@@ -190,16 +190,8 @@ const Checkout = () => {
               });
 
               if (verifyResponse.success) {
-                if (typeof gtag !== 'undefined') {
-                  gtag('event', 'conversion', {
-                    'send_to': 'AW-18205627094/adJKCKCO4bgcENalj-lD',
-                    'value': verifyResponse.order?.totalAmount || total,
-                    'currency': 'INR',
-                    'transaction_id': verifyResponse.order?._id || verifyResponse.order?.orderId || '',
-                  });
-                }
                 clearCart();
-                navigate('/my-orders', { state: { success: true } });
+                navigate('/thankyou', { state: { success: true } });
               } else {
                 setError('Payment verification failed. Please contact support.');
               }

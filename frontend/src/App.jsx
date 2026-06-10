@@ -31,6 +31,7 @@ import Terms from "./pages/Terms";
 import Cancellation from "./pages/Cancellation";
 import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
+import Thankyou from "./pages/Thankyou";
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
             <Route path="/cancellation" element={<Cancellation />} />
             <Route path="/shipping" element={<Shipping />} />
             <Route path="/otherpayement" element={<SepPayement/>} />
+            <Route path="/thankyou" element={<Thankyou/>} />
             <Route
               path="/checkout"
               element={
