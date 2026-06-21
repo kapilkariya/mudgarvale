@@ -32,7 +32,6 @@ import Cancellation from "./pages/Cancellation";
 import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
-import Thankyou from "./pages/GoogleFeed";
 
 function App() {
   return (
@@ -60,7 +59,6 @@ function App() {
             <Route path="/shipping" element={<Shipping />} />
             <Route path="/otherpayement" element={<SepPayement/>} />
             <Route path="/thankyou" element={<Thankyou/>} />
-            <Route path="/googlefeed" element={<GoogleFeed/>} />
             <Route
               path="/checkout"
               element={
