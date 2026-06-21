@@ -1,9 +1,7 @@
-
 <?xml version="1.0"?>
 <rss version="2.0"
 xmlns:g="http://base.google.com/ns/1.0">
 <channel>
-
 <item>
     <g:id>1</g:id>
     <g:title>Wooden Mudgar 5KG</g:title>
@@ -15,6 +13,5 @@ xmlns:g="http://base.google.com/ns/1.0">
     <g:price>2999 INR</g:price>
     <g:brand>MudgarVale</g:brand>
 </item>
-
 </channel>
 </rss>
