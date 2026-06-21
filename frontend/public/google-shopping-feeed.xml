@@ -1,0 +1,28 @@
+
+Kapil Kariya <kapilkariya1105@gmail.com>
+9:28 AM (4 minutes ago)
+to kawaleprasad29092005@gmail.com
+
+<?xml version="1.0"?>
+<rss version="2.0"
+xmlns:g="http://base.google.com/ns/1.0">
+<channel>
+
+<item>
+    <g:id>1</g:id>
+    <g:title>Wooden Mudgar 5KG</g:title>
+    <g:description>Traditional Indian training equipment</g:description>
+    <g:link>https://mudgarvale.com/product/wooden-mudgar-5kg</g:link>
+    <g:image_link>https://mudgarvale.com/images/mudgar1.jpg</g:image_link>
+    <g:availability>in_stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2999 INR</g:price>
+    <g:brand>MudgarVale</g:brand>
+</item>
+
+<item>
+    ...
+</item>
+
+</channel>
+</rss>
