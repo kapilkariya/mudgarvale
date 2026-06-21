@@ -1,8 +1,4 @@
 
-Kapil Kariya <kapilkariya1105@gmail.com>
-9:28 AM (4 minutes ago)
-to kawaleprasad29092005@gmail.com
-
 <?xml version="1.0"?>
 <rss version="2.0"
 xmlns:g="http://base.google.com/ns/1.0">
@@ -18,10 +14,6 @@ xmlns:g="http://base.google.com/ns/1.0">
     <g:condition>new</g:condition>
     <g:price>2999 INR</g:price>
     <g:brand>MudgarVale</g:brand>
-</item>
-
-<item>
-    ...
 </item>
 
 </channel>
