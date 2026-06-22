@@ -18,6 +18,7 @@ const cartRoutes    = require('./routes/cartRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const configRoutes  = require('./routes/configRoutes');
 const adminRoutes   = require('./routes/adminRoutes');
+const feedRoutes = require('./routes/feedRoutes');
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use('/', feedRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
 app.use('/api/auth',      authRoutes);
@@ -59,6 +61,7 @@ app.use('/api/cart',      cartRoutes);
 app.use('/api/contact',   contactRoutes);
 app.use('/api/config',    configRoutes);
 app.use('/api/admin',     adminRoutes);
+
 
 // Serve React frontend (must be after API routes)
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
