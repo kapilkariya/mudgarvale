@@ -99,7 +99,7 @@ function App() {
         </Router>
       </CartProvider>
       <div
-        onClick={() => window.open(`https://wa.me/7016243133`, '_blank')}
+        onClick={() => window.open(`https://wa.me/9327223973`, '_blank')}
         style={{
           position: 'fixed',
           bottom: '20px',
