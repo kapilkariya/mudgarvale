@@ -220,7 +220,7 @@ Train regularly, stay focused, and your body will become stronger, faster, and m
 Remember: Control first, power later.
   `,
   date: "April 14, 2026",
-  author: "Rishab Mudgar",
+  author: "MudgarVale",
   tags: ["Senaboard", "Balance", "Strength"],
   readTime: "9 min read"
 },
@@ -390,7 +390,7 @@ Gada training offers benefits no other tool can match. It's simultaneously a str
 Start light, be consistent, and experience what warriors have known for thousands of years.
     `,
     date: "April 12, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Gada", "Benefits"],
     readTime: "10 min read"
   },
@@ -613,7 +613,7 @@ No other tool builds balance as effectively while simultaneously developing stre
 Remember: Balance isn't something you have or don't have - it's a skill you can develop at any age. The Samtola is your tool for building this essential ability.
     `,
     date: "April 13, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Balance", "Samtola"],
     readTime: "9 min read"
   },
@@ -671,7 +671,7 @@ Start with light weights (1-2 kg for Mudgar, 2-3 kg for Gada). Focus on form ove
 Gym machines have their place in rehabilitation and bodybuilding. But for true, usable strength that serves you in everyday life, traditional Indian functional training is unmatched.
     `,
     date: "April 5, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Functional Training", "Fitness"],
     readTime: "6 min read"
   },
@@ -823,7 +823,7 @@ Strong joints are the foundation of a strong body. If your joints are weak, your
 Train your joints today, and your body will thank you for years to come.
     `,
   date: "April 23, 2026",
-  author: "Rishab Mudgar",
+  author: "MudgarVale",
   tags: ["Mobility", "Strength", "Joint Health"],
   readTime: "6 min read"
 },
@@ -908,7 +908,7 @@ For serious grip development, work toward completing 10,000 Mudgar or Gada swing
 Remember: Your grip connects your intention to the tool. A weak grip limits everything else.
     `,
     date: "April 7, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Strength", "Grip"],
     readTime: "7 min read"
   },
@@ -1029,7 +1029,7 @@ Notes: _________________
 Consistency beats intensity. Train 4-5 days per week, and your home workouts will outperform any gym membership.
     `,
     date: "April 8, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Workout", "Home Training"],
     readTime: "9 min read"
   },
@@ -1155,7 +1155,7 @@ It’s not just a tool.
 It’s a legacy of strength, discipline, and functional movement that continues to evolve with time.
     `,
   date: "April 23, 2026",
-  author: "Rishab Mudgar",
+  author: "MudgarVale",
   tags: ["History", "Fitness"],
   readTime: "6 min read"
 },
@@ -1266,7 +1266,7 @@ The return of traditional methods doesn't mean abandoning modern fitness - it me
 The future belongs to those who respect the past while embracing the present. Traditional Indian fitness isn't just making a comeback - it's leading a revolution in how we think about strength, health, and movement.
     `,
     date: "April 10, 2026",
-    author: "Rishab Mudgar",
+    author: "MudgarVale",
     tags: ["Traditional Fitness", "Trends"],
     readTime: "8 min read"
   },
