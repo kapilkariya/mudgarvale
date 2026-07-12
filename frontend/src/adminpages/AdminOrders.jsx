@@ -8,7 +8,6 @@ const AdminOrders = () => {
   const [updatingId, setUpdatingId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState(null);
-  const [products, setProducts] = useState([]);
 
   // Order status options with colors
   const statusOptions = [
@@ -46,21 +45,6 @@ const AdminOrders = () => {
     };
 
     fetchOrders();
-  }, []);
-
-  // Fetch products for export
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await adminAPI.getAllProducts();
-        if (response.success) {
-          setProducts(response.data);
-        }
-      } catch (err) {
-        console.error('Error fetching products:', err);
-      }
-    };
-    fetchProducts();
   }, []);
 
   const filteredOrders = useMemo(() => {
@@ -144,39 +128,55 @@ const AdminOrders = () => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  // Export products to CSV (no external libraries needed)
-  const exportProductsToCSV = () => {
-    if (products.length === 0) {
-      alert('No products available to export');
+  // Export orders to CSV
+  const exportOrdersToCSV = () => {
+    if (orders.length === 0) {
+      alert('No orders available to export');
       return;
     }
 
     // Create CSV headers
     const headers = [
-      'Product Name',
-      'Category',
-      'Description',
-      'Weights (kg)',
-      'Price per Weight',
-      'Min Price',
-      'Status',
+      'Order Number',
+      'Customer Name',
+      'Customer Email',
+      'Phone',
+      'Address',
+      'City',
+      'State',
+      'Pincode',
+      'Items',
+      'Total Amount',
+      'Payment Method',
+      'Payment Status',
+      'Order Status',
       'Created Date'
     ];
 
     // Create CSV rows
-    const rows = products.map(product => [
-      `"${product.name}"`,
-      `"${product.category.charAt(0).toUpperCase() + product.category.slice(1)}"`,
-      `"${product.description || ''}"`,
-      `"${product.weights ? product.weights.join(', ') : ''}"`,
-      `"${product.pricePerWeight ? 
-        Object.entries(product.pricePerWeight)
-          .map(([weight, price]) => `${weight}kg: ₹${price}`)
-          .join('; ') : ''}"`,
-      `"${product.minPrice ? `₹${product.minPrice}` : ''}"`,
-      `"${product.status ? 'Active' : 'Inactive'}"`,
-      `"${product.createdAt ? new Date(product.createdAt).toLocaleDateString('en-IN') : ''}"`
-    ]);
+    const rows = orders.map(order => {
+      // Format items list
+      const itemsList = order.items?.map(item => 
+        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
+      ).join('; ') || '';
+
+      return [
+        `"${order.orderNumber || ''}"`,
+        `"${order.user?.name || 'N/A'}"`,
+        `"${order.user?.email || ''}"`,
+        `"${order.address?.phone || ''}"`,
+        `"${order.address?.address || ''}"`,
+        `"${order.address?.city || ''}"`,
+        `"${order.address?.state || ''}"`,
+        `"${order.address?.pincode || ''}"`,
+        `"${itemsList}"`,
+        `"${order.totalAmount || 0}"`,
+        `"${order.paymentMethod || ''}"`,
+        `"${order.paymentStatus || ''}"`,
+        `"${order.orderStatus || ''}"`,
+        `"${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : ''}"`
+      ];
+    });
 
     // Combine headers and rows
     const csvContent = [
@@ -189,7 +189,7 @@ const AdminOrders = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `Products_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Orders_Export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -215,13 +215,13 @@ const AdminOrders = () => {
           <p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p>
         </div>
         <button
-          onClick={exportProductsToCSV}
+          onClick={exportOrdersToCSV}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm whitespace-nowrap"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
           </svg>
-          Download Products
+          Download Orders
         </button>
       </div>
 
