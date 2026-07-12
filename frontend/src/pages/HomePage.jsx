@@ -72,7 +72,6 @@ const HomePage = () => {
             height: '100%',
             objectFit: 'cover'
           }}
-          preload="metadata"
           autoPlay
           loop={false}
           muted
