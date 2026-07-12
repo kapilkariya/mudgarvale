@@ -137,7 +137,7 @@ const ProductDetails = () => {
           {/* Product Image */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
             <img
-              src={product.image}
+              src={`/products/${product.name}.jpeg`}
               alt={product.name}
               className="w-full h-full object-cover aspect-square"
               onError={(e) => {
