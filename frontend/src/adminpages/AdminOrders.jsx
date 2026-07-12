@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../config/api';
+import * as XLSX from 'xlsx';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -128,72 +129,65 @@ const AdminOrders = () => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  // Export orders to CSV
-  const exportOrdersToCSV = () => {
+  // Export orders to Excel
+  const exportOrdersToExcel = () => {
     if (orders.length === 0) {
       alert('No orders available to export');
       return;
     }
 
-    // Create CSV headers
-    const headers = [
-      'Order Number',
-      'Customer Name',
-      'Customer Email',
-      'Phone',
-      'Address',
-      'City',
-      'State',
-      'Pincode',
-      'Items',
-      'Total Amount',
-      'Payment Method',
-      'Payment Status',
-      'Order Status',
-      'Created Date'
-    ];
-
-    // Create CSV rows
-    const rows = orders.map(order => {
-      // Format items list
+    // Prepare data for Excel
+    const exportData = orders.map(order => {
       const itemsList = order.items?.map(item => 
         `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
       ).join('; ') || '';
 
-      return [
-        `"${order.orderNumber || ''}"`,
-        `"${order.user?.name || 'N/A'}"`,
-        `"${order.user?.email || ''}"`,
-        `"${order.address?.phone || ''}"`,
-        `"${order.address?.address || ''}"`,
-        `"${order.address?.city || ''}"`,
-        `"${order.address?.state || ''}"`,
-        `"${order.address?.pincode || ''}"`,
-        `"${itemsList}"`,
-        `"${order.totalAmount || 0}"`,
-        `"${order.paymentMethod || ''}"`,
-        `"${order.paymentStatus || ''}"`,
-        `"${order.orderStatus || ''}"`,
-        `"${order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : ''}"`
-      ];
+      return {
+        'Order Number': order.orderNumber || '',
+        'Customer Name': order.user?.name || 'N/A',
+        'Customer Email': order.user?.email || '',
+        'Phone': order.address?.phone || '',
+        'Address': order.address?.address || '',
+        'City': order.address?.city || '',
+        'State': order.address?.state || '',
+        'Pincode': order.address?.pincode || '',
+        'Items': itemsList,
+        'Total Amount': order.totalAmount || 0,
+        'Payment Method': order.paymentMethod || '',
+        'Payment Status': order.paymentStatus || '',
+        'Order Status': order.orderStatus || '',
+        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : ''
+      };
     });
 
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
 
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Orders_Export_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Set column widths
+    const colWidths = [
+      { wch: 15 }, // Order Number
+      { wch: 20 }, // Customer Name
+      { wch: 25 }, // Customer Email
+      { wch: 15 }, // Phone
+      { wch: 30 }, // Address
+      { wch: 15 }, // City
+      { wch: 15 }, // State
+      { wch: 12 }, // Pincode
+      { wch: 40 }, // Items
+      { wch: 15 }, // Total Amount
+      { wch: 15 }, // Payment Method
+      { wch: 15 }, // Payment Status
+      { wch: 15 }, // Order Status
+      { wch: 15 }, // Created Date
+    ];
+    ws['!cols'] = colWidths;
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+    
+    // Generate and download file
+    const fileName = `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   };
 
   if (loading && orders.length === 0) {
@@ -215,7 +209,7 @@ const AdminOrders = () => {
           <p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p>
         </div>
         <button
-          onClick={exportOrdersToCSV}
+          onClick={exportOrdersToExcel}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm whitespace-nowrap"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
