@@ -206,7 +206,7 @@ const About = () => {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Holistic Fitness</h3>
+            <h3 className="font-semibold mb-2">Great Holistic Fitness</h3>
             <p className="text-[#6b4b3a] text-sm">
               Focused on strength, balance, and overall well-being.
             </p>
