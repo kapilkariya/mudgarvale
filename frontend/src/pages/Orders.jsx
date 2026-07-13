@@ -166,7 +166,7 @@ const Orders = () => {
                     <div key={index} className="flex gap-4">
                       <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                         <img
-                          src={item.image}
+                          src={`/products/${item.image}.jpeg`}
                           alt={item.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {

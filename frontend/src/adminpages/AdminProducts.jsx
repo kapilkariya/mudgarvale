@@ -141,7 +141,7 @@ const getPriceDisplay = (product) => {
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <img
-                        src={product.image || '/placeholder-product.png'}
+                        src={`/products/${product.image}.jpeg`}
                         alt={product.name}
                         className="h-16 w-16 rounded-lg object-cover border border-gray-200"
                       />
