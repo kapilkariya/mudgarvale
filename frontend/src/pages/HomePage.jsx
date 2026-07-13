@@ -371,7 +371,226 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Customer Video Reviews Section */}
+      <section className="py-20 px-6 md:px-20 bg-gradient-to-b from-[#ede2d3] to-[#f3eadf]">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center text-2xl shadow-lg flex-shrink-0">
+                📹
+              </div>
+              <div>
+                <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">Customer Video Reviews</h2>
+                <p className="text-[#6b4b3a] text-base">Watch real customers sharing their experience with our products</p>
+              </div>
+            </div>
+            
+            {/* View More Button - Using button instead of Link */}
+            <button
+              onClick={() => window.location.href = '/review'}
+              className="group px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl inline-flex items-center gap-2 whitespace-nowrap"
+              style={{ background: '#5C3A21', color: '#f3eadf' }}
+            >
+              View More Reviews
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
 
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Video 1 */}
+            <a
+              href="https://www.instagram.com/reel/DaAxreZJgr7/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+              style={{ background: '#fff' }}
+            >
+              <div className="relative aspect-[9/16] overflow-hidden">
+                <iframe
+                  src="https://www.instagram.com/reel/DaAxreZJgr7/embed"
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowFullScreen
+                  loading="lazy"
+                />
+                
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+                
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                      <span className="text-white text-[10px]">▶</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                    <span className="text-white text-2xl ml-1">▶</span>
+                  </div>
+                </div>
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+                  Reel
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm font-medium">Customer Testimonial</p>
+                  <p className="text-white/70 text-xs">Real Strength. Real Stories.</p>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <p className="text-white text-sm">Watch full video →</p>
+                </div>
+              </div>
+            </a>
+
+            {/* Video 2 */}
+            <a
+              href="https://www.instagram.com/reel/DZ-SEKfJttA/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+              style={{ background: '#fff' }}
+            >
+              <div className="relative aspect-[9/16] overflow-hidden">
+                <iframe
+                  src="https://www.instagram.com/reel/DZ-SEKfJttA/embed"
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowFullScreen
+                  loading="lazy"
+                />
+                
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+                
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                      <span className="text-white text-[10px]">▶</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                    <span className="text-white text-2xl ml-1">▶</span>
+                  </div>
+                </div>
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+                  Reel
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm font-medium">Ashtha Jain</p>
+                  <p className="text-white/70 text-xs">Health & Wellness Center</p>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <p className="text-white text-sm">Watch full video →</p>
+                </div>
+              </div>
+            </a>
+
+            {/* Video 3 */}
+            <a
+              href="https://www.instagram.com/reel/DZ7vVUGFAd8/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+              style={{ background: '#fff' }}
+            >
+              <div className="relative aspect-[9/16] overflow-hidden">
+                <iframe
+                  src="https://www.instagram.com/reel/DZ7vVUGFAd8/embed"
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowFullScreen
+                  loading="lazy"
+                />
+                
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+                
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                      <span className="text-white text-[10px]">▶</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                    <span className="text-white text-2xl ml-1">▶</span>
+                  </div>
+                </div>
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+                  Reel
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm font-medium">Happy Customer</p>
+                  <p className="text-white/70 text-xs">10kg Mudgar Delivery</p>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <p className="text-white text-sm">Watch full video →</p>
+                </div>
+              </div>
+            </a>
+
+            {/* Video 4 */}
+            <a
+              href="https://www.instagram.com/reel/DaLIr7Up3Pk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+              style={{ background: '#fff' }}
+            >
+              <div className="relative aspect-[9/16] overflow-hidden">
+                <iframe
+                  src="https://www.instagram.com/reel/DaLIr7Up3Pk/embed"
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowFullScreen
+                  loading="lazy"
+                />
+                
+                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+                
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                      <span className="text-white text-[10px]">▶</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                    <span className="text-white text-2xl ml-1">▶</span>
+                  </div>
+                </div>
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+                  Reel
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm font-medium">Customer Happiness</p>
+                  <p className="text-white/70 text-xs">Real Strength. Real Results.</p>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <p className="text-white text-sm">Watch full video →</p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* Section 9 - With Crossfade Animation */}
       <div className="w-full min-h-[80vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6 md:px-8 lg:px-16" style={{ backgroundColor: '#F5EDE0' }}>
