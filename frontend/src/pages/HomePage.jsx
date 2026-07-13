@@ -73,7 +73,7 @@ const HomePage = () => {
             objectFit: 'cover'
           }}
           preload="metadata"
-          poster="/bg4.png"
+          poster={window.innerWidth >= 1024 ? "/bg4.png" : "/bg5.png"}
           autoPlay
           loop={false}
           muted

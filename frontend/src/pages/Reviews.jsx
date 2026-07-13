@@ -113,12 +113,37 @@ const Reviews = () => {
   };
 
   // Instagram Reels data
-  const instagramReels = [
-    { id: 1, url: 'https://www.instagram.com/reel/DVGJLtgiiPQ/', thumbnail: 'https://img.youtube.com/vi/w-XUR-K8c1w/maxresdefault.jpg' },
-    { id: 2, url: 'https://www.instagram.com/reel/DU5UoIOgcid/', thumbnail: 'https://img.youtube.com/vi/dwi0F7WE0yw/maxresdefault.jpg' },
-    { id: 3, url: 'https://www.instagram.com/reel/DQvmqXPDpho/', thumbnail: 'https://img.youtube.com/vi/GLIPlntdOmU/maxresdefault.jpg' },
-    { id: 4, url: 'https://www.instagram.com/reel/DQe4AU7j23j/', thumbnail: 'https://img.youtube.com/vi/l8uDtnCjCnM/maxresdefault.jpg' },
-  ];
+ // Instagram Reels data with embed URLs for thumbnails
+const instagramReels = [
+  { 
+    id: 1, 
+    url: 'https://www.instagram.com/reel/DaAxreZJgr7/',
+    embedUrl: 'https://www.instagram.com/reel/DaAxreZJgr7/embed',
+    title: 'Customer Testimonial',
+    subtitle: 'Real Strength. Real Stories.'
+  },
+  { 
+    id: 2, 
+    url: 'https://www.instagram.com/reel/DZ-SEKfJttA/',
+    embedUrl: 'https://www.instagram.com/reel/DZ-SEKfJttA/embed',
+    title: 'Ashtha Jain',
+    subtitle: 'Health & Wellness Center'
+  },
+  { 
+    id: 3, 
+    url: 'https://www.instagram.com/reel/DZ7vVUGFAd8/',
+    embedUrl: 'https://www.instagram.com/reel/DZ7vVUGFAd8/embed',
+    title: 'Happy Customer',
+    subtitle: '10kg Mudgar Delivery'
+  },
+  { 
+    id: 4, 
+    url: 'https://www.instagram.com/reel/DaLIr7Up3Pk/',
+    embedUrl: 'https://www.instagram.com/reel/DaLIr7Up3Pk/embed',
+    title: 'Customer Happiness',
+    subtitle: 'Real Strength. Real Results.'
+  },
+];
 
   // YouTube Shorts data
   const youtubeShorts = [
@@ -237,7 +262,7 @@ const Reviews = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {instagramReels.map((reel, index) => (
+            {instagramReels.map((reel) => (
               <a
                 key={reel.id}
                 href={reel.url}
@@ -247,16 +272,20 @@ const Reviews = () => {
                 style={{ background: '#fff' }}
               >
                 <div className="relative aspect-[9/16] overflow-hidden">
-                  <img
-                    src={reel.thumbnail}
-                    alt="Instagram Reel"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  {/* Instagram Embed for thumbnail */}
+                  <iframe
+                    src={reel.embedUrl}
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    scrolling="no"
+                    allowFullScreen
+                    loading="lazy"
                   />
-
+                  
                   {/* SOLID STRIP AT TOP TO COVER LOGO */}
                   <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
 
-                  {/* Optional: Add your own brand text on the strip */}
+                  {/* Brand text on the strip */}
                   <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
@@ -267,7 +296,7 @@ const Reviews = () => {
                   </div>
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
                       <span className="text-white text-2xl ml-1">▶</span>
                     </div>
@@ -275,7 +304,7 @@ const Reviews = () => {
                   <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
                     Reel
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
                     <p className="text-white text-sm">Watch full video →</p>
                   </div>
                 </div>
@@ -284,68 +313,69 @@ const Reviews = () => {
           </div>
         </div>
       </section>
-
-    {/* YouTube Shorts Section - Enhanced */}
-<section className="py-20 px-6 md:px-20">
-  <div className="max-w-6xl mx-auto">
-    <div className="flex items-center gap-4 mb-12">
-      <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center text-2xl shadow-lg">
-        📺
-      </div>
-      <div>
-        <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">YouTube Shorts</h2>
-        <p className="text-[#6b4b3a] text-base">Quick tutorials • Form guides • Expert tips</p>
-      </div>
-    </div>
-
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-      {youtubeShorts.map((video, index) => (
-        <a
-          key={video.id}
-          href={video.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-          style={{ background: '#fff' }}
-        >
-          <div className="relative aspect-[9/16] overflow-hidden">
-            <img
-              src={video.thumbnail}
-              alt="YouTube Short"
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            />
-            
-            {/* SOLID STRIP AT TOP TO COVER LOGO */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-red-500/30 z-10"></div>
-            
-            {/* Optional: Add your own brand text on the strip */}
-            <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center">
-                  <span className="text-white text-[10px]">▶</span>
-                </div>
-                <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
-              </div>
+      
+      {/* YouTube Shorts Section - Enhanced */}
+      <section className="py-20 px-6 md:px-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center text-2xl shadow-lg">
+              📺
             </div>
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                <span className="text-white text-2xl ml-1">▶</span>
-              </div>
-            </div>
-            <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white shadow-md z-30">
-              #Shorts
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-              <p className="text-white text-sm">Watch on YouTube →</p>
+            <div>
+              <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">YouTube Shorts</h2>
+              <p className="text-[#6b4b3a] text-base">Quick tutorials • Form guides • Expert tips</p>
             </div>
           </div>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {youtubeShorts.map((video, index) => (
+              <a
+                key={video.id}
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                style={{ background: '#fff' }}
+              >
+                <div className="relative aspect-[9/16] overflow-hidden">
+                  <img
+                    src={video.thumbnail}
+                    alt="YouTube Short"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  
+                  {/* SOLID STRIP AT TOP TO COVER LOGO */}
+                  <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-red-500/30 z-10"></div>
+                  
+                  {/* Optional: Add your own brand text on the strip */}
+                  <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center">
+                        <span className="text-white text-[10px]">▶</span>
+                      </div>
+                      <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+                      <span className="text-white text-2xl ml-1">▶</span>
+                    </div>
+                  </div>
+                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-red-600 text-white shadow-md z-30">
+                    #Shorts
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <p className="text-white text-sm">Watch on YouTube →</p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Written Reviews Section - Enhanced Cards */}
       <section className="py-20 px-6 md:px-20 bg-[#ede2d3]">
         <div className="max-w-6xl mx-auto">
