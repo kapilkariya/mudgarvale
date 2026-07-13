@@ -8,24 +8,17 @@ const About = () => {
       <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       {/* HERO */}
-      <section className="relative h-[85vh] flex items-center justify-center mt-19">
-        <img
-          src="/images/abousus-hero.png"
-          className="absolute w-full object-cover 
-            h-[55vh]      
-            sm:h-[60vh]   
-            md:h-[75vh]   
-            lg:h-full     
-            object-[60%_center]
-          "
-        />
-        <div className="absolute inset-0 bg-black/30"></div>
+     <section className="relative flex items-center justify-center mt-19 overflow-hidden min-h-[55vh] sm:min-h-[60vh] md:min-h-[75vh] lg:min-h-[85vh]">
+  <img
+    src="/images/abousus-hero.png"
+    className="absolute w-full h-full object-cover object-[60%_center]"
+  />
+  <div className="absolute inset-0 bg-black/30"></div>
 
-        <h1 className="relative text-white text-center font-serif text-5xl md:text-6xl leading-tight">
-          The Story <br /> Behind Mudgarvale
-        </h1>
-      </section>
-
+  <h1 className="relative text-white text-center font-serif text-5xl md:text-6xl leading-tight z-10">
+    The Story <br /> Behind Mudgarvale
+  </h1>
+</section>
       {/* ICON + INTRO */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-3xl mx-auto">
