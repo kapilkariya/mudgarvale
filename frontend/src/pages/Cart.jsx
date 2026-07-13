@@ -63,7 +63,7 @@ const Cart = () => {
               >
                 {/* Product Image */}
                 <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                  <img
+                  <img  
                     src={`/products/${item.image}.jpeg`}
                     alt={item.name}
                     className="w-full h-full object-cover"

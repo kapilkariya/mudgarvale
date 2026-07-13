@@ -63,6 +63,7 @@ const ProductDetails = () => {
   };
 
   // Handle add to cart
+  // Handle add to cart
   const handleAddToCart = () => {
     if (!product || !selectedWeight) return;
 
@@ -80,12 +81,22 @@ const ProductDetails = () => {
 
     addToCart(cartItem);
 
+    // ✅ Google Ads Conversion Tracking
+    const totalValue = getPrice() * quantity;
+    if (window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-18205627094/ltUXCI6-7rgcENalj-lD',
+        'value': totalValue,
+        'currency': 'INR'
+      });
+      console.log('✅ Google Ads conversion tracked:', totalValue);
+    }
+
     // Show success feedback
     setTimeout(() => {
       setAddingToCart(false);
     }, 500);
   };
-
   // Handle buy now
   const handleBuyNow = () => {
     handleAddToCart();

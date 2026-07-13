@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -33,6 +34,84 @@ import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
 
+// Create a wrapper component for page tracking
+const AppRoutes = () => {
+  const location = useLocation();
+
+  // ✅ Track page views for Google Analytics (NOT as conversion)
+  useEffect(() => {
+    if (window.gtag) {
+      // Send page view to Google Analytics
+      window.gtag('event', 'page_view', {
+        'page_title': document.title,
+        'page_location': window.location.href,
+        'page_path': location.pathname
+      });
+    }
+    
+    // Track with Facebook Pixel
+    if (window.fbq) {
+      window.fbq('track', 'PageView');
+    }
+  }, [location]); // Runs every time route changes
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/blogs" element={<BlogsPage />} />
+      <Route path="/blogs/:slug" element={<BlogDetail />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/review" element={<Reviews />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/cancellation" element={<Cancellation />} />
+      <Route path="/shipping" element={<Shipping />} />
+      <Route path="/otherpayement" element={<SepPayement />} />
+      <Route path="/thankyou" element={<Thankyou />} />
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+      {/* Admin Routes with Layout */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="products/add" element={<Add />} />
+        <Route path="products/edit/:id" element={<EditProduct />} />
+        <Route path="orders" element={<AdminOrders />} />
+      </Route>
+
+      {/* Legacy admin route - redirect to new /admin */}
+      <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -40,64 +119,14 @@ function App() {
         <Router>
           <ToastContainer />
           <Navbar />
-
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/blogs" element={<BlogsPage />} />
-            <Route path="/blogs/:slug" element={<BlogDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/review" element={<Reviews />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/cancellation" element={<Cancellation />} />
-            <Route path="/shipping" element={<Shipping />} />
-            <Route path="/otherpayement" element={<SepPayement/>} />
-            <Route path="/thankyou" element={<Thankyou/>} />
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <Checkout />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-orders"
-              element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
-              }
-            />
-            {/* Admin Routes with Layout */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="products/add" element={<Add />} />
-              <Route path="products/edit/:id" element={<EditProduct />} />
-              <Route path="orders" element={<AdminOrders />} />
-            </Route>
-
-            {/* Legacy admin route - redirect to new /admin */}
-            <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
-          </Routes>
+          
+          <AppRoutes />
 
           <MudgarFooter />
         </Router>
       </CartProvider>
+      
+      {/* WhatsApp Floating Button */}
       <div
         onClick={() => window.open(`https://wa.me/9327223973`, '_blank')}
         style={{
