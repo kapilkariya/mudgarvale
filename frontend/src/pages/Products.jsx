@@ -187,7 +187,7 @@ const sortedProducts = [...products].sort((a, b) => {
                     {/* Product Image */}
                     <div className="rounded-xl overflow-hidden h-70 md:h-120 sm: aspect-square bg-gray-100">
                       <img
-                        src={`/products/${product.name}.jpeg`}
+                        src={`/products/${product.image}.jpeg`}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                         onError={(e) => {
