@@ -119,28 +119,28 @@ const HomePage = () => {
       </div>
 
       {/* Section 2 - Welcome */}
-      <div className="relative w-full min-h-screen flex flex-col items-center justify-center text-center px-4 sm:px-6 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
-        <img src="/bg1.svg" alt="" className="absolute inset-10 w-full h-full object-contain pointer-events-none" style={{ opacity: 1 }} />
-        <div className="absolute inset-0 bg-gray-400/15 pointer-events-none"></div>
+      <div className="relative w-full flex flex-col items-center justify-center text-center px-4 sm:px-6 overflow-hidden min-h-[60vh] sm:min-h-screen" style={{ backgroundColor: '#F5EDE0' }}>
+  <img src="/bg1.svg" alt="" className="absolute inset-10 w-full h-full object-contain pointer-events-none" style={{ opacity: 1 }} />
+  <div className="absolute inset-0 bg-gray-400/15 pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-[1000px] mx-auto px-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-            Welcome to Mudgarvale
-          </h1>
-          <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium tracking-wide mb-6 sm:mb-10 md:mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-            From Tradition To Transformation
-          </p>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-8 sm:mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
-            Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
-          </p>
-          <button
-            onClick={() => navigate('/about')}
-            className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 rounded-full text-white text-base sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}
-          >
-            Step Into Our Story
-          </button>
-        </div>
-      </div>
+  <div className="relative z-10 max-w-[1000px] mx-auto px-4 py-8 sm:py-0">
+    <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+      Welcome to Mudgarvale
+    </h1>
+    <p className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-medium tracking-wide mb-3 sm:mb-10 md:mb-15" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+      From Tradition To Transformation
+    </p>
+    <p className="text-xs sm:text-lg md:text-xl lg:text-2xl leading-relaxed mb-6 sm:mb-10 max-w-4xl mx-auto" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>
+      Mudgarvale is about real strength and raw movement—no gimmicks, just solid wooden tools made to challenge you. Wonder where it all began?
+    </p>
+    <button
+      onClick={() => navigate('/about')}
+      className="px-4 sm:px-8 md:px-12 py-2.5 sm:py-4 rounded-full text-white text-xs sm:text-lg md:text-xl tracking-widest uppercase transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#3B1408' }}
+    >
+      Step Into Our Story
+    </button>
+  </div>
+</div>
 
       {/* Section 3 - Bestseller Products */}
       <div className="shadow-[0_20px_30px_rgba(0,0,0,0.2)] w-full py-12 sm:py-16 px-4 overflow-hidden" style={{ backgroundColor: '#F5EDE0' }}>
@@ -302,318 +302,318 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Section 5 - Left */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
-          <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
+     {/* Section 5 - Left */}
+<div className="relative w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-6 sm:py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+  <div className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-4 md:mb-0">
+    <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
+  </div>
+  <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[300px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[240px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
+    <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+    <div className="relative z-10 w-full h-full flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 py-3 sm:py-6 md:py-10">
+      <div className="max-w-[200px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
+        <div className="flex items-start gap-0.5 sm:gap-1 ml-12 md:ml-17 mb-0 sm:mb-2 md:mb-3">
+          <span className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
+          <h2 className="text-[10px] sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-0 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+            It Starts with Premium Wood
+          </h2>
         </div>
-        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
-          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
-            <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
-              <div className="flex items-start gap-1 ml-15 md:ml-17 mb-1 sm:mb-2 md:mb-3">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>1</span>
-                <h2 className="text-sm sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                  It Starts with Premium Wood
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed ml-15 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-                We handpick kiln-dried African Mahogany wood—dense, seasoned, and perfect for strength training. No shortcuts, just the best wood we can find.
-              </p>
-            </div>
-          </div>
-        </div>
+        <p className="text-[9px] sm:text-sm md:text-base leading-relaxed ml-12 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+          We handpick kiln-dried African Mahogany wood—dense, seasoned, and perfect for strength training. No shortcuts, just the best wood we can find.
+        </p>
       </div>
+    </div>
+  </div>
+</div>
 
-      {/* Section 6 - Right */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
-          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
-            <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
-              <div className="flex items-start gap-1 ml-15 md:ml-17 mb-1 sm:mb-2 md:mb-3">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
-                <h2 className="text-sm sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                  Shaped with Precision
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed ml-15 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-                Each piece is turned on a lathe by skilled hands to achieve the perfect shape, balance, and proportions—no CNC, just craftsmanship.
-              </p>
-            </div>
-          </div>
+{/* Section 6 - Right */}
+<div className="relative w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-6 sm:py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+  <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[300px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[240px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
+    <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+    <div className="relative z-10 w-full h-full flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 py-3 sm:py-6 md:py-10">
+      <div className="max-w-[200px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
+        <div className="flex items-start gap-0.5 sm:gap-1 ml-12 md:ml-17 mb-0 sm:mb-2 md:mb-3">
+          <span className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>2</span>
+          <h2 className="text-[10px] sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-0 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+            Shaped with Precision
+          </h2>
         </div>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0 order-1 md:order-2">
-          <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
-        </div>
+        <p className="text-[9px] sm:text-sm md:text-base leading-relaxed ml-12 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+          Each piece is turned on a lathe by skilled hands to achieve the perfect shape, balance, and proportions—no CNC, just craftsmanship.
+        </p>
       </div>
+    </div>
+  </div>
+  <div className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-4 md:mb-0 order-1 md:order-2">
+    <img src="/sam2.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+  </div>
+</div>
 
-      {/* Section 7 - Left */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
-          <img src="/sam3.webp" alt="Wood logs" className="w-full h-auto object-contain" />
+{/* Section 7 - Left */}
+<div className="relative w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-6 sm:py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+  <div className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-4 md:mb-0">
+    <img src="/sam3.webp" alt="Wood logs" className="w-full h-auto object-contain" />
+  </div>
+  <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[300px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[240px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
+    <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+    <div className="relative z-10 w-full h-full flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 py-3 sm:py-6 md:py-10">
+      <div className="max-w-[200px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
+        <div className="flex items-start gap-0.5 sm:gap-1 ml-12 md:ml-17 mb-0 sm:mb-2 md:mb-3">
+          <span className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
+          <h2 className="text-[10px] sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-0 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+            Finished by Hand
+          </h2>
         </div>
-        <div className="relative flex items-center justify-center md:ml-4 lg:ml-8 xl:ml-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px]">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
-          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
-            <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
-              <div className="flex items-start gap-1 ml-15 md:ml-17 mb-1 sm:mb-2 md:mb-3">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>3</span>
-                <h2 className="text-sm sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                  Finished by Hand
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed ml-15 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-                After shaping, every product is hand-sanded, oiled, and polished to bring out the natural grain and ensure a smooth, durable finish.
-              </p>
-            </div>
-          </div>
-        </div>
+        <p className="text-[9px] sm:text-sm md:text-base leading-relaxed ml-12 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+          After shaping, every product is hand-sanded, oiled, and polished to bring out the natural grain and ensure a smooth, durable finish.
+        </p>
       </div>
+    </div>
+  </div>
+</div>
 
-      {/* Section 8 - Right */}
-      <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
-        <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[350px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[280px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
-          <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
-          <div className="relative z-10 w-full h-full flex flex-col justify-center px-8 sm:px-10 md:px-14 lg:px-16 py-4 sm:py-6 md:py-10">
-            <div className="max-w-[250px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
-              <div className="flex items-start gap-1 ml-15 md:ml-17 mb-1 sm:mb-2 md:mb-3">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
-                <h2 className="text-sm sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-1 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                  Packed with Care
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed ml-15 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
-                Before dispatch, every item is quality-checked, hand-oiled once more, and securely packed to travel safely to your home or gym.
-              </p>
-            </div>
-          </div>
+{/* Section 8 - Right */}
+<div className="relative w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col md:flex-row items-center justify-end px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-6 sm:py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
+  <div className="relative flex items-center justify-center md:mr-4 lg:mr-8 xl:mr-16 w-[300px] sm:w-[380px] md:w-[500px] lg:w-[600px] h-[240px] sm:h-[320px] md:h-[400px] lg:h-[500px] order-2 md:order-1">
+    <img src="/bg3.png" alt="" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+    <div className="relative z-10 w-full h-full flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-16 py-3 sm:py-6 md:py-10">
+      <div className="max-w-[200px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[380px]">
+        <div className="flex items-start gap-0.5 sm:gap-1 ml-12 md:ml-17 mb-0 sm:mb-2 md:mb-3">
+          <span className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-none" style={{ color: '#3B1408', fontFamily: 'Georgia, serif' }}>4</span>
+          <h2 className="text-[10px] sm:text-base md:text-2xl lg:text-3xl font-semibold leading-snug mt-0 sm:mt-1 md:mt-3" style={{ color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+            Packed with Care
+          </h2>
         </div>
-        <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0 order-1 md:order-2">
-          <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
-        </div>
+        <p className="text-[9px] sm:text-sm md:text-base leading-relaxed ml-12 md:ml-18" style={{ color: '#2a2a2a', fontFamily: 'Georgia, serif' }}>
+          Before dispatch, every item is quality-checked, hand-oiled once more, and securely packed to travel safely to your home or gym.
+        </p>
       </div>
+    </div>
+  </div>
+  <div className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-4 md:mb-0 order-1 md:order-2">
+    <img src="/sam4.webp" alt="Craftsman at lathe" className="w-full h-auto object-contain" />
+  </div>
+</div>
 
       {/* Customer Video Reviews Section */}
-      <section className="py-20 px-6 md:px-20 bg-gradient-to-b from-[#ede2d3] to-[#f3eadf]">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center text-2xl shadow-lg flex-shrink-0">
-                📹
+      <section className="py-12 sm:py-20 px-4 sm:px-6 md:px-20 bg-gradient-to-b from-[#ede2d3] to-[#f3eadf]">
+  <div className="max-w-6xl mx-auto">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-8 sm:mb-12">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center text-lg sm:text-2xl shadow-lg flex-shrink-0">
+          📹
+        </div>
+        <div>
+          <h2 className="font-serif text-xl sm:text-3xl md:text-4xl text-[#3a1f0f]">Customer Video Reviews</h2>
+          <p className="text-xs sm:text-base text-[#6b4b3a]">Watch real customers sharing their experience</p>
+        </div>
+      </div>
+      
+      {/* View More Button */}
+      <button
+        onClick={() => window.location.href = '/review'}
+        className="group px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl inline-flex items-center gap-1 sm:gap-2 whitespace-nowrap"
+        style={{ background: '#5C3A21', color: '#f3eadf' }}
+      >
+        View More Reviews
+        <span className="group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
+      {/* Video 1 */}
+      <a
+        href="https://www.instagram.com/reel/DaAxreZJgr7/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        style={{ background: '#fff' }}
+      >
+        <div className="relative aspect-[9/16] overflow-hidden">
+          <iframe
+            src="https://www.instagram.com/reel/DaAxreZJgr7/embed"
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            loading="lazy"
+          />
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 flex items-center justify-center z-20">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                <span className="text-white text-[8px] sm:text-[10px]">▶</span>
               </div>
-              <div>
-                <h2 className="font-serif text-3xl md:text-4xl text-[#3a1f0f]">Customer Video Reviews</h2>
-                <p className="text-[#6b4b3a] text-base">Watch real customers sharing their experience with our products</p>
-              </div>
+              <span className="text-white text-[10px] sm:text-xs font-semibold tracking-wide">MUDGARVALE</span>
             </div>
-            
-            {/* View More Button - Using button instead of Link */}
-            <button
-              onClick={() => window.location.href = '/review'}
-              className="group px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-xl inline-flex items-center gap-2 whitespace-nowrap"
-              style={{ background: '#5C3A21', color: '#f3eadf' }}
-            >
-              View More Reviews
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Video 1 */}
-            <a
-              href="https://www.instagram.com/reel/DaAxreZJgr7/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-              style={{ background: '#fff' }}
-            >
-              <div className="relative aspect-[9/16] overflow-hidden">
-                <iframe
-                  src="https://www.instagram.com/reel/DaAxreZJgr7/embed"
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowFullScreen
-                  loading="lazy"
-                />
-                
-                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
-                
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
-                      <span className="text-white text-[10px]">▶</span>
-                    </div>
-                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
-                  </div>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                    <span className="text-white text-2xl ml-1">▶</span>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
-                  Reel
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-white text-sm font-medium">Customer Testimonial</p>
-                  <p className="text-white/70 text-xs">Real Strength. Real Stories.</p>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <p className="text-white text-sm">Watch full video →</p>
-                </div>
-              </div>
-            </a>
-
-            {/* Video 2 */}
-            <a
-              href="https://www.instagram.com/reel/DZ-SEKfJttA/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-              style={{ background: '#fff' }}
-            >
-              <div className="relative aspect-[9/16] overflow-hidden">
-                <iframe
-                  src="https://www.instagram.com/reel/DZ-SEKfJttA/embed"
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowFullScreen
-                  loading="lazy"
-                />
-                
-                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
-                
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
-                      <span className="text-white text-[10px]">▶</span>
-                    </div>
-                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
-                  </div>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                    <span className="text-white text-2xl ml-1">▶</span>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
-                  Reel
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-white text-sm font-medium">Ashtha Jain</p>
-                  <p className="text-white/70 text-xs">Health & Wellness Center</p>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <p className="text-white text-sm">Watch full video →</p>
-                </div>
-              </div>
-            </a>
-
-            {/* Video 3 */}
-            <a
-              href="https://www.instagram.com/reel/DZ7vVUGFAd8/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-              style={{ background: '#fff' }}
-            >
-              <div className="relative aspect-[9/16] overflow-hidden">
-                <iframe
-                  src="https://www.instagram.com/reel/DZ7vVUGFAd8/embed"
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowFullScreen
-                  loading="lazy"
-                />
-                
-                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
-                
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
-                      <span className="text-white text-[10px]">▶</span>
-                    </div>
-                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
-                  </div>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                    <span className="text-white text-2xl ml-1">▶</span>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
-                  Reel
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-white text-sm font-medium">Happy Customer</p>
-                  <p className="text-white/70 text-xs">10kg Mudgar Delivery</p>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <p className="text-white text-sm">Watch full video →</p>
-                </div>
-              </div>
-            </a>
-
-            {/* Video 4 */}
-            <a
-              href="https://www.instagram.com/reel/DaLIr7Up3Pk/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
-              style={{ background: '#fff' }}
-            >
-              <div className="relative aspect-[9/16] overflow-hidden">
-                <iframe
-                  src="https://www.instagram.com/reel/DaLIr7Up3Pk/embed"
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowFullScreen
-                  loading="lazy"
-                />
-                
-                <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
-                
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-center z-20">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
-                      <span className="text-white text-[10px]">▶</span>
-                    </div>
-                    <span className="text-white text-xs font-semibold tracking-wide">MUDGARVALE</span>
-                  </div>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
-                    <span className="text-white text-2xl ml-1">▶</span>
-                  </div>
-                </div>
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
-                  Reel
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-white text-sm font-medium">Customer Happiness</p>
-                  <p className="text-white/70 text-xs">Real Strength. Real Results.</p>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <p className="text-white text-sm">Watch full video →</p>
-                </div>
-              </div>
-            </a>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+              <span className="text-white text-xl sm:text-2xl ml-1">▶</span>
+            </div>
+          </div>
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+            Reel
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent">
+            <p className="text-white text-[10px] sm:text-sm font-medium">Customer Testimonial</p>
+            <p className="text-white/70 text-[8px] sm:text-xs">Real Strength. Real Stories.</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-white text-[10px] sm:text-sm">Watch full video →</p>
           </div>
         </div>
-      </section>
+      </a>
+
+      {/* Video 2 */}
+      <a
+        href="https://www.instagram.com/reel/DZ-SEKfJttA/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        style={{ background: '#fff' }}
+      >
+        <div className="relative aspect-[9/16] overflow-hidden">
+          <iframe
+            src="https://www.instagram.com/reel/DZ-SEKfJttA/embed"
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            loading="lazy"
+          />
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 flex items-center justify-center z-20">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                <span className="text-white text-[8px] sm:text-[10px]">▶</span>
+              </div>
+              <span className="text-white text-[10px] sm:text-xs font-semibold tracking-wide">MUDGARVALE</span>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+              <span className="text-white text-xl sm:text-2xl ml-1">▶</span>
+            </div>
+          </div>
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+            Reel
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent">
+            <p className="text-white text-[10px] sm:text-sm font-medium">Ashtha Jain</p>
+            <p className="text-white/70 text-[8px] sm:text-xs">Health & Wellness Center</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-white text-[10px] sm:text-sm">Watch full video →</p>
+          </div>
+        </div>
+      </a>
+
+      {/* Video 3 */}
+      <a
+        href="https://www.instagram.com/reel/DZ7vVUGFAd8/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        style={{ background: '#fff' }}
+      >
+        <div className="relative aspect-[9/16] overflow-hidden">
+          <iframe
+            src="https://www.instagram.com/reel/DZ7vVUGFAd8/embed"
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            loading="lazy"
+          />
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 flex items-center justify-center z-20">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                <span className="text-white text-[8px] sm:text-[10px]">▶</span>
+              </div>
+              <span className="text-white text-[10px] sm:text-xs font-semibold tracking-wide">MUDGARVALE</span>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+              <span className="text-white text-xl sm:text-2xl ml-1">▶</span>
+            </div>
+          </div>
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+            Reel
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent">
+            <p className="text-white text-[10px] sm:text-sm font-medium">Happy Customer</p>
+            <p className="text-white/70 text-[8px] sm:text-xs">10kg Mudgar Delivery</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-white text-[10px] sm:text-sm">Watch full video →</p>
+          </div>
+        </div>
+      </a>
+
+      {/* Video 4 */}
+      <a
+        href="https://www.instagram.com/reel/DaLIr7Up3Pk/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+        style={{ background: '#fff' }}
+      >
+        <div className="relative aspect-[9/16] overflow-hidden">
+          <iframe
+            src="https://www.instagram.com/reel/DaLIr7Up3Pk/embed"
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            loading="lazy"
+          />
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border-b border-amber-500/30 z-10"></div>
+          
+          <div className="absolute top-0 left-0 right-0 h-10 sm:h-12 flex items-center justify-center z-20">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center">
+                <span className="text-white text-[8px] sm:text-[10px]">▶</span>
+              </div>
+              <span className="text-white text-[10px] sm:text-xs font-semibold tracking-wide">MUDGARVALE</span>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg">
+              <span className="text-white text-xl sm:text-2xl ml-1">▶</span>
+            </div>
+          </div>
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-semibold bg-gradient-to-r from-[#f58529] to-[#dd2a7b] text-white shadow-md z-30">
+            Reel
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent">
+            <p className="text-white text-[10px] sm:text-sm font-medium">Customer Happiness</p>
+            <p className="text-white/70 text-[8px] sm:text-xs">Real Strength. Real Results.</p>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-white text-[10px] sm:text-sm">Watch full video →</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
 
       {/* Section 9 - With Crossfade Animation */}
       <div className="w-full min-h-[80vh] flex flex-col items-center justify-center py-12 px-4 sm:px-6 md:px-8 lg:px-16" style={{ backgroundColor: '#F5EDE0' }}>
