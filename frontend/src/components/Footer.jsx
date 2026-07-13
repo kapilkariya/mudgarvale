@@ -93,7 +93,7 @@ export default function MudgarFooter() {
           </p>
           <div style={{ display: "flex", gap: "16px" }}>
             <a href="https://www.youtube.com/@Mudgarvale" style={{ color: "#2e1503" }}><YoutubeIcon /></a>
-            <a href="https://www.instagram.com/mudgarvale" target="_blank" rel="noopener noreferrer" style={{ color: "#2e1503" }}>
+            <a href="https://www.instagram.com/mudgar_vale" target="_blank" rel="noopener noreferrer" style={{ color: "#2e1503" }}>
               <InstagramIcon />
             </a>
           </div>
