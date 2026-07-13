@@ -11,7 +11,13 @@ const About = () => {
       <section className="relative h-[85vh] flex items-center justify-center mt-19">
         <img
           src="/images/abousus-hero.png"
-          className="absolute w-full h-full object-cover"
+          className="absolute w-full object-cover 
+            h-[55vh]      
+            sm:h-[60vh]   
+            md:h-[75vh]   
+            lg:h-full     
+            object-[60%_center]
+          "
         />
         <div className="absolute inset-0 bg-black/30"></div>
 
