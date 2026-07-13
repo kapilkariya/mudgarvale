@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const reviews = [
@@ -24,24 +24,57 @@ const reviews = [
     text: 'I was skeptical at first but after using the Mudgar for a month I can feel a huge difference in my shoulder and core strength. Beautiful product, great packaging, and fast delivery. Will definitely buy again.',
   },
 ]
+
 const HomePage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
   const navigate = useNavigate();
-  const [current, setCurrent] = useState(0)
+  const [current, setCurrent] = useState(0);
+  const videoRef = useRef(null);
+  const [posterImage, setPosterImage] = useState('/bg5.png');
 
-  const prev = () => setCurrent((c) => (c - 1 + reviews.length) % reviews.length)
-  const next = () => setCurrent((c) => (c + 1) % reviews.length)
+  // Handle poster image based on screen size
+  useEffect(() => {
+    const updatePoster = () => {
+      setPosterImage(window.innerWidth >= 800 ? '/bg4.png' : '/bg5.png');
+    };
+    updatePoster();
+    window.addEventListener('resize', updatePoster);
+    return () => window.removeEventListener('resize', updatePoster);
+  }, []);
+
+  // Handle video loop
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      if (video.currentTime >= 29) {
+        video.currentTime = 0;
+        video.play();
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, []);
+
+  const prev = () => setCurrent((c) => (c - 1 + reviews.length) % reviews.length);
+  const next = () => setCurrent((c) => (c + 1) % reviews.length);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((c) => (c + 1) % reviews.length)
-    }, 3000)
-    return () => clearInterval(timer)
-  }, [])
+      setCurrent((c) => (c + 1) % reviews.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const review = reviews[current]
+  const review = reviews[current];
 
   const handleProductClick = (category) => {
     navigate(`/products?category=${category}`);
@@ -53,16 +86,7 @@ const HomePage = () => {
       {/* Section 1 - Video Hero */}
       <div className="lg:w-[85vw]" style={{ position: 'relative', width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', overflow: 'hidden' }}>
         <video
-          ref={(videoRef) => {
-            if (videoRef) {
-              videoRef.addEventListener('timeupdate', () => {
-                if (videoRef.currentTime >= 29) {
-                  videoRef.currentTime = 0;
-                  videoRef.play();
-                }
-              });
-            }
-          }}
+          ref={videoRef}
           className="sm:object-[50%_20%] md:object-[50%_20%] lg:object-[50%_10%]"
           style={{
             position: 'absolute',
@@ -73,9 +97,8 @@ const HomePage = () => {
             objectFit: 'cover'
           }}
           preload="metadata"
-          poster={window.innerWidth >= 1024 ? "/bg4.png" : "/bg5.png"}
+          poster={posterImage}
           autoPlay
-          loop={false}
           muted
           playsInline
         >
@@ -236,30 +259,30 @@ const HomePage = () => {
 
         {/* Pause on hover */}
         <style>{`
-    @keyframes scroll {
-      0% {
-        transform: translateX(0);
+      @keyframes scroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
       }
-      100% {
-        transform: translateX(-50%);
-      }
-    }
-    
-    .animate-infinite-scroll {
-      animation: scroll 25s linear infinite;
-    }
-    
-    .animate-infinite-scroll:hover {
-      animation-play-state: paused;
-    }
-    
-    /* Slower scroll on mobile for better readability */
-    @media (max-width: 640px) {
+      
       .animate-infinite-scroll {
-        animation: scroll 35s linear infinite;
+        animation: scroll 25s linear infinite;
       }
-    }
-  `}</style>
+      
+      .animate-infinite-scroll:hover {
+        animation-play-state: paused;
+      }
+      
+      /* Slower scroll on mobile for better readability */
+      @media (max-width: 640px) {
+        .animate-infinite-scroll {
+          animation: scroll 35s linear infinite;
+        }
+      }
+    `}</style>
       </div>
 
       {/* Section 4 */}
@@ -279,7 +302,7 @@ const HomePage = () => {
         </div>
       </div>
 
-{/* Section 5 - Left */}
+      {/* Section 5 - Left */}
       <div className="relative w-full min-h-[60vh] flex flex-col md:flex-row items-center justify-start px-4 sm:px-6 md:px-8 lg:px-16 overflow-hidden py-12 md:py-0" style={{ backgroundColor: '#F5EDE0' }}>
         <div className="flex-shrink-0 w-[200px] sm:w-[180px] md:w-[200px] lg:w-[260px] mb-6 md:mb-0">
           <img src="/sam1.webp" alt="Wood logs" className="w-full h-auto object-contain" />
@@ -658,7 +681,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-   
+    
     </div>
   )
 }
