@@ -72,6 +72,8 @@ const HomePage = () => {
             height: '100%',
             objectFit: 'cover'
           }}
+          preload="metadata"
+          poster="/bg4.png"
           autoPlay
           loop={false}
           muted
