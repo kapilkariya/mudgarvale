@@ -24,7 +24,7 @@ router.get("/google-shopping-feed.xml", async (req, res) => {
 <g:title><![CDATA[${product.name}]]></g:title>
 <g:description><![CDATA[${product.description}]]></g:description>
 <g:link>https://mudgarvale.com/product/${product._id}</g:link>
-<g:image_link>${product.image}</g:image_link>
+<g:image_link>https://mudgarvale.com/product/${product.image}.jpeg</g:image_link>
 <g:availability>in_stock</g:availability>
 <g:condition>new</g:condition>
 <g:price>${price} INR</g:price>
