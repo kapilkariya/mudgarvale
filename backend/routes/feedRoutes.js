@@ -23,7 +23,7 @@ router.get("/google-shopping-feed.xml", async (req, res) => {
 <g:id>${product._id}-${weight}kg</g:id>
 <g:title><![CDATA[${product.name}]]></g:title>
 <g:description><![CDATA[${product.description}]]></g:description>
-<g:link>https://mudgarvale.com/product/${product._id}</g:link>
+<g:link>https://mudgarvale.com/products/${product._id}</g:link>
 <g:image_link>https://mudgarvale.com/product/${product.image}.jpeg</g:image_link>
 <g:availability>in_stock</g:availability>
 <g:condition>new</g:condition>
