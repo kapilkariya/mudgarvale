@@ -138,9 +138,39 @@ const AdminOrders = () => {
 
     // Prepare data for Excel
     const exportData = orders.map(order => {
-      const itemsList = order.items?.map(item => 
+      const itemsList = order.items?.map(item =>
         `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
       ).join('; ') || '';
+
+      // Calculate total weight (sum of all item weights)
+      const totalWeight = order.items?.reduce((sum, item) => {
+        // For senaboard, weight is 0 or use a default value
+        const itemWeight = item.category !== 'senaboard'
+          ? (parseFloat(item.selectedWeight) * item.quantity)
+          : 0;
+        return sum + itemWeight;
+      }, 0) || 0;
+
+      // Calculate amount paid and pending based on payment status
+      let amountPaid = 0;
+      let amountPending = 0;
+
+      if (order.paymentMethod === 'online') {
+        // For online payments, full amount is paid
+        amountPaid = order.totalAmount || 0;
+        amountPending = 0;
+      } else if (order.paymentMethod === 'cod') {
+        if (order.paymentStatus === 'paid') {
+          amountPaid = order.totalAmount || 0;
+          amountPending = 0;
+        } else if (order.paymentStatus === 'partial_paid') {
+          amountPaid = order.paidAmount || 0;
+          amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
+        } else {
+          amountPaid = 0;
+          amountPending = order.totalAmount || 0;
+        }
+      }
 
       return {
         'Order Number': order.orderNumber || '',
@@ -152,7 +182,10 @@ const AdminOrders = () => {
         'State': order.address?.state || '',
         'Pincode': order.address?.pincode || '',
         'Items': itemsList,
+        'Total Weight (kg)': totalWeight.toFixed(2), // Add total weight
         'Total Amount': order.totalAmount || 0,
+        'Amount Paid': amountPaid, // Add amount paid
+        'Amount Pending': amountPending, // Add amount pending
         'Payment Method': order.paymentMethod || '',
         'Payment Status': order.paymentStatus || '',
         'Order Status': order.orderStatus || '',
@@ -164,7 +197,7 @@ const AdminOrders = () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(exportData);
 
-    // Set column widths
+    // Set column widths (updated to include new columns)
     const colWidths = [
       { wch: 15 }, // Order Number
       { wch: 20 }, // Customer Name
@@ -175,7 +208,10 @@ const AdminOrders = () => {
       { wch: 15 }, // State
       { wch: 12 }, // Pincode
       { wch: 40 }, // Items
+      { wch: 16 }, // Total Weight (kg) - new
       { wch: 15 }, // Total Amount
+      { wch: 15 }, // Amount Paid - new
+      { wch: 15 }, // Amount Pending - new
       { wch: 15 }, // Payment Method
       { wch: 15 }, // Payment Status
       { wch: 15 }, // Order Status
@@ -184,7 +220,7 @@ const AdminOrders = () => {
     ws['!cols'] = colWidths;
 
     XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-    
+
     // Generate and download file
     const fileName = `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
@@ -249,8 +285,8 @@ const AdminOrders = () => {
                 key={filter.value}
                 onClick={() => setActiveFilter(filter.value)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${activeFilter === filter.value
-                    ? 'bg-[#5C3A21] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#5C3A21] text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 {filter.label} ({count})
@@ -363,7 +399,7 @@ const AdminOrders = () => {
                         <p className="flex justify-between">
                           <span className="text-gray-600">Payment Status:</span>
                           <span className={`font-medium ${order.paymentStatus === 'paid' ? 'text-green-600' :
-                              order.paymentStatus === 'partial_paid' ? 'text-blue-600' : 'text-yellow-600'
+                            order.paymentStatus === 'partial_paid' ? 'text-blue-600' : 'text-yellow-600'
                             }`}>
                             {order.paymentStatus === 'partial_paid' ? 'Advance Paid' : order.paymentStatus}
                           </span>
