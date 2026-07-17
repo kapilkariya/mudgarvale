@@ -8,11 +8,17 @@ const AdminDashboard = () => {
     totalOrders: 0,
     pendingOrders: 0,
   });
+  const [periodStats, setPeriodStats] = useState({
+    weekly: { orders: 0, sales: 0 },
+    monthly: { orders: 0, sales: 0 },
+    annual: { orders: 0, sales: 0 },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchStats();
+    fetchPeriodStats();
   }, []);
 
   const fetchStats = async () => {
@@ -41,6 +47,68 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchPeriodStats = async () => {
+    try {
+      // Fetch all orders to calculate period stats
+      const response = await adminAPI.getAllOrders();
+      if (response.success) {
+        const orders = response.data || [];
+        calculatePeriodStats(orders);
+      }
+    } catch (err) {
+      console.error('Error fetching orders for stats:', err);
+    }
+  };
+
+  const calculatePeriodStats = (orders) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Weekly: Last 7 days
+    const weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - 7);
+    
+    // Monthly: Current month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Annual: Current year
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+
+    // Filter orders by period
+    const weeklyOrders = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= weekStart && orderDate <= now && order.orderStatus !== 'cancelled';
+    });
+
+    const monthlyOrders = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= monthStart && orderDate <= now && order.orderStatus !== 'cancelled';
+    });
+
+    const annualOrders = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= yearStart && orderDate <= now && order.orderStatus !== 'cancelled';
+    });
+
+    // Calculate total sales for each period
+    const weeklySales = weeklyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const monthlySales = monthlyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const annualSales = annualOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+    setPeriodStats({
+      weekly: { orders: weeklyOrders.length, sales: weeklySales },
+      monthly: { orders: monthlyOrders.length, sales: monthlySales },
+      annual: { orders: annualOrders.length, sales: annualSales },
+    });
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(price);
+  };
+
   const statCards = [
     {
       title: 'Total Products',
@@ -62,6 +130,30 @@ const AdminDashboard = () => {
       icon: '⏳',
       color: 'bg-yellow-500',
       link: '/admin/orders',
+    },
+  ];
+
+  const periodCards = [
+    {
+      title: 'Weekly',
+      icon: '📅',
+      color: 'bg-purple-500',
+      orders: periodStats.weekly.orders,
+      sales: periodStats.weekly.sales,
+    },
+    {
+      title: 'Monthly',
+      icon: '📊',
+      color: 'bg-indigo-500',
+      orders: periodStats.monthly.orders,
+      sales: periodStats.monthly.sales,
+    },
+    {
+      title: 'Annual',
+      icon: '📈',
+      color: 'bg-red-500',
+      orders: periodStats.annual.orders,
+      sales: periodStats.annual.sales,
     },
   ];
 
@@ -104,6 +196,38 @@ const AdminDashboard = () => {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Period Stats - Orders & Sales */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">📊 Orders & Sales Overview</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {periodCards.map((period) => (
+            <div
+              key={period.title}
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition"
+            >
+              <div className="flex items-center mb-4">
+                <div className={`${period.color} text-white rounded-lg p-3 text-2xl mr-4`}>
+                  {period.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">{period.title}</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Orders</span>
+                  <span className="text-xl font-bold text-gray-900">{period.orders}</span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-sm text-gray-600">Sales</span>
+                  <span className="text-xl font-bold text-[#5C3A21]">
+                    {formatPrice(period.sales)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Quick Links */}
