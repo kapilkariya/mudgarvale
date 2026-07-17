@@ -131,100 +131,106 @@ const AdminOrders = () => {
 
   // Export orders to Excel
   const exportOrdersToExcel = () => {
-    if (orders.length === 0) {
-      alert('No orders available to export');
-      return;
-    }
+  if (orders.length === 0) {
+    alert('No orders available to export');
+    return;
+  }
 
-    // Prepare data for Excel
-    const exportData = orders.map(order => {
-      const itemsList = order.items?.map(item =>
-        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
-      ).join('; ') || '';
+  // Prepare data for Excel
+  const exportData = orders.map(order => {
+    const itemsList = order.items?.map(item => 
+      `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
+    ).join('; ') || '';
 
-      // Calculate total weight (sum of all item weights)
-      const totalWeight = order.items?.reduce((sum, item) => {
-        // For senaboard, weight is 0 or use a default value
-        const itemWeight = item.category !== 'senaboard'
-          ? (parseFloat(item.selectedWeight) * item.quantity)
-          : 0;
-        return sum + itemWeight;
-      }, 0) || 0;
+    // Calculate total weight (sum of all item weights)
+    const totalWeight = order.items?.reduce((sum, item) => {
+      let itemWeight = 0;
+      
+      if (item.category === 'senaboard') {
+        // For senaboard, add 2kg per quantity
+        itemWeight = 2 * item.quantity;
+      } else {
+        // For other products, use selectedWeight * quantity
+        itemWeight = parseFloat(item.selectedWeight) * item.quantity;
+      }
+      
+      return sum + itemWeight;
+    }, 0) || 0;
 
-      // Calculate amount paid and pending based on payment status
-      let amountPaid = 0;
-      let amountPending = 0;
-
-      if (order.paymentMethod === 'online') {
-        // For online payments, full amount is paid
+    // Calculate amount paid and pending based on payment status
+    let amountPaid = 0;
+    let amountPending = 0;
+    
+    if (order.paymentMethod === 'online') {
+      // For online payments, full amount is paid
+      amountPaid = order.totalAmount || 0;
+      amountPending = 0;
+    } else if (order.paymentMethod === 'cod') {
+      if (order.paymentStatus === 'paid') {
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
-      } else if (order.paymentMethod === 'cod') {
-        if (order.paymentStatus === 'paid') {
-          amountPaid = order.totalAmount || 0;
-          amountPending = 0;
-        } else if (order.paymentStatus === 'partial_paid') {
-          amountPaid = order.paidAmount || 0;
-          amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-        } else {
-          amountPaid = 0;
-          amountPending = order.totalAmount || 0;
-        }
+      } else if (order.paymentStatus === 'partial_paid') {
+        amountPaid = order.paidAmount || 0;
+        amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
+      } else {
+        amountPaid = 0;
+        amountPending = order.totalAmount || 0;
       }
+    }
 
-      return {
-        'Order Number': order.orderNumber || '',
-        'Customer Name': order.user?.name || 'N/A',
-        'Customer Email': order.user?.email || '',
-        'Phone': order.address?.phone || '',
-        'Address': order.address?.address || '',
-        'City': order.address?.city || '',
-        'State': order.address?.state || '',
-        'Pincode': order.address?.pincode || '',
-        'Items': itemsList,
-        'Total Weight (kg)': totalWeight.toFixed(2), // Add total weight
-        'Total Amount': order.totalAmount || 0,
-        'Amount Paid': amountPaid, // Add amount paid
-        'Amount Pending': amountPending, // Add amount pending
-        'Payment Method': order.paymentMethod || '',
-        'Payment Status': order.paymentStatus || '',
-        'Order Status': order.orderStatus || '',
-        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : ''
-      };
-    });
+    return {
+      'Order Number': order.orderNumber || '',
+      'Customer Name': order.user?.name || 'N/A',
+      'Customer Email': order.user?.email || '',
+      'Phone': order.address?.phone || '',
+      'Address': order.address?.address || '',
+      'City': order.address?.city || '',
+      'State': order.address?.state || '',
+      'Pincode': order.address?.pincode || '',
+      'Items': itemsList,
+      'Total Weight (kg)': totalWeight.toFixed(2), // Add total weight
+      'Total Amount': order.totalAmount || 0,
+      'Amount Paid': amountPaid, // Add amount paid
+      'Amount Pending': amountPending, // Add amount pending
+      'Payment Method': order.paymentMethod || '',
+      'Payment Status': order.paymentStatus || '',
+      'Order Status': order.orderStatus || '',
+      'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : ''
+    };
+  });
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(exportData);
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(exportData);
 
-    // Set column widths (updated to include new columns)
-    const colWidths = [
-      { wch: 15 }, // Order Number
-      { wch: 20 }, // Customer Name
-      { wch: 25 }, // Customer Email
-      { wch: 15 }, // Phone
-      { wch: 30 }, // Address
-      { wch: 15 }, // City
-      { wch: 15 }, // State
-      { wch: 12 }, // Pincode
-      { wch: 40 }, // Items
-      { wch: 16 }, // Total Weight (kg) - new
-      { wch: 15 }, // Total Amount
-      { wch: 15 }, // Amount Paid - new
-      { wch: 15 }, // Amount Pending - new
-      { wch: 15 }, // Payment Method
-      { wch: 15 }, // Payment Status
-      { wch: 15 }, // Order Status
-      { wch: 15 }, // Created Date
-    ];
-    ws['!cols'] = colWidths;
+  // Set column widths (updated to include new columns)
+  const colWidths = [
+    { wch: 15 }, // Order Number
+    { wch: 20 }, // Customer Name
+    { wch: 25 }, // Customer Email
+    { wch: 15 }, // Phone
+    { wch: 30 }, // Address
+    { wch: 15 }, // City
+    { wch: 15 }, // State
+    { wch: 12 }, // Pincode
+    { wch: 40 }, // Items
+    { wch: 16 }, // Total Weight (kg) - new
+    { wch: 15 }, // Total Amount
+    { wch: 15 }, // Amount Paid - new
+    { wch: 15 }, // Amount Pending - new
+    { wch: 15 }, // Payment Method
+    { wch: 15 }, // Payment Status
+    { wch: 15 }, // Order Status
+    { wch: 15 }, // Created Date
+  ];
+  ws['!cols'] = colWidths;
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-
-    // Generate and download file
-    const fileName = `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-  };
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+  
+  // Generate and download file
+  const fileName = `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+};
 
   if (loading && orders.length === 0) {
     return (
