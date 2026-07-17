@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI, orderAPI } from '../config/api';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -13,12 +23,17 @@ const AdminDashboard = () => {
     monthly: { orders: 0, sales: 0 },
     annual: { orders: 0, sales: 0 },
   });
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [yearlyData, setYearlyData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [graphView, setGraphView] = useState('monthly'); // 'monthly' or 'yearly'
 
   useEffect(() => {
     fetchStats();
-    fetchPeriodStats();
+    fetchAllData();
   }, []);
 
   const fetchStats = async () => {
@@ -26,11 +41,9 @@ const AdminDashboard = () => {
       setLoading(true);
       setError('');
       
-      // Get products count
       const productsRes = await adminAPI.getAllProducts();
       const totalProducts = productsRes.success ? productsRes.count || productsRes.data?.length || 0 : 0;
 
-      // Get orders stats
       const ordersRes = await adminAPI.getOrderStats();
       const orderStats = ordersRes.success ? ordersRes.data : {};
       
@@ -47,16 +60,17 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchPeriodStats = async () => {
+  const fetchAllData = async () => {
     try {
-      // Fetch all orders to calculate period stats
       const response = await adminAPI.getAllOrders();
       if (response.success) {
         const orders = response.data || [];
         calculatePeriodStats(orders);
+        processMonthlyData(orders);
+        processYearlyData(orders);
       }
     } catch (err) {
-      console.error('Error fetching orders for stats:', err);
+      console.error('Error fetching data:', err);
     }
   };
 
@@ -64,17 +78,11 @@ const AdminDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    // Weekly: Last 7 days
     const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - 7);
-    
-    // Monthly: Current month
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Annual: Current year
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    // Filter orders by period
     const weeklyOrders = orders.filter(order => {
       const orderDate = new Date(order.createdAt);
       return orderDate >= weekStart && orderDate <= now && order.orderStatus !== 'cancelled';
@@ -90,7 +98,6 @@ const AdminDashboard = () => {
       return orderDate >= yearStart && orderDate <= now && order.orderStatus !== 'cancelled';
     });
 
-    // Calculate total sales for each period
     const weeklySales = weeklyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const monthlySales = monthlyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const annualSales = annualOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
@@ -100,6 +107,69 @@ const AdminDashboard = () => {
       monthly: { orders: monthlyOrders.length, sales: monthlySales },
       annual: { orders: annualOrders.length, sales: annualSales },
     });
+  };
+
+  const processMonthlyData = (orders) => {
+    const monthMap = {};
+    const years = new Set();
+
+    orders.forEach(order => {
+      if (order.orderStatus === 'cancelled') return;
+      
+      const date = new Date(order.createdAt);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const amount = order.totalAmount || 0;
+
+      years.add(year);
+      const key = `${year}-${month}`;
+      
+      if (!monthMap[key]) {
+        monthMap[key] = {
+          year,
+          month,
+          monthName: new Date(year, month).toLocaleString('default', { month: 'short' }),
+          displayName: `${new Date(year, month).toLocaleString('default', { month: 'short' })} ${year}`,
+          total: 0,
+          count: 0,
+        };
+      }
+      monthMap[key].total += amount;
+      monthMap[key].count += 1;
+    });
+
+    const sortedData = Object.values(monthMap).sort((a, b) => a.year - b.year || a.month - b.month);
+    setMonthlyData(sortedData);
+    setAvailableYears(Array.from(years).sort());
+    
+    if (years.size > 0) {
+      setSelectedYear(Math.max(...years));
+    }
+  };
+
+  const processYearlyData = (orders) => {
+    const yearMap = {};
+
+    orders.forEach(order => {
+      if (order.orderStatus === 'cancelled') return;
+      
+      const date = new Date(order.createdAt);
+      const year = date.getFullYear();
+      const amount = order.totalAmount || 0;
+
+      if (!yearMap[year]) {
+        yearMap[year] = {
+          year,
+          total: 0,
+          count: 0,
+        };
+      }
+      yearMap[year].total += amount;
+      yearMap[year].count += 1;
+    });
+
+    const sortedData = Object.values(yearMap).sort((a, b) => a.year - b.year);
+    setYearlyData(sortedData);
   };
 
   const formatPrice = (price) => {
@@ -133,27 +203,55 @@ const AdminDashboard = () => {
     },
   ];
 
+  // Calculate total
+  const totalEarnings = yearlyData.reduce((sum, y) => sum + y.total, 0);
+  const totalOrders = yearlyData.reduce((sum, y) => sum + y.count, 0);
+
+  // Get current month data
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const currentMonthData = monthlyData.find(d => d.year === currentYear && d.month === currentMonth);
+  const currentMonthEarnings = currentMonthData?.total || 0;
+  const currentMonthOrders = currentMonthData?.count || 0;
+
+  // Get current year data
+  const currentYearData = yearlyData.find(d => d.year === currentYear);
+  const currentYearEarnings = currentYearData?.total || 0;
+  const currentYearOrders = currentYearData?.count || 0;
+
+  // Get selected year monthly data for the table
+  const selectedYearMonthlyData = monthlyData.filter(d => d.year === selectedYear);
+  const selectedYearTotal = selectedYearMonthlyData.reduce((sum, d) => sum + d.total, 0);
+  const selectedYearOrders = selectedYearMonthlyData.reduce((sum, d) => sum + d.count, 0);
+
   const periodCards = [
     {
-      title: 'Weekly',
+      title: 'This Week',
       icon: '📅',
       color: 'bg-purple-500',
       orders: periodStats.weekly.orders,
       sales: periodStats.weekly.sales,
     },
     {
-      title: 'Monthly',
+      title: 'This Month',
       icon: '📊',
       color: 'bg-indigo-500',
-      orders: periodStats.monthly.orders,
-      sales: periodStats.monthly.sales,
+      orders: currentMonthOrders,
+      sales: currentMonthEarnings,
     },
     {
-      title: 'Annual',
+      title: 'This Year',
       icon: '📈',
       color: 'bg-red-500',
-      orders: periodStats.annual.orders,
-      sales: periodStats.annual.sales,
+      orders: currentYearOrders,
+      sales: currentYearEarnings,
+    },
+    {
+      title: 'Lifetime',
+      icon: '🏆',
+      color: 'bg-[#5C3A21]',
+      orders: totalOrders,
+      sales: totalEarnings,
     },
   ];
 
@@ -166,7 +264,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div>
+    <div className="px-4 pb-8">
       <div className='h-20'></div>
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
       <p className="text-gray-600 mb-8">Welcome to your admin panel</p>
@@ -198,10 +296,10 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Period Stats - Orders & Sales */}
+      {/* Quick Overview with Lifetime */}
       <div className="mb-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">📊 Orders & Sales Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">📊 Quick Overview</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {periodCards.map((period) => (
             <div
               key={period.title}
@@ -229,6 +327,216 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
+
+      {/* Graph Section */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+          <h2 className="text-lg font-bold text-gray-900">📈 Earnings Overview</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setGraphView('monthly')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                graphView === 'monthly'
+                  ? 'bg-[#5C3A21] text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setGraphView('yearly')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                graphView === 'yearly'
+                  ? 'bg-[#5C3A21] text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          {/* Year Selector for Monthly View */}
+          {graphView === 'monthly' && availableYears.length > 0 && (
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Select Year:</span>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white"
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-lg">
+                <div>
+                  <span className="text-xs text-gray-500">Total {selectedYear} Earnings</span>
+                  <p className="text-lg font-bold text-[#5C3A21]">{formatPrice(selectedYearTotal)}</p>
+                </div>
+                <div className="border-l pl-4">
+                  <span className="text-xs text-gray-500">Total Orders</span>
+                  <p className="text-lg font-bold text-gray-900">{selectedYearOrders}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              {graphView === 'monthly' ? (
+                <LineChart data={monthlyData.filter(d => d.year === selectedYear)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="monthName" 
+                    stroke="#6b7280"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `₹${value/1000}k`}
+                    stroke="#6b7280"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    formatter={(value) => formatPrice(value)}
+                    labelFormatter={(label) => `${label} ${selectedYear}`}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="linear" 
+                    dataKey="total" 
+                    stroke="#5C3A21" 
+                    strokeWidth={3}
+                    dot={{ stroke: '#5C3A21', strokeWidth: 2, r: 4, fill: 'white' }}
+                    activeDot={{ r: 6, fill: '#5C3A21' }}
+                    name="Earnings"
+                  />
+                </LineChart>
+              ) : (
+                <LineChart data={yearlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="year" 
+                    stroke="#6b7280"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `₹${value/1000}k`}
+                    stroke="#6b7280"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    formatter={(value) => formatPrice(value)}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="linear" 
+                    dataKey="total" 
+                    stroke="#5C3A21" 
+                    strokeWidth={3}
+                    dot={{ stroke: '#5C3A21', strokeWidth: 2, r: 5, fill: 'white' }}
+                    activeDot={{ r: 7, fill: '#5C3A21' }}
+                    name="Yearly Earnings"
+                  />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+
+          {/* Monthly Sales Table - Only for Monthly View */}
+          {graphView === 'monthly' && selectedYearMonthlyData.length > 0 && (
+            <div className="mt-6 border-t pt-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                📋 Monthly Sales for {selectedYear}
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Earnings</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Order</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {selectedYearMonthlyData.map((month, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {month.monthName}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                          {month.count}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm font-semibold text-[#5C3A21] text-right">
+                          {formatPrice(month.total)}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600 text-right">
+                          {month.count > 0 ? formatPrice(month.total / month.count) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-gray-100 font-bold">
+                    <tr>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {selectedYearMonthlyData.reduce((sum, m) => sum + m.count, 0)}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-[#5C3A21] text-right">
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0))}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatPrice(
+                          selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0) / 
+                          selectedYearMonthlyData.reduce((sum, m) => sum + m.count, 0) || 0
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Yearly Data Cards (for reference) */}
+      {yearlyData.length > 1 && graphView === 'yearly' && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {yearlyData.map((year) => (
+            <div 
+              key={year.year} 
+              className={`bg-white rounded-xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition ${
+                year.year === selectedYear ? 'border-2 border-[#5C3A21]' : ''
+              }`}
+              onClick={() => {
+                setSelectedYear(year.year);
+                setGraphView('monthly');
+              }}
+            >
+              <p className="text-sm font-semibold text-gray-600">{year.year}</p>
+              <p className="text-lg font-bold text-[#5C3A21]">{formatPrice(year.total)}</p>
+              <p className="text-xs text-gray-500">{year.count} orders</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Quick Links */}
       <div className="bg-white rounded-xl shadow-sm p-6">
@@ -281,7 +589,6 @@ const AdminDashboard = () => {
           </a>
         </div>
       </div>
-
     </div>
   );
 };
