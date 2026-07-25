@@ -32,7 +32,6 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://localhost:3000',
   'https://mudgarvale-rzyy.vercel.app',
-  'https://sandybrown-pony-153467.hostingersite.com',
   'https://www.mudgarvale.com',
   process.env.CLIENT_URL,
 ].filter(Boolean);
