@@ -88,14 +88,15 @@ app.use(errorHandler);
 
 // ✅ Always listen — Hostinger requires app.listen() in production
 const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
 connectDB()
-  .then(() => {
-    console.log('✅ DB connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
+  .then(() => console.log('✅ DB connected'))
   .catch((err) => {
     console.error('Database startup failed:', err);
-    process.exitCode = 1;
+    server.close(() => {
+      process.exitCode = 1;
+    });
   });
 
 module.exports = app;
