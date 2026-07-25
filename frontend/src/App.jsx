@@ -33,6 +33,10 @@ import Cancellation from "./pages/Cancellation";
 import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
+import Gada from "./pages/Gada";
+import Samtola from "./pages/Samtola";
+import SenaBoard from "./pages/SenaBoard";
+import Mudgar from "./pages/Mudgar";
 
 // Create a wrapper component for page tracking
 const AppRoutes = () => {
@@ -48,7 +52,7 @@ const AppRoutes = () => {
         'page_path': location.pathname
       });
     }
-    
+
     // Track with Facebook Pixel
     if (window.fbq) {
       window.fbq('track', 'PageView');
@@ -74,6 +78,10 @@ const AppRoutes = () => {
       <Route path="/shipping" element={<Shipping />} />
       <Route path="/otherpayement" element={<SepPayement />} />
       <Route path="/thankyou" element={<Thankyou />} />
+      <Route path="/products/mudgar" element={<Mudgar />} />
+      <Route path="/products/gada" element={<Gada />} />
+      <Route path="/products/samtola" element={<Samtola />} />
+      <Route path="/products/senaboard" element={<SenaBoard />} />
       <Route
         path="/checkout"
         element={
@@ -119,13 +127,13 @@ function App() {
         <Router>
           <ToastContainer />
           <Navbar />
-          
+
           <AppRoutes />
 
           <MudgarFooter />
         </Router>
       </CartProvider>
-      
+
       {/* WhatsApp Floating Button */}
       <div
         onClick={() => window.open(`https://wa.me/9327223973`, '_blank')}
