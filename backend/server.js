@@ -41,7 +41,8 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS error: ${origin}`));
+      console.warn(`CORS blocked: ${origin}`); // quiet log, not a thrown Error
+      callback(null, false);
     }
   },
   credentials: true,
