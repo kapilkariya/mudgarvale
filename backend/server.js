@@ -66,7 +66,16 @@ app.use('/api/admin',     adminRoutes);
 
 
 // Serve React frontend (must be after API routes)
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+app.use(express.static(path.join(__dirname, '../frontend/dist'), {
+  maxAge: '7d',
+  setHeaders: (res, filePath) => {
+    // Never cache index.html — it must always reflect the latest deploy
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));

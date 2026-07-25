@@ -13,7 +13,7 @@ const Checkout = () => {
 
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
-
+  
   // Saved addresses from backend
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
