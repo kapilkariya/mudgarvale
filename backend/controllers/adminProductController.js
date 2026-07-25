@@ -1,5 +1,4 @@
 const Product = require('../models/Product');
-const { cloudinary } = require('../config/cloudinary');
 
 // @desc    Get all products (admin)
 // @route   GET /api/admin/products
@@ -48,16 +47,8 @@ const updateProduct = async (req, res) => {
     if (pricePerWeight) product.pricePerWeight = pricePerWeight;
     if (typeof isActive === 'boolean') product.isActive = isActive;
 
-    // Handle image update if provided
     if (req.body.image && req.body.image !== product.image) {
-      // Delete old image from Cloudinary if exists
-      if (product.imagePublicId) {
-        await deleteFromCloudinary(product.imagePublicId);
-      }
       product.image = req.body.image;
-      if (req.body.imagePublicId) {
-        product.imagePublicId = req.body.imagePublicId;
-      }
     }
 
     await product.save();
@@ -91,16 +82,6 @@ const deleteProduct = async (req, res) => {
         success: false,
         message: 'Product not found',
       });
-    }
-
-    // Delete image from Cloudinary if exists
-    if (product.imagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(product.imagePublicId);
-      } catch (cloudinaryErr) {
-        console.error('Cloudinary delete error:', cloudinaryErr);
-        // Continue with product deletion even if image delete fails
-      }
     }
 
     // Delete product

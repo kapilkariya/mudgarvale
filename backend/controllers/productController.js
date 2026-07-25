@@ -1,12 +1,11 @@
 const Product = require('../models/Product');
-const { cloudinary } = require('../config/cloudinary');
 
 // @desc    Create new product (Admin only)
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
-    const { name, description, category, weights, pricePerWeight } = req.body;
+    const { name, description, category, weights, pricePerWeight, image } = req.body;
 
     // Parse weights and pricePerWeight if sent as JSON strings
     const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
@@ -21,21 +20,18 @@ const createProduct = async (req, res) => {
       });
     }
 
-    // Check if image was uploaded
-    if (!req.file) {
+    if (!image || !String(image).trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload a product image',
+        message: 'Product image filename is required',
       });
     }
 
-    // Create product
     const product = await Product.create({
       name,
       description,
       category,
-      image: req.file.path,
-      imagePublicId: req.file.filename,
+      image: String(image).trim(),
       weights: parsedWeights,
       pricePerWeight: parsedPricePerWeight,
     });
@@ -136,15 +132,6 @@ const updateProduct = async (req, res) => {
       updateData.pricePerWeight = JSON.parse(updateData.pricePerWeight);
     }
 
-    // If new image uploaded, delete old one from Cloudinary
-    if (req.file) {
-      if (product.imagePublicId) {
-        await cloudinary.uploader.destroy(product.imagePublicId);
-      }
-      updateData.image = req.file.path;
-      updateData.imagePublicId = req.file.filename;
-    }
-
     product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
@@ -175,11 +162,6 @@ const deleteProduct = async (req, res) => {
         success: false,
         message: 'Product not found',
       });
-    }
-
-    // Delete image from Cloudinary
-    if (product.imagePublicId) {
-      await cloudinary.uploader.destroy(product.imagePublicId);
     }
 
     // Instead of hard delete, mark as inactive (soft delete)
