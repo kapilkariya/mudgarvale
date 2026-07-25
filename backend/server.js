@@ -1,3 +1,10 @@
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -22,10 +29,6 @@ const feedRoutes = require('./routes/feedRoutes');
 
 
 const app = express();
-
-connectDB()
-  .then(() => console.log("✅ DB connected"))
-  .catch(err => console.log("❌ DB error:", err));
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -85,6 +88,14 @@ app.use(errorHandler);
 
 // ✅ Always listen — Hostinger requires app.listen() in production
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+connectDB()
+  .then(() => {
+    console.log('✅ DB connected');
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error('Database startup failed:', err);
+    process.exitCode = 1;
+  });
 
 module.exports = app;

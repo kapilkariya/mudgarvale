@@ -49,7 +49,4 @@ const cartSchema = new mongoose.Schema(
   }
 );
 
-// Index for faster queries
-cartSchema.index({ userId: 1 });
-
 module.exports = mongoose.model('Cart', cartSchema);
