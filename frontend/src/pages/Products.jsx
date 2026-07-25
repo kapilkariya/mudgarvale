@@ -45,23 +45,45 @@ const Products = () => {
     }
   };
 
-  // Read category from URL path
-  useEffect(() => {
+  // Get category from URL - runs on every render
+  const getCategoryFromURL = () => {
     const pathSegments = location.pathname.split('/');
     const lastSegment = pathSegments[pathSegments.length - 1];
-    
-    if (categories.includes(lastSegment)) {
-      setSelectedCategory(lastSegment);
-    } else {
-      setSelectedCategory('all');
+    return categories.includes(lastSegment) ? lastSegment : 'all';
+  };
+
+  // Fetch products function
+  const fetchProducts = async (category) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = category !== 'all' ? { category: category } : {};
+      const response = await productAPI.getAll(params);
+
+      if (response.success) {
+        setProducts(response.data);
+      } else {
+        throw new Error(response.message || 'Failed to fetch products');
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError(err.message || 'Failed to load products. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  }, [location.pathname]);
+  };
+
+  // Main effect - runs on mount and when URL changes
+  useEffect(() => {
+    const category = getCategoryFromURL();
+    setSelectedCategory(category);
+    fetchProducts(category);
+  }, [location.pathname]); // Re-run when URL changes
 
   // Update meta tags when category changes
   useEffect(() => {
     const meta = categoryMeta[selectedCategory] || categoryMeta.all;
-    
-    // Update title
     document.title = meta.title;
     
     // Update meta description
@@ -86,31 +108,6 @@ const Products = () => {
       document.head.appendChild(newMeta);
     }
   }, [selectedCategory]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory]);
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = selectedCategory !== 'all' ? { category: selectedCategory } : {};
-      const response = await productAPI.getAll(params);
-
-      if (response.success) {
-        setProducts(response.data);
-      } else {
-        throw new Error(response.message || 'Failed to fetch products');
-      }
-    } catch (err) {
-      console.error('Error fetching products:', err);
-      setError(err.message || 'Failed to load products. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getMinPrice = (product) => {
     if (product.minPrice) return product.minPrice;
@@ -226,7 +223,7 @@ const Products = () => {
               <p className="font-medium text-sm sm:text-base">Error</p>
               <p className="text-xs sm:text-sm mt-1">{error}</p>
               <button
-                onClick={fetchProducts}
+                onClick={() => fetchProducts(selectedCategory)}
                 className="mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-xs sm:text-sm"
               >
                 Try Again
