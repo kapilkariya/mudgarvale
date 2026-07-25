@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { productAPI } from '../config/api';
 
 const Products = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,23 +16,17 @@ const Products = () => {
 
   const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard'];
 
-  // Read category from URL on initial load
+  // Read category from URL path
   useEffect(() => {
-    const categoryParam = searchParams.get('category');
-    if (categoryParam && categories.includes(categoryParam)) {
-      setSelectedCategory(categoryParam);
-    }
-  }, []);
-
-  // Update URL when category changes
-  useEffect(() => {
-    if (selectedCategory === 'all') {
-      searchParams.delete('category');
+    const pathSegments = location.pathname.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    
+    if (categories.includes(lastSegment)) {
+      setSelectedCategory(lastSegment);
     } else {
-      searchParams.set('category', selectedCategory);
+      setSelectedCategory('all');
     }
-    setSearchParams(searchParams, { replace: true });
-  }, [selectedCategory]);
+  }, [location.pathname]);
 
   useEffect(() => {
     fetchProducts();
@@ -70,16 +65,36 @@ const Products = () => {
   const formatPrice = (price) => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
-const categoryOrder = {
-  mudgar: 1,
-  gada: 2,
-  samtola: 3,
-  senaboard: 4,
-};
 
-const sortedProducts = [...products].sort((a, b) => {
-  return categoryOrder[a.category] - categoryOrder[b.category];
-});
+  // Handle category click - navigate to sub-route
+  const handleCategoryClick = (category) => {
+    if (category === 'all') {
+      navigate('/products');
+    } else {
+      navigate(`/products/${category}`);
+    }
+  };
+
+  // Sort products by category order: mudgar -> gada -> samtola -> senaboard
+  const categoryOrder = {
+    mudgar: 1,
+    gada: 2,
+    samtola: 3,
+    senaboard: 4,
+  };
+
+  const sortedProducts = [...products].sort((a, b) => {
+    const orderA = categoryOrder[a.category] || 999;
+    const orderB = categoryOrder[b.category] || 999;
+    return orderA - orderB;
+  });
+
+  // Get display title
+  const getDisplayTitle = () => {
+    if (selectedCategory === 'all') return 'All Products';
+    return selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
+  };
+
   return (
     <div>
       {/* Header Spacer */}
@@ -108,19 +123,19 @@ const sortedProducts = [...products].sort((a, b) => {
             className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-800"
             style={{ fontFamily: 'Georgia, serif' }}
           >
-            All Products
+            {getDisplayTitle()}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {loading ? 'Loading...' : `${products.length} products`}
           </p>
         </div>
 
-        {/* Category Filter */}
+        {/* Category Filter - Buttons at the top */}
         <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 md:gap-3 mb-8 sm:mb-10 md:mb-12 border-b border-[#D4A373]/30 pb-3 sm:pb-4">
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => handleCategoryClick(cat)}
               className={`
                 px-3 xs:px-4 sm:px-5 md:px-6 lg:px-7 
                 py-1.5 xs:py-2 sm:py-2 md:py-2.5 
@@ -169,7 +184,7 @@ const sortedProducts = [...products].sort((a, b) => {
                 <p className="text-gray-500 text-base sm:text-lg">No products found</p>
                 {selectedCategory !== 'all' && (
                   <button
-                    onClick={() => setSelectedCategory('all')}
+                    onClick={() => navigate('/products')}
                     className="mt-4 px-4 sm:px-6 py-1.5 sm:py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition text-sm sm:text-base"
                   >
                     View All Products

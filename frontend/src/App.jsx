@@ -33,10 +33,10 @@ import Cancellation from "./pages/Cancellation";
 import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
-import Gada from "./pages/Gada";
-import Samtola from "./pages/Samtola";
-import SenaBoard from "./pages/SenaBoard";
-import Mudgar from "./pages/Mudgar";
+// import Gada from "./pages/Gada";
+// import Samtola from "./pages/Samtola";
+// import SenaBoard from "./pages/SenaBoard";
+// import Mudgar from "./pages/Mudgar";
 
 // Create a wrapper component for page tracking
 const AppRoutes = () => {
@@ -78,10 +78,18 @@ const AppRoutes = () => {
       <Route path="/shipping" element={<Shipping />} />
       <Route path="/otherpayement" element={<SepPayement />} />
       <Route path="/thankyou" element={<Thankyou />} />
-      <Route path="/products/mudgar" element={<Mudgar />} />
+      {/* <Route path="/products/mudgar" element={<Mudgar />} />
       <Route path="/products/gada" element={<Gada />} />
       <Route path="/products/samtola" element={<Samtola />} />
-      <Route path="/products/senaboard" element={<SenaBoard />} />
+      <Route path="/products/senaboard" element={<SenaBoard />} /> */}
+      // In App.js, update the routes section:
+
+{/* Products and its sub-routes - all using the same Products component */}
+<Route path="/products" element={<Products />} />
+<Route path="/products/mudgar" element={<Products />} />
+<Route path="/products/gada" element={<Products />} />
+<Route path="/products/samtola" element={<Products />} />
+<Route path="/products/senaboard" element={<Products />} />
       <Route
         path="/checkout"
         element={
