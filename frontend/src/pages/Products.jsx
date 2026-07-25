@@ -16,6 +16,35 @@ const Products = () => {
 
   const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard'];
 
+  // Category metadata configuration
+  const categoryMeta = {
+    all: {
+      title: 'All Products - Traditional Fitness Equipment | Mudgarvale',
+      description: 'Explore our complete range of traditional Indian fitness equipment including Mudgar, Gada, Samtola, and SenaBoard. Premium quality workout tools for strength training.',
+      keywords: 'traditional fitness equipment, mudgar, gada, samtola, senaboard, Indian workout tools',
+    },
+    mudgar: {
+      title: 'Wooden Mudgar for Strength Training | Mudgarvale',
+      description: 'Explore handcrafted wooden Mudgars designed for traditional strength training and fitness. Durable, well-balanced, and available in multiple sizes.',
+      keywords: 'wooden mudgar, mudgar for strength training, traditional fitness, handcrafted mudgar, mudgar workout',
+    },
+    gada: {
+      title: 'Indian Gada for Traditional Workout | Mudgarvale',
+      description: 'Shop handcrafted Indian Gada for strength, endurance, and traditional fitness training. Available in different weights with pan-India delivery.',
+      keywords: 'indian gada, traditional gada, gada workout, strength training mace, handcrafted gada',
+    },
+    samtola: {
+      title: 'Traditional Samtola for Fitness Training | Mudgarvale',
+      description: 'Discover high-quality Samtola for traditional fitness and strength training. Crafted for balance, durability, and long-lasting performance.',
+      keywords: 'samtola, traditional samtola, fitness training, strength training equipment, Indian workout tools',
+    },
+    senaboard: {
+      title: 'Sena Push-Up Board for Upper Body Training | Mudgarvale',
+      description: 'Improve your upper body strength with a durable Sena Push-Up Board. Ideal for home workouts, gyms, and professional fitness training.',
+      keywords: 'sena push-up board, upper body training, home workout, push-up board, fitness equipment',
+    }
+  };
+
   // Read category from URL path
   useEffect(() => {
     const pathSegments = location.pathname.split('/');
@@ -27,6 +56,36 @@ const Products = () => {
       setSelectedCategory('all');
     }
   }, [location.pathname]);
+
+  // Update meta tags when category changes
+  useEffect(() => {
+    const meta = categoryMeta[selectedCategory] || categoryMeta.all;
+    
+    // Update title
+    document.title = meta.title;
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', meta.description);
+    } else {
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'description';
+      newMeta.content = meta.description;
+      document.head.appendChild(newMeta);
+    }
+    
+    // Update meta keywords
+    const metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (metaKeywords) {
+      metaKeywords.setAttribute('content', meta.keywords);
+    } else {
+      const newMeta = document.createElement('meta');
+      newMeta.name = 'keywords';
+      newMeta.content = meta.keywords;
+      document.head.appendChild(newMeta);
+    }
+  }, [selectedCategory]);
 
   useEffect(() => {
     fetchProducts();
