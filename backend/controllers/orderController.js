@@ -186,11 +186,22 @@ const verifyPayment = async (req, res) => {
       paidAmount,
     });
 
-    // Email delivery is deliberately non-blocking for order completion.
+    // Prefer the verified account email over checkout input. Delivery failures
+    // are deliberately non-blocking for order completion.
     try {
-      await sendOrderConfirmationEmail(order.address.email, order.address.name, order.orderNumber);
+      const confirmationEmail = req.user.email || order.address?.email;
+      if (!confirmationEmail) {
+        throw new Error('No recipient email is available for this order');
+      }
+
+      const emailResult = await sendOrderConfirmationEmail(
+        confirmationEmail,
+        order.address?.name || req.user.name,
+        order.orderNumber
+      );
       order.confirmationEmailSentAt = new Date();
       await order.save();
+      console.log(`Order confirmation email sent for ${order.orderNumber} to ${confirmationEmail} (message: ${emailResult.messageId})`);
     } catch (emailError) {
       console.error(`Order confirmation email failed for ${order.orderNumber}:`, emailError);
     }

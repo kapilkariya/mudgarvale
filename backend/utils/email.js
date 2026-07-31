@@ -132,7 +132,7 @@ const sendOrderConfirmationEmail = async (email, customerName, orderNumber) => {
   const safeName = escapeHtml(customerName);
   const safeOrderNumber = escapeHtml(orderNumber);
 
-  await transporter.sendMail({
+  return transporter.sendMail({
     from: `"MudgarVale" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: '🎉 Your MudgarVale Order Has Been Confirmed!',
