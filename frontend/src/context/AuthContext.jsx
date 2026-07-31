@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const sendLoginOTP = async (email) => {
-    return await authAPI.sendLoginOTP({ email });
+    return await authAPI.sendLoginOTP({ email: email.trim().toLowerCase() });
   };
 
   const sendSignupOTP = async (name, email, password) => {

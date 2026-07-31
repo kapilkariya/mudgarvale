@@ -3,12 +3,15 @@ const OTP = require('../models/OTP');
 const { generateOTP, sendOTPEmail } = require('../utils/email');
 const { sendTokenResponse } = require('../utils/jwt');
 
+const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
+
 // @desc    Send OTP for signup
 // @route   POST /api/auth/send-signup-otp
 // @access  Public
 const sendSignupOTP = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -65,7 +68,8 @@ const sendSignupOTP = async (req, res) => {
 // @access  Public
 const verifySignup = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || '').trim();
 
     // Bypass for testing - accept "111111" or "what is sent"
     const isBypassOTP = otp === '11111111' || otp === 'what is sent';
@@ -134,7 +138,7 @@ const verifySignup = async (req, res) => {
 // @access  Public
 const sendLoginOTP = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     // Check if user exists
     const user = await User.findOne({ email });
@@ -187,7 +191,8 @@ const sendLoginOTP = async (req, res) => {
 // @access  Public
 const verifyLogin = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || '').trim();
 
     // Bypass for testing - accept "111111" or "what is sent"
     const isBypassOTP = otp === '111111' || otp === 'what is sent';

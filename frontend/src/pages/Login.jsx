@@ -26,8 +26,10 @@ const Login = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await sendLoginOTP(email);
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await sendLoginOTP(normalizedEmail);
       if (response.success) {
+        setEmail(normalizedEmail);
         setMessage({ type: 'success', text: 'OTP sent to your email!' });
         setStep(2);
         setCountdown(60);
