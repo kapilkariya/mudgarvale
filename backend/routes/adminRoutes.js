@@ -7,6 +7,7 @@ const {
 } = require('../controllers/adminProductController');
 const {
   getAllOrders,
+  updateOrder,
   updateOrderStatus,
   getOrderStats,
 } = require('../controllers/adminOrderController');
@@ -24,6 +25,7 @@ router.delete('/products/:id', deleteProduct);
 
 // Order management routes
 router.get('/orders', getAllOrders);
+router.put('/orders/:id', updateOrder);
 router.get('/orders/stats', getOrderStats);
 router.patch('/orders/:id/status', updateOrderStatus);
 

@@ -160,7 +160,14 @@ export const adminAPI = {
   deleteProduct: (id) => fetchWithAuth(`${API_URL}/admin/products/${id}`, { method: 'DELETE' }),
   
   // Orders
-  getAllOrders: () => fetchWithAuth(`${API_URL}/admin/orders`),
+  getAllOrders: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return fetchWithAuth(`${API_URL}/admin/orders${queryString ? `?${queryString}` : ''}`);
+  },
+  updateOrder: (id, data) => fetchWithAuth(`${API_URL}/admin/orders/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
   getOrderStats: () => fetchWithAuth(`${API_URL}/admin/orders/stats`),
   updateOrderStatus: (id, status) => fetchWithAuth(`${API_URL}/admin/orders/${id}/status`, {
     method: 'PATCH',
