@@ -46,7 +46,7 @@ export default function MudgarFooter() {
         {/* Logo */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
           <img
-            src="logo.png"
+            src="/logo.png"
             alt="Mudgarvale Logo"
             style={{ width: "58px", height: "58px", objectFit: "contain" }}
           />
