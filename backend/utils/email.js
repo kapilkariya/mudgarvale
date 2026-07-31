@@ -17,6 +17,9 @@ const createTransporter = () => {
   });
 };
 
+// Reuse this single transporter for all transactional emails (OTP, contact, orders).
+const transporter = createTransporter();
+
 // Generate 6-digit OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -24,8 +27,6 @@ const generateOTP = () => {
 
 // Send OTP email
 const sendOTPEmail = async (email, otp, purpose) => {
-  const transporter = createTransporter();
-
   let subject, html;
 
   if (purpose === 'signup') {
@@ -94,7 +95,6 @@ const escapeHtml = (value = '') =>
 
 // Send contact form email
 const sendContactEmail = async ({ name, email, phone, subject, message }) => {
-  const transporter = createTransporter();
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
   const safePhone = escapeHtml(phone || 'Not provided');
@@ -127,4 +127,30 @@ const sendContactEmail = async ({ name, email, phone, subject, message }) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { generateOTP, sendOTPEmail, sendContactEmail };
+// Send confirmed-order email without affecting the order workflow if delivery fails.
+const sendOrderConfirmationEmail = async (email, customerName, orderNumber) => {
+  const safeName = escapeHtml(customerName);
+  const safeOrderNumber = escapeHtml(orderNumber);
+
+  await transporter.sendMail({
+    from: `"MudgarVale" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: '🎉 Your MudgarVale Order Has Been Confirmed!',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #333; line-height: 1.6;">
+        <h2 style="color: #5C3A21; margin-top: 0;">Thank you for shopping with MudgarVale!</h2>
+        <p>Hi <strong>${safeName}</strong>,</p>
+        <p>We're excited to let you know that your order has been placed successfully and is now confirmed.</p>
+        <p><strong>Order Number:</strong> ${safeOrderNumber}</p>
+        <p>Our team will begin preparing your order shortly. You will receive your tracking details within <strong>4 days</strong>.</p>
+        <p>If you have any questions or need any assistance, feel free to contact us.</p>
+        <p>📞 <strong>7016243133</strong></p>
+        <p>Thank you for choosing <strong>MudgarVale</strong>. We truly appreciate your support and look forward to serving you again!</p>
+        <br>
+        <p>Warm regards,<br><strong>MudgarVale Team</strong></p>
+      </div>
+    `,
+  });
+};
+
+module.exports = { generateOTP, sendOTPEmail, sendContactEmail, sendOrderConfirmationEmail };

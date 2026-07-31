@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { calculateDeliveryCharge, calculateSubtotal } = require('../utils/deliveryCharge');
+const { sendOrderConfirmationEmail } = require('../utils/email');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -131,6 +132,16 @@ const verifyPayment = async (req, res) => {
       });
     }
 
+    // A verified Razorpay payment must only create one order (and one email).
+    const existingOrder = await Order.findOne({ razorpayPaymentId: razorpay_payment_id });
+    if (existingOrder) {
+      return res.status(200).json({
+        success: true,
+        message: 'Payment was already verified and the order is confirmed',
+        data: existingOrder,
+      });
+    }
+
     // Signature is valid - now create the order in database
     const { items, paymentMethod, address } = orderData;
     const userId = req.user.id;
@@ -174,6 +185,15 @@ const verifyPayment = async (req, res) => {
       paymentStatus,
       paidAmount,
     });
+
+    // Email delivery is deliberately non-blocking for order completion.
+    try {
+      await sendOrderConfirmationEmail(order.address.email, order.address.name, order.orderNumber);
+      order.confirmationEmailSentAt = new Date();
+      await order.save();
+    } catch (emailError) {
+      console.error(`Order confirmation email failed for ${order.orderNumber}:`, emailError);
+    }
 
     res.status(200).json({
       success: true,

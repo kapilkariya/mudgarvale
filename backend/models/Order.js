@@ -109,6 +109,11 @@ const orderSchema = new mongoose.Schema(
     },
     razorpayPaymentId: {
       type: String,
+      unique: true,
+      sparse: true,
+    },
+    confirmationEmailSentAt: {
+      type: Date,
     },
     paidAmount: {
       type: Number,
