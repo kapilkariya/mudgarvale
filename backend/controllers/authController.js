@@ -129,21 +129,49 @@ const verifySignup = async (req, res) => {
   }
 };
 
-// @desc    Send OTP for login - BYPASS MODE
+// @desc    Send OTP for login
 // @route   POST /api/auth/send-login-otp
 // @access  Public
 const sendLoginOTP = async (req, res) => {
   try {
     const { email } = req.body;
-    
-    console.log('🔑 Login bypass for:', email);
-    
-    // Always return success - no database needed
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'No account found with this email. Please sign up first.',
+      });
+    }
+
+    // Delete any existing OTPs for this email
+    await OTP.deleteMany({ email, purpose: 'login' });
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Save OTP to database
+    await OTP.create({
+      email,
+      otp,
+      purpose: 'login',
+    });
+
+    // Send OTP email
+    try {
+      await sendOTPEmail(email, otp, 'login');
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send email. Please check server email configuration.',
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: 'OTP sent successfully (BYPASS MODE)',
-      bypass: true,
-      email: email,
+      message: 'OTP sent to your email',
     });
   } catch (error) {
     console.error('Send login OTP error:', error);
@@ -154,73 +182,70 @@ const sendLoginOTP = async (req, res) => {
   }
 };
 
-// @desc    Verify OTP and login - DIRECT LOGIN
+// @desc    Verify OTP and login
 // @route   POST /api/auth/verify-login
 // @access  Public
 const verifyLogin = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    
-    console.log('🔓 Login bypass for:', email);
-    
-    // Try to find user in database
-    let user = null;
-    try {
-      user = await User.findOne({ email });
-    } catch (dbError) {
-      console.log('Database error, using mock user');
-    }
-    
-    // If user not found, create one
-    if (!user) {
-      console.log('👤 Creating new user:', email);
-      const defaultName = email.split('@')[0] || 'User';
-      const defaultPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
-      const isAdmin = email === process.env.ADMIN_EMAIL;
+
+    // Bypass for testing - accept "111111" or "what is sent"
+    const isBypassOTP = otp === '111111' || otp === 'what is sent';
+
+    let otpRecord;
+    if (false) {
+      // For bypass, find any recent login OTP for this email
+      otpRecord = await OTP.findOne({
+        email,
+        purpose: 'login',
+        isUsed: false,
+      }).sort({ createdAt: -1 });
       
-      try {
-        user = await User.create({
-          name: defaultName,
-          email,
-          password: defaultPassword,
-          role: isAdmin ? 'admin' : 'user',
-          isVerified: true,
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'No pending login found. Please request OTP first.',
         });
-      } catch (createError) {
-        console.log('Could not create user, using mock user');
-        const mockUser = {
-          _id: `mock_${Date.now()}`,
-          name: defaultName,
-          email: email,
-          role: isAdmin ? 'admin' : 'user',
-          isVerified: true,
-        };
-        return sendTokenResponse(mockUser, 200, res);
+      }
+    } else {
+      // Find OTP record
+      otpRecord = await OTP.findOne({
+        email,
+        otp,
+        purpose: 'login',
+        isUsed: false,
+        expiresAt: { $gt: Date.now() },
+      });
+
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired OTP',
+        });
       }
     }
-    
-    // Check if user should be admin
+
+    // Mark OTP as used
+    otpRecord.isUsed = true;
+    await otpRecord.save();
+
+    // Get user
+    let user = await User.findOne({ email });
+
+    // Check if user should be admin but isn't
     const isAdmin = email === process.env.ADMIN_EMAIL;
-    if (isAdmin && user && user.role !== 'admin') {
+    if (isAdmin && user.role !== 'admin') {
       user.role = 'admin';
       await user.save();
-      console.log('👑 User upgraded to admin');
     }
-    
-    console.log('✅ Login successful for:', email);
+
     sendTokenResponse(user, 200, res);
   } catch (error) {
     console.error('Verify login error:', error);
-    // Fallback - login with mock user
-    console.log('⚠️ Using mock user fallback');
-    const mockUser = {
-      _id: `mock_${Date.now()}`,
-      name: email.split('@')[0] || 'User',
-      email: email,
-      role: email === process.env.ADMIN_EMAIL ? 'admin' : 'user',
-      isVerified: true,
-    };
-    sendTokenResponse(mockUser, 200, res);
+    res.status(500).json({
+      success: false,
+      message: 'Login verification failed',
+    });
   }
 };
 
