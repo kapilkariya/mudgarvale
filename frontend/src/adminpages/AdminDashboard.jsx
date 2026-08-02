@@ -19,9 +19,10 @@ const AdminDashboard = () => {
     pendingOrders: 0,
   });
   const [periodStats, setPeriodStats] = useState({
-    weekly: { orders: 0, sales: 0 },
-    monthly: { orders: 0, sales: 0 },
-    annual: { orders: 0, sales: 0 },
+    today: { orders: 0, sales: 0, subtotal: 0, deliveryCharges: 0 },
+    monthly: { orders: 0, sales: 0, subtotal: 0, deliveryCharges: 0 },
+    annual: { orders: 0, sales: 0, subtotal: 0, deliveryCharges: 0 },
+    lifetime: { orders: 0, sales: 0, subtotal: 0, deliveryCharges: 0 },
   });
   const [monthlyData, setMonthlyData] = useState([]);
   const [yearlyData, setYearlyData] = useState([]);
@@ -29,7 +30,7 @@ const AdminDashboard = () => {
   const [availableYears, setAvailableYears] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [graphView, setGraphView] = useState('monthly'); // 'monthly' or 'yearly'
+  const [graphView, setGraphView] = useState('monthly');
 
   useEffect(() => {
     fetchStats();
@@ -78,34 +79,54 @@ const AdminDashboard = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    const weekStart = new Date(today);
-    weekStart.setDate(weekStart.getDate() - 7);
+    // Today's start
+    const todayStart = new Date(today);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    const weeklyOrders = orders.filter(order => {
+    // Today's orders
+    const todayOrders = orders.filter(order => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= weekStart && orderDate <= now && order.orderStatus !== 'cancelled';
+      return orderDate >= todayStart && orderDate <= now && order.orderStatus !== 'cancelled';
     });
 
+    // Monthly orders
     const monthlyOrders = orders.filter(order => {
       const orderDate = new Date(order.createdAt);
       return orderDate >= monthStart && orderDate <= now && order.orderStatus !== 'cancelled';
     });
 
+    // Annual orders
     const annualOrders = orders.filter(order => {
       const orderDate = new Date(order.createdAt);
       return orderDate >= yearStart && orderDate <= now && order.orderStatus !== 'cancelled';
     });
 
-    const weeklySales = weeklyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    const monthlySales = monthlyOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    const annualSales = annualOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    // Lifetime orders (all non-cancelled)
+    const lifetimeOrders = orders.filter(order => order.orderStatus !== 'cancelled');
+
+    // Calculate metrics for each period
+    const calculateMetrics = (ordersList) => {
+      const totalSales = ordersList.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      const totalSubtotal = ordersList.reduce((sum, order) => {
+        const subtotal = order.totalAmount - (order.deliveryCharge || 0);
+        return sum + subtotal;
+      }, 0);
+      const totalDeliveryCharges = ordersList.reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
+      
+      return {
+        orders: ordersList.length,
+        sales: totalSales,
+        subtotal: totalSubtotal,
+        deliveryCharges: totalDeliveryCharges,
+      };
+    };
 
     setPeriodStats({
-      weekly: { orders: weeklyOrders.length, sales: weeklySales },
-      monthly: { orders: monthlyOrders.length, sales: monthlySales },
-      annual: { orders: annualOrders.length, sales: annualSales },
+      today: calculateMetrics(todayOrders),
+      monthly: calculateMetrics(monthlyOrders),
+      annual: calculateMetrics(annualOrders),
+      lifetime: calculateMetrics(lifetimeOrders),
     });
   };
 
@@ -120,6 +141,8 @@ const AdminDashboard = () => {
       const year = date.getFullYear();
       const month = date.getMonth();
       const amount = order.totalAmount || 0;
+      const deliveryCharge = order.deliveryCharge || 0;
+      const subtotal = amount - deliveryCharge;
 
       years.add(year);
       const key = `${year}-${month}`;
@@ -131,10 +154,14 @@ const AdminDashboard = () => {
           monthName: new Date(year, month).toLocaleString('default', { month: 'short' }),
           displayName: `${new Date(year, month).toLocaleString('default', { month: 'short' })} ${year}`,
           total: 0,
+          totalSubtotal: 0,
+          totalDeliveryCharges: 0,
           count: 0,
         };
       }
       monthMap[key].total += amount;
+      monthMap[key].totalSubtotal += subtotal;
+      monthMap[key].totalDeliveryCharges += deliveryCharge;
       monthMap[key].count += 1;
     });
 
@@ -156,15 +183,21 @@ const AdminDashboard = () => {
       const date = new Date(order.createdAt);
       const year = date.getFullYear();
       const amount = order.totalAmount || 0;
+      const deliveryCharge = order.deliveryCharge || 0;
+      const subtotal = amount - deliveryCharge;
 
       if (!yearMap[year]) {
         yearMap[year] = {
           year,
           total: 0,
+          totalSubtotal: 0,
+          totalDeliveryCharges: 0,
           count: 0,
         };
       }
       yearMap[year].total += amount;
+      yearMap[year].totalSubtotal += subtotal;
+      yearMap[year].totalDeliveryCharges += deliveryCharge;
       yearMap[year].count += 1;
     });
 
@@ -176,7 +209,7 @@ const AdminDashboard = () => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-    }).format(price);
+    }).format(price || 0);
   };
 
   const statCards = [
@@ -203,7 +236,7 @@ const AdminDashboard = () => {
     },
   ];
 
-  // Calculate total
+  // Calculate totals
   const totalEarnings = yearlyData.reduce((sum, y) => sum + y.total, 0);
   const totalOrders = yearlyData.reduce((sum, y) => sum + y.count, 0);
 
@@ -223,14 +256,18 @@ const AdminDashboard = () => {
   const selectedYearMonthlyData = monthlyData.filter(d => d.year === selectedYear);
   const selectedYearTotal = selectedYearMonthlyData.reduce((sum, d) => sum + d.total, 0);
   const selectedYearOrders = selectedYearMonthlyData.reduce((sum, d) => sum + d.count, 0);
+  const selectedYearSubtotal = selectedYearMonthlyData.reduce((sum, d) => sum + d.totalSubtotal, 0);
+  const selectedYearDeliveryCharges = selectedYearMonthlyData.reduce((sum, d) => sum + d.totalDeliveryCharges, 0);
 
   const periodCards = [
     {
-      title: 'This Week',
+      title: 'Today',
       icon: '📅',
       color: 'bg-purple-500',
-      orders: periodStats.weekly.orders,
-      sales: periodStats.weekly.sales,
+      orders: periodStats.today.orders,
+      sales: periodStats.today.sales,
+      subtotal: periodStats.today.subtotal,
+      deliveryCharges: periodStats.today.deliveryCharges,
     },
     {
       title: 'This Month',
@@ -238,6 +275,8 @@ const AdminDashboard = () => {
       color: 'bg-indigo-500',
       orders: currentMonthOrders,
       sales: currentMonthEarnings,
+      subtotal: periodStats.monthly.subtotal,
+      deliveryCharges: periodStats.monthly.deliveryCharges,
     },
     {
       title: 'This Year',
@@ -245,13 +284,17 @@ const AdminDashboard = () => {
       color: 'bg-red-500',
       orders: currentYearOrders,
       sales: currentYearEarnings,
+      subtotal: periodStats.annual.subtotal,
+      deliveryCharges: periodStats.annual.deliveryCharges,
     },
     {
       title: 'Lifetime',
       icon: '🏆',
       color: 'bg-[#5C3A21]',
-      orders: totalOrders,
-      sales: totalEarnings,
+      orders: periodStats.lifetime.orders,
+      sales: periodStats.lifetime.sales,
+      subtotal: periodStats.lifetime.subtotal,
+      deliveryCharges: periodStats.lifetime.deliveryCharges,
     },
   ];
 
@@ -317,7 +360,19 @@ const AdminDashboard = () => {
                   <span className="text-xl font-bold text-gray-900">{period.orders}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
-                  <span className="text-sm text-gray-600">Sales</span>
+                  <span className="text-sm text-gray-600">Product Price</span>
+                  <span className="text-lg font-semibold text-blue-600">
+                    {formatPrice(period.subtotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Delivery Charges</span>
+                  <span className="text-lg font-semibold text-orange-600">
+                    {formatPrice(period.deliveryCharges)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-sm text-gray-600">Total Sales</span>
                   <span className="text-xl font-bold text-[#5C3A21]">
                     {formatPrice(period.sales)}
                   </span>
@@ -380,6 +435,10 @@ const AdminDashboard = () => {
                 <div className="border-l pl-4">
                   <span className="text-xs text-gray-500">Total Orders</span>
                   <p className="text-lg font-bold text-gray-900">{selectedYearOrders}</p>
+                </div>
+                <div className="border-l pl-4">
+                  <span className="text-xs text-gray-500">Delivery Charges</span>
+                  <p className="text-lg font-bold text-orange-600">{formatPrice(selectedYearDeliveryCharges)}</p>
                 </div>
               </div>
             </div>
@@ -470,7 +529,9 @@ const AdminDashboard = () => {
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Earnings</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Product Price</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Order</th>
                     </tr>
                   </thead>
@@ -482,6 +543,12 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                           {month.count}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-blue-600 font-semibold text-right">
+                          {formatPrice(month.totalSubtotal)}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-orange-600 font-semibold text-right">
+                          {formatPrice(month.totalDeliveryCharges)}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm font-semibold text-[#5C3A21] text-right">
                           {formatPrice(month.total)}
@@ -497,6 +564,12 @@ const AdminDashboard = () => {
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">Total</td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                         {selectedYearMonthlyData.reduce((sum, m) => sum + m.count, 0)}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-blue-600 text-right">
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.totalSubtotal, 0))}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-orange-600 text-right">
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.totalDeliveryCharges, 0))}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-[#5C3A21] text-right">
                         {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0))}
@@ -533,6 +606,8 @@ const AdminDashboard = () => {
               <p className="text-sm font-semibold text-gray-600">{year.year}</p>
               <p className="text-lg font-bold text-[#5C3A21]">{formatPrice(year.total)}</p>
               <p className="text-xs text-gray-500">{year.count} orders</p>
+              <p className="text-xs text-blue-600">Prod: {formatPrice(year.totalSubtotal)}</p>
+              <p className="text-xs text-orange-600">Delivery: {formatPrice(year.totalDeliveryCharges)}</p>
             </div>
           ))}
         </div>

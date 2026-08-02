@@ -1,28 +1,16 @@
 const Order = require('../models/Order');
 const User = require('../models/User');
 
-// @desc    Get all orders (admin)
+// @desc    Get all orders (admin) - FETCH ALL ORDERS
 // @route   GET /api/admin/orders
 // @access  Private (Admin)
 const getAllOrders = async (req, res) => {
   try {
-    const requestedPage = Number.parseInt(req.query.page, 10);
-    const requestedLimit = Number.parseInt(req.query.limit, 10);
-    const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
-      ? Math.min(requestedLimit, 100)
-      : 10;
-    const skip = (page - 1) * limit;
-
-    const [orders, total] = await Promise.all([
-      Order.find({})
+    // Fetch ALL orders without pagination
+    const orders = await Order.find({})
       .populate('userId', 'name email phone')
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-      Order.countDocuments(),
-    ]);
+      .lean();
 
     // Format orders to include user details
     const formattedOrders = orders.map(order => ({
@@ -44,10 +32,7 @@ const getAllOrders = async (req, res) => {
     res.status(200).json({
       success: true,
       count: formattedOrders.length,
-      total,
-      page,
-      limit,
-      hasMore: skip + formattedOrders.length < total,
+      total: formattedOrders.length,
       data: formattedOrders,
     });
   } catch (error) {
@@ -116,7 +101,6 @@ const updateOrder = async (req, res) => {
     order.items = normalizedItems;
     order.address = {
       name: user.name,
-      // Email is intentionally fixed: order editing must not alter account ownership.
       email: user.email,
       phone: user.phone,
       buildingFlatNo: String(address.buildingFlatNo || '').trim(),
@@ -151,7 +135,6 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { orderStatus } = req.body;
 
-    // Validate status
     const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(orderStatus)) {
       return res.status(400).json({
@@ -200,7 +183,6 @@ const getOrderStats = async (req, res) => {
     const deliveredOrders = await Order.countDocuments({ orderStatus: 'delivered' });
     const cancelledOrders = await Order.countDocuments({ orderStatus: 'cancelled' });
 
-    // Calculate total revenue from delivered orders
     const revenue = await Order.aggregate([
       { $match: { orderStatus: 'delivered' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } },

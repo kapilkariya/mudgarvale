@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { adminAPI } from '../config/api';
 import * as XLSX from 'xlsx';
 
-const PAGE_SIZE = 10;
-
 const emptyForm = (order) => ({
   customer: {
     name: order.user?.name || order.address?.name || '',
@@ -25,9 +23,6 @@ const emptyForm = (order) => ({
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [page, setPage] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
@@ -52,27 +47,23 @@ const AdminOrders = () => {
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
-  const loadOrders = async (nextPage, append) => {
+  const loadOrders = async () => {
     try {
-      append ? setLoadingMore(true) : setLoading(true);
+      setLoading(true);
       setError('');
-      const response = await adminAPI.getAllOrders({ page: nextPage, limit: PAGE_SIZE });
+      const response = await adminAPI.getAllOrders();
       if (response.success) {
-        setOrders((current) => append ? [...current, ...response.data.filter((item) => !current.some((existing) => existing._id === item._id))] : response.data);
-        setPage(response.page);
-        setHasMore(response.hasMore);
+        setOrders(response.data);
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { loadOrders(1, false); }, 0);
-    return () => window.clearTimeout(timer);
+    loadOrders();
   }, []);
 
   const filteredOrders = useMemo(() => {
@@ -141,12 +132,10 @@ const AdminOrders = () => {
     const rows = orders.map((order) => {
       const subtotal = order.totalAmount - (order.deliveryCharge || 0);
       
-      // Calculate amount paid and pending based on payment method and status
       let amountPaid = 0;
       let amountPending = 0;
       
       if (order.paymentMethod === 'online') {
-        // For online payments, full amount is paid
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
       } else if (order.paymentMethod === 'cod') {
@@ -185,23 +174,21 @@ const AdminOrders = () => {
     XLSX.writeFile(workbook, `Orders_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  if (loading && !orders.length) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
 
   return <div className="px-4 pb-8">
     <div className="h-20" />
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
-      <button onClick={exportOrdersToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">Download loaded orders</button>
+      <button onClick={exportOrdersToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">Download Orders</button>
     </div>
     {error && <Notice tone="red" message={error} dismiss={() => setError('')} />}
     {success && <Notice tone="green" message={success} dismiss={() => setSuccess('')} />}
     <div className="mb-6 overflow-x-auto pb-2"><div className="flex gap-2 min-w-max">{filterOptions.map((filter) => <button key={filter.value} onClick={() => setActiveFilter(filter.value)} className={`px-4 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter.value ? 'bg-[#5C3A21] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{filter.label} ({filter.value === 'all' ? orders.length : filteredCount(orders, filter.value)})</button>)}</div></div>
     <div className="space-y-4">
       {filteredOrders.map((order) => <OrderCard key={order._id} order={order} expanded={expandedOrder === order._id} toggle={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)} openEdit={() => openEdit(order)} status={getStatus(order.orderStatus)} statusOptions={statusOptions} updating={updatingId === order._id} onStatusChange={handleStatusChange} formatDate={formatDate} formatPrice={formatPrice} />)}
-      {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">No loaded orders match this filter.</div>}
+      {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">No orders found.</div>}
     </div>
-    {hasMore && <div className="mt-6 text-center"><button onClick={() => loadOrders(page + 1, true)} disabled={loadingMore} className="px-5 py-2 bg-[#5C3A21] text-white rounded-lg disabled:opacity-60">{loadingMore ? 'Loading…' : 'Load More'}</button></div>}
-    {!hasMore && orders.length > 0 && <p className="mt-6 text-center text-sm text-gray-500">All orders have been loaded.</p>}
     {editingOrder && form && <EditOrderModal form={form} onClose={() => { if (!updatingId) { setEditingOrder(null); setForm(null); } }} onSubmit={submitEdit} updateField={updateField} updateItem={updateItem} error={formError} saving={updatingId === editingOrder._id} />}
   </div>;
 };
@@ -213,7 +200,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   const subtotal = order.totalAmount - (order.deliveryCharge || 0);
   const deliveryCharge = order.deliveryCharge || 0;
   
-  // Calculate amount paid and pending based on payment method and status
   let amountPaid = 0;
   let amountPending = 0;
   let paymentMethodLabel = '';
@@ -221,7 +207,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   let paymentStatusColor = '';
   
   if (order.paymentMethod === 'online') {
-    // For online payments, full amount is paid
     amountPaid = order.totalAmount || 0;
     amountPending = 0;
     paymentMethodLabel = '💳 Online Payment';
@@ -281,7 +266,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
         </div>)}
       </section>
       
-      {/* Order Totals with Subtotal + Delivery = Total */}
       <section className="text-sm border-t pt-2">
         <p className="flex justify-between">
           <span className="text-gray-600">Subtotal</span>
@@ -297,7 +281,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
         </p>
       </section>
 
-      {/* Payment Details */}
       <section className="border-t pt-2">
         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Payment Details</h4>
         <div className="bg-white rounded-lg p-3 space-y-1 text-sm">
