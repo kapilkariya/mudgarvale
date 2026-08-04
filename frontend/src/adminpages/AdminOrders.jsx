@@ -25,7 +25,6 @@ const emptyForm = (order) => ({
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredDateOrders, setFilteredDateOrders] = useState([]);
-  const [allOrdersForExport, setAllOrdersForExport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingExport, setLoadingExport] = useState(false);
@@ -49,6 +48,7 @@ const AdminOrders = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
+  const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -78,10 +78,8 @@ const AdminOrders = () => {
       if (response.success) {
         if (append) {
           setOrders(prev => [...prev, ...response.data]);
-          setFilteredDateOrders(prev => [...prev, ...response.data]);
         } else {
           setOrders(response.data);
-          setFilteredDateOrders(response.data);
         }
         setCurrentPage(response.page);
         setHasMoreOrders(response.hasMore);
@@ -96,19 +94,18 @@ const AdminOrders = () => {
     }
   };
 
-  // Fetch ALL orders for export (only when needed)
-  const fetchAllOrdersForExport = async () => {
+  // Fetch ALL orders for date filter
+  const fetchAllOrdersForDateFilter = async () => {
     try {
       setLoadingExport(true);
       setError('');
       const response = await adminAPI.getAllOrders();
       if (response.success) {
-        setAllOrdersForExport(response.data);
         return response.data;
       }
       return [];
     } catch (err) {
-      setError(err.message || 'Failed to fetch orders for export');
+      setError(err.message || 'Failed to fetch orders for date filter');
       return [];
     } finally {
       setLoadingExport(false);
@@ -131,14 +128,16 @@ const AdminOrders = () => {
       filterOrdersByDate();
     } else if (!dateFrom && !dateTo) {
       setIsDateFilterActive(false);
-      setFilteredDateOrders(orders);
+      setDateFilteredOrders([]);
+      setFilteredDateOrders([]);
     }
-  }, [dateFrom, dateTo, orders]);
+  }, [dateFrom, dateTo]);
 
-  const filterOrdersByDate = () => {
+  const filterOrdersByDate = async () => {
     if (!dateFrom || !dateTo) {
       setIsDateFilterActive(false);
-      setFilteredDateOrders(orders);
+      setDateFilteredOrders([]);
+      setFilteredDateOrders([]);
       return;
     }
 
@@ -146,11 +145,15 @@ const AdminOrders = () => {
     const toDate = new Date(dateTo);
     toDate.setHours(23, 59, 59, 999);
 
-    const filtered = orders.filter(order => {
+    // Fetch ALL orders from database for date filtering
+    const allOrders = await fetchAllOrdersForDateFilter();
+    
+    const filtered = allOrders.filter(order => {
       const orderDate = new Date(order.createdAt);
       return orderDate >= fromDate && orderDate <= toDate && order.orderStatus !== 'cancelled';
     });
 
+    setDateFilteredOrders(filtered);
     setFilteredDateOrders(filtered);
     setIsDateFilterActive(true);
     
@@ -165,11 +168,12 @@ const AdminOrders = () => {
     setDateFrom('');
     setDateTo('');
     setIsDateFilterActive(false);
-    setFilteredDateOrders(orders);
+    setDateFilteredOrders([]);
+    setFilteredDateOrders([]);
     setSuccess('');
   };
 
-  // Get the orders to display (filtered by date if active, else all)
+  // Get the orders to display (filtered by date if active, else paginated orders)
   const displayOrders = isDateFilterActive ? filteredDateOrders : orders;
 
   const filteredOrders = useMemo(() => {
@@ -181,7 +185,7 @@ const AdminOrders = () => {
   const updateOrderInList = (updated) => {
     setOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
     setFilteredDateOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
-    setAllOrdersForExport((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
+    setDateFilteredOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
   };
 
   const handleStatusChange = async (orderId, orderStatus) => {
@@ -298,18 +302,16 @@ const AdminOrders = () => {
   // Export to Excel
   const exportToExcel = async () => {
     try {
-      let ordersToExport;
-      
-      if (isDateFilterActive) {
-        // If date filter is active, use filteredDateOrders
-        ordersToExport = filteredDateOrders;
-      } else {
-        // If no date filter, fetch ALL orders for export
-        ordersToExport = await fetchAllOrdersForExport();
+      if (!isDateFilterActive) {
+        setError('Please select date range first to download orders');
+        setShowDownloadMenu(false);
+        return;
       }
       
+      const ordersToExport = filteredDateOrders;
+      
       if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
+        setError('No orders to export in this date range');
         return;
       }
       
@@ -326,7 +328,7 @@ const AdminOrders = () => {
       ws['!cols'] = colWidths;
       
       XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
-      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      const dateSuffix = `_${dateFrom}_to_${dateTo}`;
       XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
       setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
       setShowDownloadMenu(false);
@@ -338,16 +340,16 @@ const AdminOrders = () => {
   // Export to CSV
   const exportToCSV = async () => {
     try {
-      let ordersToExport;
-      
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
+      if (!isDateFilterActive) {
+        setError('Please select date range first to download orders');
+        setShowDownloadMenu(false);
+        return;
       }
       
+      const ordersToExport = filteredDateOrders;
+      
       if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
+        setError('No orders to export in this date range');
         return;
       }
       
@@ -369,7 +371,7 @@ const AdminOrders = () => {
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      const dateSuffix = `_${dateFrom}_to_${dateTo}`;
       link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(link.href);
@@ -383,16 +385,16 @@ const AdminOrders = () => {
   // Export to PDF
   const exportToPDF = async () => {
     try {
-      let ordersToExport;
-      
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
+      if (!isDateFilterActive) {
+        setError('Please select date range first to download orders');
+        setShowDownloadMenu(false);
+        return;
       }
       
+      const ordersToExport = filteredDateOrders;
+      
       if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
+        setError('No orders to export in this date range');
         return;
       }
       
@@ -407,14 +409,12 @@ const AdminOrders = () => {
       doc.setFontSize(10);
       doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
       doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
-      if (isDateFilterActive) {
-        doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
-      }
+      doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
       
       autoTable(doc, {
         head: [tableHeaders],
         body: tableRows,
-        startY: isDateFilterActive ? 40 : 35,
+        startY: 40,
         theme: 'grid',
         styles: { fontSize: 6, cellPadding: 1.5 },
         headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
@@ -430,7 +430,7 @@ const AdminOrders = () => {
         }
       });
       
-      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      const dateSuffix = `_${dateFrom}_to_${dateTo}`;
       doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
       setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
       setShowDownloadMenu(false);
@@ -446,12 +446,22 @@ const AdminOrders = () => {
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
       
-      {/* Download Dropdown */}
+      {/* Download Dropdown - Only enabled when date filter is active */}
       <div className="relative">
         <button
-          onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-          disabled={loadingExport}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2 disabled:opacity-50"
+          onClick={() => {
+            if (!isDateFilterActive) {
+              setError('Please select a date range first to download orders');
+              return;
+            }
+            setShowDownloadMenu(!showDownloadMenu);
+          }}
+          disabled={!isDateFilterActive || loadingExport}
+          className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${
+            isDateFilterActive && !loadingExport
+              ? 'bg-green-600 text-white hover:bg-green-700'
+              : 'bg-gray-400 text-white cursor-not-allowed'
+          }`}
         >
           <span>⬇ Download</span>
           <span className="text-xs">▾</span>
@@ -459,7 +469,7 @@ const AdminOrders = () => {
           {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
         </button>
         
-        {showDownloadMenu && !loadingExport && (
+        {showDownloadMenu && !loadingExport && isDateFilterActive && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
             <button
               onClick={exportToExcel}
@@ -559,7 +569,7 @@ const AdminOrders = () => {
       </div>}
     </div>
 
-    {/* Load More Button */}
+    {/* Load More Button - Only when no date filter */}
     {!isDateFilterActive && hasMoreOrders && (
       <div className="mt-6 text-center">
         <button
