@@ -96,7 +96,7 @@ const Checkout = () => {
     if (!formData.city.trim()) return 'Please enter your city';
     if (!formData.state.trim()) return 'Please enter your state';
     if (!formData.pincode.trim()) return 'Please enter your pincode';
-    if (formData.phone.length < 10) return 'Please enter a valid phone number';
+    if (formData.phone.length !== 10) return 'Please enter a valid phone number';
     return null;
   };
 
