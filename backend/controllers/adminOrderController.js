@@ -1,7 +1,7 @@
 const Order = require('../models/Order');
 const User = require('../models/User');
 
-// @desc    Get all orders (admin) - FETCH ALL ORDERS
+// @desc    Get all orders (admin) - FETCH ALL ORDERS (Original - Keep as is)
 // @route   GET /api/admin/orders
 // @access  Private (Admin)
 const getAllOrders = async (req, res) => {
@@ -45,7 +45,63 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-// @desc    Get orders by date range
+// @desc    Get orders with pagination (NEW - For admin orders page)
+// @route   GET /api/admin/orders/paginated
+// @access  Private (Admin)
+const getOrdersPaginated = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      Order.find({})
+        .populate('userId', 'name email phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Order.countDocuments(),
+    ]);
+
+    // Format orders to include user details
+    const formattedOrders = orders.map(order => ({
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      user: order.userId,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      deliveryCharge: order.deliveryCharge,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      orderStatus: order.orderStatus,
+      address: order.address,
+      createdAt: order.createdAt,
+      paidAmount: order.paidAmount,
+      remainingAmount: order.remainingAmount,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedOrders.length,
+      total: total,
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(total / limit),
+      hasMore: skip + formattedOrders.length < total,
+      data: formattedOrders,
+    });
+  } catch (error) {
+    console.error('Get paginated orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get orders by date range (Keep as is)
 // @route   GET /api/admin/orders/date-range
 // @access  Private (Admin)
 const getOrdersByDateRange = async (req, res) => {
@@ -155,7 +211,7 @@ const getOrdersByDateRange = async (req, res) => {
   }
 };
 
-// @desc    Update editable order and customer details
+// @desc    Update editable order and customer details (Keep as is)
 // @route   PUT /api/admin/orders/:id
 // @access  Private (Admin)
 const updateOrder = async (req, res) => {
@@ -237,7 +293,7 @@ const updateOrder = async (req, res) => {
   }
 };
 
-// @desc    Update order status
+// @desc    Update order status (Keep as is)
 // @route   PATCH /api/admin/orders/:id/status
 // @access  Private (Admin)
 const updateOrderStatus = async (req, res) => {
@@ -281,7 +337,7 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// @desc    Get order statistics
+// @desc    Get order statistics (Keep as is)
 // @route   GET /api/admin/orders/stats
 // @access  Private (Admin)
 const getOrderStats = async (req, res) => {
@@ -322,6 +378,7 @@ const getOrderStats = async (req, res) => {
 
 module.exports = {
   getAllOrders,
+  getOrdersPaginated,
   getOrdersByDateRange,
   updateOrder,
   updateOrderStatus,

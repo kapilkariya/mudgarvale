@@ -26,6 +26,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredDateOrders, setFilteredDateOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
@@ -35,6 +36,12 @@ const AdminOrders = () => {
   const [form, setForm] = useState(null);
   const [formError, setFormError] = useState('');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [allOrdersLoaded, setAllOrdersLoaded] = useState(false);
   
   // Date Range States
   const [dateFrom, setDateFrom] = useState('');
@@ -56,24 +63,45 @@ const AdminOrders = () => {
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
-  const loadOrders = async () => {
+  const loadOrders = async (page = 1, append = false) => {
     try {
-      setLoading(true);
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
       setError('');
-      const response = await adminAPI.getAllOrders();
+      
+      const response = await adminAPI.getOrdersPaginated(page, 20);
       if (response.success) {
-        setOrders(response.data);
-        setFilteredDateOrders(response.data);
+        if (append) {
+          setOrders(prev => [...prev, ...response.data]);
+          setFilteredDateOrders(prev => [...prev, ...response.data]);
+        } else {
+          setOrders(response.data);
+          setFilteredDateOrders(response.data);
+        }
+        setCurrentPage(response.page);
+        setHasMoreOrders(response.hasMore);
+        setTotalOrdersCount(response.total);
+        setAllOrdersLoaded(!response.hasMore);
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreOrders = () => {
+    if (hasMoreOrders && !loadingMore && !isDateFilterActive) {
+      loadOrders(currentPage + 1, true);
     }
   };
 
   useEffect(() => {
-    loadOrders();
+    loadOrders(1, false);
   }, []);
 
   // Auto-filter when dates change
@@ -307,54 +335,52 @@ const AdminOrders = () => {
   };
 
   // Export to PDF
- // Export to PDF
-const exportToPDF = () => {
-  const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
-  if (!ordersToExport.length) {
-    setError('No orders to export');
-    return;
-  }
-  
-  const doc = new jsPDF('landscape', 'mm', 'a4');
-  const rows = prepareExportData(ordersToExport);
-  
-  const tableHeaders = Object.keys(rows[0]);
-  const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
-  
-  doc.setFontSize(16);
-  doc.text('Orders Report', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
-  doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
-  if (isDateFilterActive) {
-    doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
-  }
-  
-  // ✅ FIXED: Use autoTable as a function
-  autoTable(doc, {
-    head: [tableHeaders],
-    body: tableRows,
-    startY: isDateFilterActive ? 40 : 35,
-    theme: 'grid',
-    styles: { fontSize: 6, cellPadding: 1.5 },
-    headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
-    columnStyles: {
-      0: { cellWidth: 18 },
-      1: { cellWidth: 22 },
-      2: { cellWidth: 28 },
-      7: { cellWidth: 38 },
-    },
-    didDrawPage: function(data) {
-      doc.setFontSize(8);
-      doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
+  const exportToPDF = () => {
+    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
+    if (!ordersToExport.length) {
+      setError('No orders to export');
+      return;
     }
-  });
-  
-  const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-  doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
-  setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
-  setShowDownloadMenu(false);
-};
+    
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    const rows = prepareExportData(ordersToExport);
+    
+    const tableHeaders = Object.keys(rows[0]);
+    const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
+    
+    doc.setFontSize(16);
+    doc.text('Orders Report', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
+    doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
+    if (isDateFilterActive) {
+      doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
+    }
+    
+    autoTable(doc, {
+      head: [tableHeaders],
+      body: tableRows,
+      startY: isDateFilterActive ? 40 : 35,
+      theme: 'grid',
+      styles: { fontSize: 6, cellPadding: 1.5 },
+      headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 18 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 28 },
+        7: { cellWidth: 38 },
+      },
+      didDrawPage: function(data) {
+        doc.setFontSize(8);
+        doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
+      }
+    });
+    
+    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+    doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
+    setShowDownloadMenu(false);
+  };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
 
@@ -434,6 +460,11 @@ const exportToPDF = () => {
             {dateFrom && dateTo && ` from ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`}
           </span>
         )}
+        {!isDateFilterActive && totalOrdersCount > 0 && (
+          <span className="text-sm text-gray-600 ml-2">
+            Showing <span className="font-bold text-[#5C3A21]">{orders.length}</span> of <span className="font-bold">{totalOrdersCount}</span> orders
+          </span>
+        )}
       </div>
     </div>
 
@@ -465,9 +496,30 @@ const exportToPDF = () => {
     <div className="space-y-4">
       {filteredOrders.map((order) => <OrderCard key={order._id} order={order} expanded={expandedOrder === order._id} toggle={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)} openEdit={() => openEdit(order)} status={getStatus(order.orderStatus)} statusOptions={statusOptions} updating={updatingId === order._id} onStatusChange={handleStatusChange} formatDate={formatDate} formatPrice={formatPrice} />)}
       {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">
-        {isDateFilterActive ? 'No orders found in this date range.' : 'No orders found.'}
+        {isDateFilterActive ? 'No orders found in this date range.' : allOrdersLoaded ? 'No orders found.' : 'Loading orders...'}
       </div>}
     </div>
+
+    {/* Load More Button */}
+    {!isDateFilterActive && hasMoreOrders && (
+      <div className="mt-6 text-center">
+        <button
+          onClick={loadMoreOrders}
+          disabled={loadingMore}
+          className="px-6 py-3 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50"
+        >
+          {loadingMore ? 'Loading...' : 'Load More Orders'}
+        </button>
+      </div>
+    )}
+
+    {/* All loaded message */}
+    {!isDateFilterActive && allOrdersLoaded && orders.length > 0 && (
+      <p className="mt-6 text-center text-sm text-gray-500">
+        All {totalOrdersCount} orders loaded
+      </p>
+    )}
+
     {editingOrder && form && <EditOrderModal form={form} onClose={() => { if (!updatingId) { setEditingOrder(null); setForm(null); } }} onSubmit={submitEdit} updateField={updateField} updateItem={updateItem} error={formError} saving={updatingId === editingOrder._id} />}
   </div>;
 };

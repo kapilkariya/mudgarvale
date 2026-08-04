@@ -159,11 +159,23 @@ export const adminAPI = {
   }),
   deleteProduct: (id) => fetchWithAuth(`${API_URL}/admin/products/${id}`, { method: 'DELETE' }),
   
-  // Orders
+  // Orders - Original (fetches all orders)
   getAllOrders: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return fetchWithAuth(`${API_URL}/admin/orders${queryString ? `?${queryString}` : ''}`);
   },
+  
+  // NEW - Paginated orders (for admin orders page - fetches 20 at a time)
+  getOrdersPaginated: (page = 1, limit = 20) => {
+    return fetchWithAuth(`${API_URL}/admin/orders/paginated?page=${page}&limit=${limit}`);
+  },
+  
+  // Date range filter
+  getOrdersByDateRange: (from, to) => {
+    return fetchWithAuth(`${API_URL}/admin/orders/date-range?from=${from}&to=${to}`);
+  },
+  
+  // Order management
   updateOrder: (id, data) => fetchWithAuth(`${API_URL}/admin/orders/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -173,9 +185,4 @@ export const adminAPI = {
     method: 'PATCH',
     body: JSON.stringify({ orderStatus: status }),
   }),
-  
-  // 👇 ADD THIS NEW FUNCTION 👇
-  getOrdersByDateRange: (from, to) => {
-    return fetchWithAuth(`${API_URL}/admin/orders/date-range?from=${from}&to=${to}`);
-  },
 };
