@@ -130,12 +130,31 @@ const AdminOrders = () => {
   const exportOrdersToExcel = () => {
     if (!orders.length) return;
     const rows = orders.map((order) => {
-      const subtotal = order.totalAmount - (order.deliveryCharge || 0);
-      
+      const itemsList = order.items?.map(item => 
+        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
+      ).join('; ') || '';
+
+      // Calculate total weight
+      const totalWeight = order.items?.reduce((sum, item) => {
+        let itemWeight = 0;
+        
+        if (item.category === 'senaboard') {
+          // For senaboard, add 2kg per quantity
+          itemWeight = 2 * item.quantity;
+        } else {
+          // For other products, use selectedWeight * quantity
+          itemWeight = parseFloat(item.selectedWeight) * item.quantity;
+        }
+        
+        return sum + itemWeight;
+      }, 0) || 0;
+
+      // Calculate amount paid and pending
       let amountPaid = 0;
       let amountPending = 0;
       
       if (order.paymentMethod === 'online') {
+        // For online payments, full amount is paid
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
       } else if (order.paymentMethod === 'cod') {
@@ -152,25 +171,51 @@ const AdminOrders = () => {
       }
 
       return {
-        'Order Number': order.orderNumber,
-        'Customer Name': order.user?.name || '',
-        'Customer Email': order.user?.email || '',
+        'Order Number': order.orderNumber || '',
+        'Customer Name': order.user?.name || order.address?.name || '',
+        'Customer Email': order.user?.email || order.address?.email || '',
+        'Address': order.address?.address || '',
+        'City': order.address?.city || '',
+        'State': order.address?.state || '',
+        'Pincode': order.address?.pincode || '',
+        'Items': itemsList,
         'Phone': order.address?.phone || '',
-        'Address': [order.address?.address, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', '),
-        'Items': (order.items || []).map((item) => `${item.name} (${item.selectedWeight}kg) × ${item.quantity}`).join('; '),
-        'Subtotal': subtotal,
-        'Delivery Charge': order.deliveryCharge || 0,
-        'Total Amount': order.totalAmount,
+        'Total Weight (kg)': totalWeight.toFixed(2),
+        'Total Amount': order.totalAmount || 0,
         'Amount Paid': amountPaid,
         'Amount Pending': amountPending,
         'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
         'Payment Status': order.paymentStatus || '',
-        'Order Status': order.orderStatus,
+        'Order Status': order.orderStatus || '',
         'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
       };
     });
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), 'Orders');
+    const ws = XLSX.utils.json_to_sheet(rows);
+    
+    // Set column widths
+    const colWidths = [
+      { wch: 15 }, // Order Number
+      { wch: 20 }, // Customer Name
+      { wch: 25 }, // Customer Email
+      { wch: 30 }, // Address
+      { wch: 15 }, // City
+      { wch: 15 }, // State
+      { wch: 12 }, // Pincode
+      { wch: 40 }, // Items
+      { wch: 15 }, // Phone
+      { wch: 16 }, // Total Weight (kg)
+      { wch: 15 }, // Total Amount
+      { wch: 15 }, // Amount Paid
+      { wch: 15 }, // Amount Pending
+      { wch: 20 }, // Payment Method
+      { wch: 18 }, // Payment Status
+      { wch: 18 }, // Order Status
+      { wch: 15 }, // Created Date
+    ];
+    ws['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
     XLSX.writeFile(workbook, `Orders_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
