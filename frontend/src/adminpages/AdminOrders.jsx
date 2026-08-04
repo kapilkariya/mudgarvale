@@ -94,23 +94,23 @@ const AdminOrders = () => {
     }
   };
 
-  // Fetch ALL orders for date filter
-  const fetchAllOrdersForDateFilter = async () => {
-    try {
-      setLoadingExport(true);
-      setError('');
-      const response = await adminAPI.getAllOrders();
-      if (response.success) {
-        return response.data;
-      }
-      return [];
-    } catch (err) {
-      setError(err.message || 'Failed to fetch orders for date filter');
-      return [];
-    } finally {
-      setLoadingExport(false);
+  // Fetch ALL orders for date filter (including cancelled)
+const fetchAllOrdersForDateFilter = async () => {
+  try {
+    setLoadingExport(true);
+    setError('');
+    const response = await adminAPI.getAllOrders();
+    if (response.success) {
+      return response.data;
     }
-  };
+    return [];
+  } catch (err) {
+    setError(err.message || 'Failed to fetch orders for date filter');
+    return [];
+  } finally {
+    setLoadingExport(false);
+  }
+};
 
   const loadMoreOrders = () => {
     if (hasMoreOrders && !loadingMore && !isDateFilterActive) {
@@ -133,36 +133,46 @@ const AdminOrders = () => {
     }
   }, [dateFrom, dateTo]);
 
-  const filterOrdersByDate = async () => {
-    if (!dateFrom || !dateTo) {
-      setIsDateFilterActive(false);
-      setDateFilteredOrders([]);
-      setFilteredDateOrders([]);
-      return;
-    }
+const filterOrdersByDate = async () => {
+  if (!dateFrom || !dateTo) {
+    setIsDateFilterActive(false);
+    setDateFilteredOrders([]);
+    setFilteredDateOrders([]);
+    return;
+  }
 
-    const fromDate = new Date(dateFrom);
-    const toDate = new Date(dateTo);
-    toDate.setHours(23, 59, 59, 999);
+  const fromDate = new Date(dateFrom);
+  const toDate = new Date(dateTo);
+  // Set to end of day for 'to' date
+  toDate.setHours(23, 59, 59, 999);
+  // Set from date to start of day
+  fromDate.setHours(0, 0, 0, 0);
 
-    // Fetch ALL orders from database for date filtering
-    const allOrders = await fetchAllOrdersForDateFilter();
+  // Fetch ALL orders from database for date filtering
+  const allOrders = await fetchAllOrdersForDateFilter();
+  
+  // ✅ FIX: Compare dates properly - include all orders on the selected dates
+  const filtered = allOrders.filter(order => {
+    const orderDate = new Date(order.createdAt);
+    // Reset time to 0 for accurate date comparison
+    const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+    const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+    const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
     
-    const filtered = allOrders.filter(order => {
-      const orderDate = new Date(order.createdAt);
-      return orderDate >= fromDate && orderDate <= toDate && order.orderStatus !== 'cancelled';
-    });
+    // Compare only the date part (year, month, day)
+    return orderDateOnly >= fromDateOnly && orderDateOnly <= toDateOnly;
+  });
 
-    setDateFilteredOrders(filtered);
-    setFilteredDateOrders(filtered);
-    setIsDateFilterActive(true);
-    
-    if (filtered.length > 0) {
-      setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
-    } else {
-      setSuccess(`No orders found between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
-    }
-  };
+  setDateFilteredOrders(filtered);
+  setFilteredDateOrders(filtered);
+  setIsDateFilterActive(true);
+  
+  if (filtered.length > 0) {
+    setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
+  } else {
+    setSuccess(`No orders found between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
+  }
+};
 
   const clearDateFilter = () => {
     setDateFrom('');
