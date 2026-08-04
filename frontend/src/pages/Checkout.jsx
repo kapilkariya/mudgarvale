@@ -96,7 +96,7 @@ const Checkout = () => {
     if (!formData.city.trim()) return 'Please enter your city';
     if (!formData.state.trim()) return 'Please enter your state';
     if (!formData.pincode.trim()) return 'Please enter your pincode';
-    if (formData.phone.length !== 10) return 'Please enter a valid phone number';
+    if (formData.phone.length !== 10) return 'Phone number must be exactly 10 digits';
     return null;
   };
 
@@ -383,11 +383,22 @@ const Checkout = () => {
                         type="tel"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFormData({ ...formData, phone: value });
+                        }}
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-                        placeholder="Enter your phone number"
+                        maxLength="10"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${
+                          formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
+                            ? 'border-red-500'
+                            : 'border-gray-300'
+                        }`}
+                        placeholder="Enter 10-digit phone number"
                       />
+                      {formData.phone && formData.phone.length !== 10 && formData.phone.length > 0 && (
+                        <p className="text-red-500 text-sm mt-1">Phone number must be exactly 10 digits</p>
+                      )}
                     </div>
 
                     <div>
