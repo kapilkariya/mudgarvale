@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { adminAPI } from '../config/api';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const emptyForm = (order) => ({
   customer: {
@@ -22,6 +24,7 @@ const emptyForm = (order) => ({
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredDateOrders, setFilteredDateOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -31,6 +34,12 @@ const AdminOrders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [form, setForm] = useState(null);
   const [formError, setFormError] = useState('');
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  
+  // Date Range States
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [isDateFilterActive, setIsDateFilterActive] = useState(false);
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -54,6 +63,7 @@ const AdminOrders = () => {
       const response = await adminAPI.getAllOrders();
       if (response.success) {
         setOrders(response.data);
+        setFilteredDateOrders(response.data);
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch orders');
@@ -66,13 +76,63 @@ const AdminOrders = () => {
     loadOrders();
   }, []);
 
-  const filteredOrders = useMemo(() => {
-    if (activeFilter === 'pending_delivery') return orders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
-    if (activeFilter === 'delivered' || activeFilter === 'cancelled') return orders.filter((order) => order.orderStatus === activeFilter);
-    return orders;
-  }, [activeFilter, orders]);
+  // Auto-filter when dates change
+  useEffect(() => {
+    if (dateFrom && dateTo) {
+      filterOrdersByDate();
+    } else if (!dateFrom && !dateTo) {
+      setIsDateFilterActive(false);
+      setFilteredDateOrders(orders);
+    }
+  }, [dateFrom, dateTo, orders]);
 
-  const updateOrderInList = (updated) => setOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
+  const filterOrdersByDate = () => {
+    if (!dateFrom || !dateTo) {
+      setIsDateFilterActive(false);
+      setFilteredDateOrders(orders);
+      return;
+    }
+
+    const fromDate = new Date(dateFrom);
+    const toDate = new Date(dateTo);
+    toDate.setHours(23, 59, 59, 999);
+
+    const filtered = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= fromDate && orderDate <= toDate && order.orderStatus !== 'cancelled';
+    });
+
+    setFilteredDateOrders(filtered);
+    setIsDateFilterActive(true);
+    
+    if (filtered.length > 0) {
+      setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
+    } else {
+      setSuccess(`No orders found between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
+    }
+  };
+
+  const clearDateFilter = () => {
+    setDateFrom('');
+    setDateTo('');
+    setIsDateFilterActive(false);
+    setFilteredDateOrders(orders);
+    setSuccess('');
+  };
+
+  // Get the orders to display (filtered by date if active, else all)
+  const displayOrders = isDateFilterActive ? filteredDateOrders : orders;
+
+  const filteredOrders = useMemo(() => {
+    if (activeFilter === 'pending_delivery') return displayOrders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
+    if (activeFilter === 'delivered' || activeFilter === 'cancelled') return displayOrders.filter((order) => order.orderStatus === activeFilter);
+    return displayOrders;
+  }, [activeFilter, displayOrders]);
+
+  const updateOrderInList = (updated) => {
+    setOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
+    setFilteredDateOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
+  };
 
   const handleStatusChange = async (orderId, orderStatus) => {
     try {
@@ -127,34 +187,27 @@ const AdminOrders = () => {
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  const exportOrdersToExcel = () => {
-    if (!orders.length) return;
-    const rows = orders.map((order) => {
+  // Prepare data for export
+  const prepareExportData = (ordersToExport) => {
+    return ordersToExport.map((order) => {
       const itemsList = order.items?.map(item => 
         `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
       ).join('; ') || '';
 
-      // Calculate total weight
       const totalWeight = order.items?.reduce((sum, item) => {
         let itemWeight = 0;
-        
         if (item.category === 'senaboard') {
-          // For senaboard, add 2kg per quantity
           itemWeight = 2 * item.quantity;
         } else {
-          // For other products, use selectedWeight * quantity
           itemWeight = parseFloat(item.selectedWeight) * item.quantity;
         }
-        
         return sum + itemWeight;
       }, 0) || 0;
 
-      // Calculate amount paid and pending
       let amountPaid = 0;
       let amountPending = 0;
       
       if (order.paymentMethod === 'online') {
-        // For online payments, full amount is paid
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
       } else if (order.paymentMethod === 'cod') {
@@ -190,34 +243,118 @@ const AdminOrders = () => {
         'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
       };
     });
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
+    if (!ordersToExport.length) {
+      setError('No orders to export');
+      return;
+    }
+    
+    const rows = prepareExportData(ordersToExport);
     const workbook = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(rows);
     
-    // Set column widths
     const colWidths = [
-      { wch: 15 }, // Order Number
-      { wch: 20 }, // Customer Name
-      { wch: 25 }, // Customer Email
-      { wch: 30 }, // Address
-      { wch: 15 }, // City
-      { wch: 15 }, // State
-      { wch: 12 }, // Pincode
-      { wch: 40 }, // Items
-      { wch: 15 }, // Phone
-      { wch: 16 }, // Total Weight (kg)
-      { wch: 15 }, // Total Amount
-      { wch: 15 }, // Amount Paid
-      { wch: 15 }, // Amount Pending
-      { wch: 20 }, // Payment Method
-      { wch: 18 }, // Payment Status
-      { wch: 18 }, // Order Status
-      { wch: 15 }, // Created Date
+      { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
+      { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 },
+      { wch: 18 }, { wch: 15 }
     ];
     ws['!cols'] = colWidths;
     
     XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
-    XLSX.writeFile(workbook, `Orders_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+    XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
+    setShowDownloadMenu(false);
   };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
+    if (!ordersToExport.length) {
+      setError('No orders to export');
+      return;
+    }
+    
+    const rows = prepareExportData(ordersToExport);
+    const headers = Object.keys(rows[0]);
+    const csvRows = [];
+    
+    csvRows.push(headers.join(','));
+    
+    for (const row of rows) {
+      const values = headers.map(header => {
+        const val = row[header] || '';
+        return `"${String(val).replace(/"/g, '""')}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+    
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+    link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
+    setShowDownloadMenu(false);
+  };
+
+  // Export to PDF
+ // Export to PDF
+const exportToPDF = () => {
+  const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
+  if (!ordersToExport.length) {
+    setError('No orders to export');
+    return;
+  }
+  
+  const doc = new jsPDF('landscape', 'mm', 'a4');
+  const rows = prepareExportData(ordersToExport);
+  
+  const tableHeaders = Object.keys(rows[0]);
+  const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
+  
+  doc.setFontSize(16);
+  doc.text('Orders Report', 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
+  doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
+  if (isDateFilterActive) {
+    doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
+  }
+  
+  // ✅ FIXED: Use autoTable as a function
+  autoTable(doc, {
+    head: [tableHeaders],
+    body: tableRows,
+    startY: isDateFilterActive ? 40 : 35,
+    theme: 'grid',
+    styles: { fontSize: 6, cellPadding: 1.5 },
+    headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 18 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 28 },
+      7: { cellWidth: 38 },
+    },
+    didDrawPage: function(data) {
+      doc.setFontSize(8);
+      doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
+    }
+  });
+  
+  const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+  doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
+  setShowDownloadMenu(false);
+};
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
 
@@ -225,20 +362,116 @@ const AdminOrders = () => {
     <div className="h-20" />
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
-      <button onClick={exportOrdersToExcel} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm">Download Orders</button>
+      
+      {/* Download Dropdown */}
+      <div className="relative">
+        <button
+          onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2"
+        >
+          <span>⬇ Download</span>
+          <span className="text-xs">▾</span>
+          {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
+        </button>
+        
+        {showDownloadMenu && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+            <button
+              onClick={exportToExcel}
+              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
+            >
+              <span className="text-lg mr-2">📊</span> Excel (.xlsx)
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
+            >
+              <span className="text-lg mr-2">📄</span> CSV (.csv)
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"
+            >
+              <span className="text-lg mr-2">📕</span> PDF (.pdf)
+            </button>
+          </div>
+        )}
+      </div>
     </div>
+
+    {/* Date Range Filter - Auto-filter on date change */}
+    <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="flex flex-wrap items-end gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+          />
+        </div>
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={clearDateFilter}
+            className="px-4 py-2 text-red-600 hover:text-red-800 transition font-medium"
+          >
+            ✕ Clear Dates
+          </button>
+        )}
+        {isDateFilterActive && (
+          <span className="text-sm text-gray-600 ml-2">
+            Showing <span className="font-bold text-[#5C3A21]">{filteredDateOrders.length}</span> orders
+            {dateFrom && dateTo && ` from ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`}
+          </span>
+        )}
+      </div>
+    </div>
+
     {error && <Notice tone="red" message={error} dismiss={() => setError('')} />}
     {success && <Notice tone="green" message={success} dismiss={() => setSuccess('')} />}
-    <div className="mb-6 overflow-x-auto pb-2"><div className="flex gap-2 min-w-max">{filterOptions.map((filter) => <button key={filter.value} onClick={() => setActiveFilter(filter.value)} className={`px-4 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter.value ? 'bg-[#5C3A21] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{filter.label} ({filter.value === 'all' ? orders.length : filteredCount(orders, filter.value)})</button>)}</div></div>
+    
+    <div className="mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 min-w-max">
+        {filterOptions.map((filter) => {
+          const count = filter.value === 'all' 
+            ? displayOrders.length 
+            : filter.value === 'pending_delivery'
+              ? displayOrders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus)).length
+              : displayOrders.filter((order) => order.orderStatus === filter.value).length;
+          
+          return (
+            <button
+              key={filter.value}
+              onClick={() => setActiveFilter(filter.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter.value ? 'bg-[#5C3A21] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              {filter.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+    </div>
+    
     <div className="space-y-4">
       {filteredOrders.map((order) => <OrderCard key={order._id} order={order} expanded={expandedOrder === order._id} toggle={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)} openEdit={() => openEdit(order)} status={getStatus(order.orderStatus)} statusOptions={statusOptions} updating={updatingId === order._id} onStatusChange={handleStatusChange} formatDate={formatDate} formatPrice={formatPrice} />)}
-      {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">No orders found.</div>}
+      {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">
+        {isDateFilterActive ? 'No orders found in this date range.' : 'No orders found.'}
+      </div>}
     </div>
     {editingOrder && form && <EditOrderModal form={form} onClose={() => { if (!updatingId) { setEditingOrder(null); setForm(null); } }} onSubmit={submitEdit} updateField={updateField} updateItem={updateItem} error={formError} saving={updatingId === editingOrder._id} />}
   </div>;
 };
 
-const filteredCount = (orders, filter) => filter === 'pending_delivery' ? orders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus)).length : orders.filter((order) => order.orderStatus === filter).length;
 const Notice = ({ tone, message, dismiss }) => <div className={`mb-4 p-3 bg-${tone}-100 text-${tone}-800 rounded-lg text-sm`}>{message}<button onClick={dismiss} className="ml-4 underline">Dismiss</button></div>;
 
 const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, updating, onStatusChange, formatDate, formatPrice }) => {

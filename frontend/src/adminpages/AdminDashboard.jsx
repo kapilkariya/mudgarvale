@@ -52,6 +52,12 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [graphView, setGraphView] = useState('monthly');
 
+  // Date Range States
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [dateRangeData, setDateRangeData] = useState(null);
+  const [loadingDateRange, setLoadingDateRange] = useState(false);
+
   useEffect(() => {
     fetchStats();
     fetchAllData();
@@ -92,6 +98,29 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error fetching data:', err);
+    }
+  };
+
+  const fetchDateRangeData = async () => {
+    if (!dateFrom || !dateTo) {
+      setError('Please select both "From" and "To" dates');
+      return;
+    }
+
+    try {
+      setLoadingDateRange(true);
+      setError('');
+      const response = await adminAPI.getOrdersByDateRange(dateFrom, dateTo);
+      if (response.success) {
+        setDateRangeData(response.data);
+      } else {
+        setError(response.message || 'Failed to fetch date range data');
+      }
+    } catch (err) {
+      console.error('Error fetching date range:', err);
+      setError(err.message || 'Failed to fetch date range data');
+    } finally {
+      setLoadingDateRange(false);
     }
   };
 
@@ -356,6 +385,120 @@ const AdminDashboard = () => {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Date Range Filter - NEW SECTION */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">📅 Date Range Report</h2>
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+              />
+            </div>
+            <button
+              onClick={fetchDateRangeData}
+              disabled={loadingDateRange}
+              className="px-6 py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50"
+            >
+              {loadingDateRange ? 'Loading...' : 'Get Report'}
+            </button>
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => {
+                  setDateFrom('');
+                  setDateTo('');
+                  setDateRangeData(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Date Range Results */}
+          {dateRangeData && (
+            <div className="mt-6 border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-600">
+                  Showing orders from <span className="font-semibold">{new Date(dateRangeData.dateRange.from).toLocaleDateString('en-IN')}</span> 
+                  to <span className="font-semibold">{new Date(dateRangeData.dateRange.to).toLocaleDateString('en-IN')}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Total Orders: <span className="font-semibold">{dateRangeData.summary.totalOrders}</span>
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">💳</span>
+                    <h4 className="font-semibold text-gray-700">Online</h4>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="flex justify-between">
+                      <span className="text-sm text-gray-600">Orders</span>
+                      <span className="font-bold text-gray-900">{dateRangeData.summary.onlineOrders}</span>
+                    </p>
+                    <p className="flex justify-between border-t pt-1">
+                      <span className="text-sm text-gray-600">Amount</span>
+                      <span className="font-bold text-green-600">{formatPrice(dateRangeData.summary.onlineAmount)}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">💰</span>
+                    <h4 className="font-semibold text-gray-700">COD</h4>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="flex justify-between">
+                      <span className="text-sm text-gray-600">Orders</span>
+                      <span className="font-bold text-gray-900">{dateRangeData.summary.codOrders}</span>
+                    </p>
+                    <p className="flex justify-between border-t pt-1">
+                      <span className="text-sm text-gray-600">Amount</span>
+                      <span className="font-bold text-orange-600">{formatPrice(dateRangeData.summary.codAmount)}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[#5C3A21]/5 rounded-lg p-4 border border-[#5C3A21]/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">📊</span>
+                    <h4 className="font-semibold text-gray-700">Total Sales</h4>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="flex justify-between">
+                      <span className="text-sm text-gray-600">Orders</span>
+                      <span className="font-bold text-gray-900">{dateRangeData.summary.totalOrders}</span>
+                    </p>
+                    <p className="flex justify-between border-t pt-1">
+                      <span className="text-sm text-gray-600">Amount</span>
+                      <span className="font-bold text-[#5C3A21]">{formatPrice(dateRangeData.summary.totalSales)}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Quick Overview with Lifetime */}
@@ -679,7 +822,7 @@ const AdminDashboard = () => {
           </a>
         </div>
       </div>
-    </div>
+    </div> 
   );
 };
 

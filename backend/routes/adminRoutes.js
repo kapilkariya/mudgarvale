@@ -7,6 +7,7 @@ const {
 } = require('../controllers/adminProductController');
 const {
   getAllOrders,
+  getOrdersByDateRange,
   updateOrder,
   updateOrderStatus,
   getOrderStats,
@@ -25,6 +26,7 @@ router.delete('/products/:id', deleteProduct);
 
 // Order management routes
 router.get('/orders', getAllOrders);
+router.get('/orders/date-range', getOrdersByDateRange); // NEW: Date range filter
 router.put('/orders/:id', updateOrder);
 router.get('/orders/stats', getOrderStats);
 router.patch('/orders/:id/status', updateOrderStatus);

@@ -173,4 +173,9 @@ export const adminAPI = {
     method: 'PATCH',
     body: JSON.stringify({ orderStatus: status }),
   }),
+  
+  // 👇 ADD THIS NEW FUNCTION 👇
+  getOrdersByDateRange: (from, to) => {
+    return fetchWithAuth(`${API_URL}/admin/orders/date-range?from=${from}&to=${to}`);
+  },
 };

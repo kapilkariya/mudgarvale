@@ -45,6 +45,116 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// @desc    Get orders by date range
+// @route   GET /api/admin/orders/date-range
+// @access  Private (Admin)
+const getOrdersByDateRange = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    // Validate dates
+    if (!from || !to) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both "from" and "to" dates are required',
+      });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    
+    // Set to end of day for 'to' date
+    toDate.setHours(23, 59, 59, 999);
+
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Use YYYY-MM-DD',
+      });
+    }
+
+    if (fromDate > toDate) {
+      return res.status(400).json({
+        success: false,
+        message: '"From" date must be before "To" date',
+      });
+    }
+
+    // Fetch orders within date range (excluding cancelled)
+    const orders = await Order.find({
+      createdAt: { $gte: fromDate, $lte: toDate },
+      orderStatus: { $ne: 'cancelled' }
+    })
+      .populate('userId', 'name email phone')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Calculate metrics
+    let totalSales = 0;
+    let onlineAmount = 0;
+    let codAmount = 0;
+    let totalOrders = orders.length;
+    let onlineOrders = 0;
+    let codOrders = 0;
+
+    orders.forEach(order => {
+      const amount = order.totalAmount || 0;
+      totalSales += amount;
+      
+      if (order.paymentMethod === 'online') {
+        onlineAmount += amount;
+        onlineOrders += 1;
+      } else if (order.paymentMethod === 'cod') {
+        codAmount += amount;
+        codOrders += 1;
+      }
+    });
+
+    // Format orders for response
+    const formattedOrders = orders.map(order => ({
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      user: order.userId,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      deliveryCharge: order.deliveryCharge,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      orderStatus: order.orderStatus,
+      address: order.address,
+      createdAt: order.createdAt,
+      paidAmount: order.paidAmount,
+      remainingAmount: order.remainingAmount,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOrders,
+          totalSales,
+          onlineAmount,
+          codAmount,
+          onlineOrders,
+          codOrders,
+        },
+        orders: formattedOrders,
+        dateRange: {
+          from: fromDate,
+          to: toDate,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Get orders by date range error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders by date range',
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Update editable order and customer details
 // @route   PUT /api/admin/orders/:id
 // @access  Private (Admin)
@@ -212,6 +322,7 @@ const getOrderStats = async (req, res) => {
 
 module.exports = {
   getAllOrders,
+  getOrdersByDateRange,
   updateOrder,
   updateOrderStatus,
   getOrderStats,
