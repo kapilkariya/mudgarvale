@@ -25,8 +25,10 @@ const emptyForm = (order) => ({
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredDateOrders, setFilteredDateOrders] = useState([]);
+  const [allOrdersForExport, setAllOrdersForExport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingExport, setLoadingExport] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
@@ -91,6 +93,25 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+    }
+  };
+
+  // Fetch ALL orders for export (only when needed)
+  const fetchAllOrdersForExport = async () => {
+    try {
+      setLoadingExport(true);
+      setError('');
+      const response = await adminAPI.getAllOrders();
+      if (response.success) {
+        setAllOrdersForExport(response.data);
+        return response.data;
+      }
+      return [];
+    } catch (err) {
+      setError(err.message || 'Failed to fetch orders for export');
+      return [];
+    } finally {
+      setLoadingExport(false);
     }
   };
 
@@ -160,6 +181,7 @@ const AdminOrders = () => {
   const updateOrderInList = (updated) => {
     setOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
     setFilteredDateOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
+    setAllOrdersForExport((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
   };
 
   const handleStatusChange = async (orderId, orderStatus) => {
@@ -274,112 +296,147 @@ const AdminOrders = () => {
   };
 
   // Export to Excel
-  const exportToExcel = () => {
-    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
-    if (!ordersToExport.length) {
-      setError('No orders to export');
-      return;
+  const exportToExcel = async () => {
+    try {
+      let ordersToExport;
+      
+      if (isDateFilterActive) {
+        // If date filter is active, use filteredDateOrders
+        ordersToExport = filteredDateOrders;
+      } else {
+        // If no date filter, fetch ALL orders for export
+        ordersToExport = await fetchAllOrdersForExport();
+      }
+      
+      if (!ordersToExport || !ordersToExport.length) {
+        setError('No orders to export');
+        return;
+      }
+      
+      const rows = prepareExportData(ordersToExport);
+      const workbook = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      
+      const colWidths = [
+        { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
+        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 },
+        { wch: 18 }, { wch: 15 }
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
+      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
+      setShowDownloadMenu(false);
+    } catch (err) {
+      setError(err.message || 'Failed to export to Excel');
     }
-    
-    const rows = prepareExportData(ordersToExport);
-    const workbook = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(rows);
-    
-    const colWidths = [
-      { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
-      { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
-      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 },
-      { wch: 18 }, { wch: 15 }
-    ];
-    ws['!cols'] = colWidths;
-    
-    XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
-    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-    XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
-    setShowDownloadMenu(false);
   };
 
   // Export to CSV
-  const exportToCSV = () => {
-    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
-    if (!ordersToExport.length) {
-      setError('No orders to export');
-      return;
+  const exportToCSV = async () => {
+    try {
+      let ordersToExport;
+      
+      if (isDateFilterActive) {
+        ordersToExport = filteredDateOrders;
+      } else {
+        ordersToExport = await fetchAllOrdersForExport();
+      }
+      
+      if (!ordersToExport || !ordersToExport.length) {
+        setError('No orders to export');
+        return;
+      }
+      
+      const rows = prepareExportData(ordersToExport);
+      const headers = Object.keys(rows[0]);
+      const csvRows = [];
+      
+      csvRows.push(headers.join(','));
+      
+      for (const row of rows) {
+        const values = headers.map(header => {
+          const val = row[header] || '';
+          return `"${String(val).replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+      
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
+      setShowDownloadMenu(false);
+    } catch (err) {
+      setError(err.message || 'Failed to export to CSV');
     }
-    
-    const rows = prepareExportData(ordersToExport);
-    const headers = Object.keys(rows[0]);
-    const csvRows = [];
-    
-    csvRows.push(headers.join(','));
-    
-    for (const row of rows) {
-      const values = headers.map(header => {
-        const val = row[header] || '';
-        return `"${String(val).replace(/"/g, '""')}"`;
-      });
-      csvRows.push(values.join(','));
-    }
-    
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-    link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
-    setShowDownloadMenu(false);
   };
 
   // Export to PDF
-  const exportToPDF = () => {
-    const ordersToExport = isDateFilterActive ? filteredDateOrders : orders;
-    if (!ordersToExport.length) {
-      setError('No orders to export');
-      return;
-    }
-    
-    const doc = new jsPDF('landscape', 'mm', 'a4');
-    const rows = prepareExportData(ordersToExport);
-    
-    const tableHeaders = Object.keys(rows[0]);
-    const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
-    
-    doc.setFontSize(16);
-    doc.text('Orders Report', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
-    doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
-    if (isDateFilterActive) {
-      doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
-    }
-    
-    autoTable(doc, {
-      head: [tableHeaders],
-      body: tableRows,
-      startY: isDateFilterActive ? 40 : 35,
-      theme: 'grid',
-      styles: { fontSize: 6, cellPadding: 1.5 },
-      headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 18 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 28 },
-        7: { cellWidth: 38 },
-      },
-      didDrawPage: function(data) {
-        doc.setFontSize(8);
-        doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
+  const exportToPDF = async () => {
+    try {
+      let ordersToExport;
+      
+      if (isDateFilterActive) {
+        ordersToExport = filteredDateOrders;
+      } else {
+        ordersToExport = await fetchAllOrdersForExport();
       }
-    });
-    
-    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-    doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
-    setShowDownloadMenu(false);
+      
+      if (!ordersToExport || !ordersToExport.length) {
+        setError('No orders to export');
+        return;
+      }
+      
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const rows = prepareExportData(ordersToExport);
+      
+      const tableHeaders = Object.keys(rows[0]);
+      const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
+      
+      doc.setFontSize(16);
+      doc.text('Orders Report', 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
+      doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
+      if (isDateFilterActive) {
+        doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
+      }
+      
+      autoTable(doc, {
+        head: [tableHeaders],
+        body: tableRows,
+        startY: isDateFilterActive ? 40 : 35,
+        theme: 'grid',
+        styles: { fontSize: 6, cellPadding: 1.5 },
+        headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 18 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 28 },
+          7: { cellWidth: 38 },
+        },
+        didDrawPage: function(data) {
+          doc.setFontSize(8);
+          doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
+        }
+      });
+      
+      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
+      setShowDownloadMenu(false);
+    } catch (err) {
+      setError(err.message || 'Failed to export to PDF');
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
@@ -393,14 +450,16 @@ const AdminOrders = () => {
       <div className="relative">
         <button
           onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2"
+          disabled={loadingExport}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm flex items-center gap-2 disabled:opacity-50"
         >
           <span>⬇ Download</span>
           <span className="text-xs">▾</span>
+          {loadingExport && <span className="ml-2">Loading...</span>}
           {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
         </button>
         
-        {showDownloadMenu && (
+        {showDownloadMenu && !loadingExport && (
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
             <button
               onClick={exportToExcel}
