@@ -22,26 +22,30 @@ const AdminDashboard = () => {
     today: { 
       orders: 0, 
       sales: 0, 
-      onlineAmount: 0, 
-      codAmount: 0 
+      onlineRevenue: 0, 
+      codRevenue: 0,
+      deliveryCharges: 0
     },
     monthly: { 
       orders: 0, 
       sales: 0, 
-      onlineAmount: 0, 
-      codAmount: 0 
+      onlineRevenue: 0, 
+      codRevenue: 0,
+      deliveryCharges: 0
     },
     annual: { 
       orders: 0, 
       sales: 0, 
-      onlineAmount: 0, 
-      codAmount: 0 
+      onlineRevenue: 0, 
+      codRevenue: 0,
+      deliveryCharges: 0
     },
     lifetime: { 
       orders: 0, 
       sales: 0, 
-      onlineAmount: 0, 
-      codAmount: 0 
+      onlineRevenue: 0, 
+      codRevenue: 0,
+      deliveryCharges: 0
     },
   });
   const [monthlyData, setMonthlyData] = useState([]);
@@ -151,18 +155,31 @@ const AdminDashboard = () => {
 
     const calculateMetrics = (ordersList) => {
       const totalSales = ordersList.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      const onlineAmount = ordersList
+      
+      // Calculate online revenue: online payments + delivery charges from COD orders
+      const onlineRevenue = ordersList
         .filter(order => order.paymentMethod === 'online')
-        .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      const codAmount = ordersList
+        .reduce((sum, order) => sum + (order.totalAmount || 0), 0) +
+        ordersList
         .filter(order => order.paymentMethod === 'cod')
-        .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        .reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
+      
+      // Calculate COD revenue: COD payments without delivery charges
+      const codRevenue = ordersList
+        .filter(order => order.paymentMethod === 'cod')
+        .reduce((sum, order) => sum + ((order.totalAmount || 0) - (order.deliveryCharge || 0)), 0);
+      
+      // Total delivery charges from COD orders
+      const deliveryCharges = ordersList
+        .filter(order => order.paymentMethod === 'cod')
+        .reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
       
       return {
         orders: ordersList.length,
         sales: totalSales,
-        onlineAmount: onlineAmount,
-        codAmount: codAmount,
+        onlineRevenue: onlineRevenue,
+        codRevenue: codRevenue,
+        deliveryCharges: deliveryCharges,
       };
     };
 
@@ -186,6 +203,7 @@ const AdminDashboard = () => {
       const month = date.getMonth();
       const amount = order.totalAmount || 0;
       const paymentMethod = order.paymentMethod || 'cod';
+      const deliveryCharge = order.deliveryCharge || 0;
 
       years.add(year);
       const key = `${year}-${month}`;
@@ -198,17 +216,22 @@ const AdminDashboard = () => {
           displayName: `${new Date(year, month).toLocaleString('default', { month: 'short' })} ${year}`,
           total: 0,
           count: 0,
-          onlineAmount: 0,
-          codAmount: 0,
+          onlineRevenue: 0,
+          codRevenue: 0,
+          deliveryCharges: 0,
         };
       }
+      
       monthMap[key].total += amount;
       monthMap[key].count += 1;
       
       if (paymentMethod === 'online') {
-        monthMap[key].onlineAmount += amount;
+        monthMap[key].onlineRevenue += amount;
       } else {
-        monthMap[key].codAmount += amount;
+        // For COD: onlineRevenue gets delivery charge, codRevenue gets amount minus delivery charge
+        monthMap[key].onlineRevenue += deliveryCharge;
+        monthMap[key].codRevenue += (amount - deliveryCharge);
+        monthMap[key].deliveryCharges += deliveryCharge;
       }
     });
 
@@ -231,23 +254,29 @@ const AdminDashboard = () => {
       const year = date.getFullYear();
       const amount = order.totalAmount || 0;
       const paymentMethod = order.paymentMethod || 'cod';
+      const deliveryCharge = order.deliveryCharge || 0;
 
       if (!yearMap[year]) {
         yearMap[year] = {
           year,
           total: 0,
           count: 0,
-          onlineAmount: 0,
-          codAmount: 0,
+          onlineRevenue: 0,
+          codRevenue: 0,
+          deliveryCharges: 0,
         };
       }
+      
       yearMap[year].total += amount;
       yearMap[year].count += 1;
       
       if (paymentMethod === 'online') {
-        yearMap[year].onlineAmount += amount;
+        yearMap[year].onlineRevenue += amount;
       } else {
-        yearMap[year].codAmount += amount;
+        // For COD: onlineRevenue gets delivery charge, codRevenue gets amount minus delivery charge
+        yearMap[year].onlineRevenue += deliveryCharge;
+        yearMap[year].codRevenue += (amount - deliveryCharge);
+        yearMap[year].deliveryCharges += deliveryCharge;
       }
     });
 
@@ -314,8 +343,9 @@ const AdminDashboard = () => {
       color: 'bg-purple-500',
       orders: periodStats.today.orders,
       sales: periodStats.today.sales,
-      onlineAmount: periodStats.today.onlineAmount,
-      codAmount: periodStats.today.codAmount,
+      onlineRevenue: periodStats.today.onlineRevenue,
+      codRevenue: periodStats.today.codRevenue,
+      deliveryCharges: periodStats.today.deliveryCharges,
     },
     {
       title: 'This Month',
@@ -323,8 +353,9 @@ const AdminDashboard = () => {
       color: 'bg-indigo-500',
       orders: currentMonthOrders,
       sales: currentMonthEarnings,
-      onlineAmount: periodStats.monthly.onlineAmount,
-      codAmount: periodStats.monthly.codAmount,
+      onlineRevenue: periodStats.monthly.onlineRevenue,
+      codRevenue: periodStats.monthly.codRevenue,
+      deliveryCharges: periodStats.monthly.deliveryCharges,
     },
     {
       title: 'This Year',
@@ -332,8 +363,9 @@ const AdminDashboard = () => {
       color: 'bg-red-500',
       orders: currentYearOrders,
       sales: currentYearEarnings,
-      onlineAmount: periodStats.annual.onlineAmount,
-      codAmount: periodStats.annual.codAmount,
+      onlineRevenue: periodStats.annual.onlineRevenue,
+      codRevenue: periodStats.annual.codRevenue,
+      deliveryCharges: periodStats.annual.deliveryCharges,
     },
     {
       title: 'Lifetime',
@@ -341,8 +373,9 @@ const AdminDashboard = () => {
       color: 'bg-[#5C3A21]',
       orders: periodStats.lifetime.orders,
       sales: periodStats.lifetime.sales,
-      onlineAmount: periodStats.lifetime.onlineAmount,
-      codAmount: periodStats.lifetime.codAmount,
+      onlineRevenue: periodStats.lifetime.onlineRevenue,
+      codRevenue: periodStats.lifetime.codRevenue,
+      deliveryCharges: periodStats.lifetime.deliveryCharges,
     },
   ];
 
@@ -448,16 +481,20 @@ const AdminDashboard = () => {
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">💳</span>
-                    <h4 className="font-semibold text-gray-700">Online</h4>
+                    <h4 className="font-semibold text-gray-700">Online Revenue</h4>
                   </div>
                   <div className="space-y-1">
                     <p className="flex justify-between">
-                      <span className="text-sm text-gray-600">Orders</span>
+                      <span className="text-sm text-gray-600">Online Orders</span>
                       <span className="font-bold text-gray-900">{dateRangeData.summary.onlineOrders}</span>
                     </p>
                     <p className="flex justify-between border-t pt-1">
-                      <span className="text-sm text-gray-600">Amount</span>
-                      <span className="font-bold text-green-600">{formatPrice(dateRangeData.summary.onlineAmount)}</span>
+                      <span className="text-sm text-gray-600">COD Delivery Charges</span>
+                      <span className="font-bold text-gray-900">{formatPrice(dateRangeData.summary.deliveryCharges || 0)}</span>
+                    </p>
+                    <p className="flex justify-between border-t pt-1">
+                      <span className="text-sm text-gray-600">Total Online Revenue</span>
+                      <span className="font-bold text-green-600">{formatPrice(dateRangeData.summary.onlineRevenue || 0)}</span>
                     </p>
                   </div>
                 </div>
@@ -465,16 +502,16 @@ const AdminDashboard = () => {
                 <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">💰</span>
-                    <h4 className="font-semibold text-gray-700">COD</h4>
+                    <h4 className="font-semibold text-gray-700">COD Revenue</h4>
                   </div>
                   <div className="space-y-1">
                     <p className="flex justify-between">
-                      <span className="text-sm text-gray-600">Orders</span>
+                      <span className="text-sm text-gray-600">COD Orders</span>
                       <span className="font-bold text-gray-900">{dateRangeData.summary.codOrders}</span>
                     </p>
                     <p className="flex justify-between border-t pt-1">
-                      <span className="text-sm text-gray-600">Amount</span>
-                      <span className="font-bold text-orange-600">{formatPrice(dateRangeData.summary.codAmount)}</span>
+                      <span className="text-sm text-gray-600">COD Amount (excl. delivery)</span>
+                      <span className="font-bold text-orange-600">{formatPrice(dateRangeData.summary.codRevenue || 0)}</span>
                     </p>
                   </div>
                 </div>
@@ -522,15 +559,21 @@ const AdminDashboard = () => {
                   <span className="text-xl font-bold text-gray-900">{period.orders}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
-                  <span className="text-sm text-gray-600">💳 Online</span>
+                  <span className="text-sm text-gray-600">💳 Online Revenue</span>
                   <span className="text-lg font-semibold text-green-600">
-                    {formatPrice(period.onlineAmount)}
+                    {formatPrice(period.onlineRevenue)}
                   </span>
                 </div>
+                {period.deliveryCharges > 0 && (
+                  <div className="flex justify-between items-center text-xs text-gray-500 pl-4">
+                    <span className="text-sm">(incl. delivery charges)</span>
+                    <span>{formatPrice(period.deliveryCharges)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">💰 COD</span>
+                  <span className="text-sm text-gray-600">💰 COD Revenue</span>
                   <span className="text-lg font-semibold text-orange-600">
-                    {formatPrice(period.codAmount)}
+                    {formatPrice(period.codRevenue)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
@@ -548,7 +591,7 @@ const AdminDashboard = () => {
       {/* Graph Section */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-          <h2 className="text-lg font-bold text-gray-900">📈 Earnings Overview</h2>
+          <h2 className="text-lg font-bold text-gray-900">📈 Revenue Overview</h2>
           <div className="flex gap-2">
             <button
               onClick={() => setGraphView('monthly')}
@@ -630,12 +673,21 @@ const AdminDashboard = () => {
                   <Legend />
                   <Line 
                     type="linear" 
-                    dataKey="total" 
-                    stroke="#5C3A21" 
+                    dataKey="onlineRevenue" 
+                    stroke="#22c55e" 
                     strokeWidth={3}
-                    dot={{ stroke: '#5C3A21', strokeWidth: 2, r: 4, fill: 'white' }}
-                    activeDot={{ r: 6, fill: '#5C3A21' }}
-                    name="Earnings"
+                    dot={{ stroke: '#22c55e', strokeWidth: 2, r: 4, fill: 'white' }}
+                    activeDot={{ r: 6, fill: '#22c55e' }}
+                    name="Online Revenue"
+                  />
+                  <Line 
+                    type="linear" 
+                    dataKey="codRevenue" 
+                    stroke="#f97316" 
+                    strokeWidth={3}
+                    dot={{ stroke: '#f97316', strokeWidth: 2, r: 4, fill: 'white' }}
+                    activeDot={{ r: 6, fill: '#f97316' }}
+                    name="COD Revenue"
                   />
                 </LineChart>
               ) : (
@@ -663,12 +715,21 @@ const AdminDashboard = () => {
                   <Legend />
                   <Line 
                     type="linear" 
-                    dataKey="total" 
-                    stroke="#5C3A21" 
+                    dataKey="onlineRevenue" 
+                    stroke="#22c55e" 
                     strokeWidth={3}
-                    dot={{ stroke: '#5C3A21', strokeWidth: 2, r: 5, fill: 'white' }}
-                    activeDot={{ r: 7, fill: '#5C3A21' }}
-                    name="Yearly Earnings"
+                    dot={{ stroke: '#22c55e', strokeWidth: 2, r: 5, fill: 'white' }}
+                    activeDot={{ r: 7, fill: '#22c55e' }}
+                    name="Online Revenue"
+                  />
+                  <Line 
+                    type="linear" 
+                    dataKey="codRevenue" 
+                    stroke="#f97316" 
+                    strokeWidth={3}
+                    dot={{ stroke: '#f97316', strokeWidth: 2, r: 5, fill: 'white' }}
+                    activeDot={{ r: 7, fill: '#f97316' }}
+                    name="COD Revenue"
                   />
                 </LineChart>
               )}
@@ -679,7 +740,7 @@ const AdminDashboard = () => {
           {graphView === 'monthly' && selectedYearMonthlyData.length > 0 && (
             <div className="mt-6 border-t pt-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                📋 Monthly Sales for {selectedYear}
+                📋 Monthly Revenue Breakdown for {selectedYear}
               </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -687,8 +748,9 @@ const AdminDashboard = () => {
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Online</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">COD</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Online Revenue</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">COD Revenue</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Charges</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sales</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Order</th>
                     </tr>
@@ -703,10 +765,13 @@ const AdminDashboard = () => {
                           {month.count}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-green-600 font-semibold text-right">
-                          {formatPrice(month.onlineAmount)}
+                          {formatPrice(month.onlineRevenue)}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-orange-600 font-semibold text-right">
-                          {formatPrice(month.codAmount)}
+                          {formatPrice(month.codRevenue)}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-blue-600 font-semibold text-right">
+                          {formatPrice(month.deliveryCharges || 0)}
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm font-semibold text-[#5C3A21] text-right">
                           {formatPrice(month.total)}
@@ -724,10 +789,13 @@ const AdminDashboard = () => {
                         {selectedYearMonthlyData.reduce((sum, m) => sum + m.count, 0)}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-green-600 text-right">
-                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.onlineAmount, 0))}
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.onlineRevenue, 0))}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-orange-600 text-right">
-                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.codAmount, 0))}
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.codRevenue, 0))}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-blue-600 text-right">
+                        {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + (m.deliveryCharges || 0), 0))}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-[#5C3A21] text-right">
                         {formatPrice(selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0))}
@@ -764,8 +832,8 @@ const AdminDashboard = () => {
               <p className="text-sm font-semibold text-gray-600">{year.year}</p>
               <p className="text-lg font-bold text-[#5C3A21]">{formatPrice(year.total)}</p>
               <p className="text-xs text-gray-500">{year.count} orders</p>
-              <p className="text-xs text-green-600">Online: {formatPrice(year.onlineAmount)}</p>
-              <p className="text-xs text-orange-600">COD: {formatPrice(year.codAmount)}</p>
+              <p className="text-xs text-green-600">Online: {formatPrice(year.onlineRevenue)}</p>
+              <p className="text-xs text-orange-600">COD: {formatPrice(year.codRevenue)}</p>
             </div>
           ))}
         </div>
