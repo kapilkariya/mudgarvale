@@ -234,7 +234,7 @@ const getMyOrders = async (req, res) => {
       ...order,
       items: order.items.map(item => ({
         name: item.name || 'Unknown Product',
-        image: item.image || '/placeholder-product.png',
+        image: item.image,
         selectedWeight: item.selectedWeight || '',
         price: item.price || 0,
         quantity: item.quantity || 1,

@@ -169,9 +169,6 @@ const Orders = () => {
                           src={`/products/${item.image}.jpeg`}
                           alt={item.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/placeholder-product.png';
-                          }}
                         />
                       </div>
                       <div className="flex-1">

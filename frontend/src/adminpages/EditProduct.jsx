@@ -342,7 +342,7 @@ const EditProduct = () => {
           </label>
           <div className="flex items-center gap-4">
             <img
-              src={imagePreview || '/placeholder-product.png'}
+              src={imagePreview}
               alt="Product preview"
               className="h-32 w-32 object-cover rounded-lg border border-gray-200"
             />
