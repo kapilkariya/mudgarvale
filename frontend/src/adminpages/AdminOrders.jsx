@@ -22,6 +22,26 @@ const emptyForm = (order) => ({
   totalAmount: String(order.totalAmount || 0),
 });
 
+const inactivePaymentStatuses = ['cancelled_by_user', 'expired', 'failed'];
+
+const paymentStatusDetails = {
+  pending: { label: 'Pending', color: 'text-yellow-600' },
+  paid: { label: 'Confirmed', color: 'text-green-600' },
+  partial_paid: { label: 'Advance Paid', color: 'text-blue-600' },
+  failed: { label: 'Failed', color: 'text-red-600' },
+  cancelled_by_user: { label: 'Cancelled', color: 'text-red-600' },
+  expired: { label: 'Expired', color: 'text-gray-600' },
+  refunded: { label: 'Refunded', color: 'text-purple-600' },
+};
+
+const filterOrdersByStatus = (orders, filter) => {
+  if (filter === 'active') return orders.filter((order) => !inactivePaymentStatuses.includes(order.paymentStatus));
+  if (filter === 'cancelled_failed') return orders.filter((order) => inactivePaymentStatuses.includes(order.paymentStatus));
+  if (filter === 'pending_delivery') return orders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
+  if (filter === 'delivered' || filter === 'cancelled') return orders.filter((order) => order.orderStatus === filter);
+  return orders;
+};
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredDateOrders, setFilteredDateOrders] = useState([]);
@@ -31,7 +51,7 @@ const AdminOrders = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('active');
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [editingOrder, setEditingOrder] = useState(null);
   const [form, setForm] = useState(null);
@@ -59,10 +79,12 @@ const AdminOrders = () => {
     { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
   ];
   const filterOptions = [
-    { value: 'all', label: 'All Orders' },
+    { value: 'active', label: 'Active Orders' },
     { value: 'pending_delivery', label: 'Not Delivered' },
     { value: 'delivered', label: 'Delivered' },
     { value: 'cancelled', label: 'Cancelled' },
+    { value: 'cancelled_failed', label: 'Cancelled / Failed' },
+    { value: 'all', label: 'All Orders' },
   ];
 
   const loadOrders = async (page = 1, append = false) => {
@@ -177,14 +199,21 @@ const AdminOrders = () => {
     setSuccess('');
   };
 
+  const refreshOrders = async () => {
+    setExpandedOrder(null);
+    setSuccess('');
+
+    if (isDateFilterActive) {
+      await filterOrdersByDate();
+    } else {
+      await loadOrders(1, false);
+    }
+  };
+
   // Get the orders to display (filtered by date if active, else paginated orders)
   const displayOrders = isDateFilterActive ? filteredDateOrders : orders;
 
-  const filteredOrders = useMemo(() => {
-    if (activeFilter === 'pending_delivery') return displayOrders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
-    if (activeFilter === 'delivered' || activeFilter === 'cancelled') return displayOrders.filter((order) => order.orderStatus === activeFilter);
-    return displayOrders;
-  }, [activeFilter, displayOrders]);
+  const filteredOrders = useMemo(() => filterOrdersByStatus(displayOrders, activeFilter), [activeFilter, displayOrders]);
 
   const updateOrderInList = (updated) => {
     setOrders((current) => current.map((order) => order._id === updated._id ? { ...updated, user: updated.user || updated.userId || order.user } : order));
@@ -264,21 +293,14 @@ const AdminOrders = () => {
 
       let amountPaid = 0;
       let amountPending = 0;
-      
-      if (order.paymentMethod === 'online') {
+
+      if (order.paymentStatus === 'paid') {
         amountPaid = order.totalAmount || 0;
-        amountPending = 0;
-      } else if (order.paymentMethod === 'cod') {
-        if (order.paymentStatus === 'paid') {
-          amountPaid = order.totalAmount || 0;
-          amountPending = 0;
-        } else if (order.paymentStatus === 'partial_paid') {
-          amountPaid = order.paidAmount || 0;
-          amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-        } else {
-          amountPaid = 0;
-          amountPending = order.totalAmount || 0;
-        }
+      } else if (order.paymentStatus === 'partial_paid') {
+        amountPaid = order.paidAmount || 0;
+        amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
+      } else if (order.paymentStatus === 'pending') {
+        amountPending = order.totalAmount || 0;
       }
 
       return {
@@ -454,8 +476,17 @@ const AdminOrders = () => {
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
       
-      {/* Download Dropdown - Always enabled */}
-      <div className="relative">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={refreshOrders}
+          disabled={loading || loadingExport}
+          className="px-4 py-2 rounded-lg transition font-medium text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          Refresh
+        </button>
+
+        {/* Download Dropdown - Always enabled */}
+        <div className="relative">
         <button
           onClick={() => {
             setShowDownloadMenu(!showDownloadMenu);
@@ -496,6 +527,7 @@ const AdminOrders = () => {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
 
@@ -536,7 +568,7 @@ const AdminOrders = () => {
         )}
         {!isDateFilterActive && totalOrdersCount > 0 && (
           <span className="text-sm text-gray-600 ml-2">
-            Showing <span className="font-bold text-[#5C3A21]">{orders.length}</span> of <span className="font-bold">{totalOrdersCount}</span> orders
+            Showing <span className="font-bold text-[#5C3A21]">{filteredOrders.length}</span> matching orders from <span className="font-bold">{orders.length}</span> loaded
           </span>
         )}
       </div>
@@ -548,11 +580,7 @@ const AdminOrders = () => {
     <div className="mb-6 overflow-x-auto pb-2">
       <div className="flex gap-2 min-w-max">
         {filterOptions.map((filter) => {
-          const count = filter.value === 'all' 
-            ? displayOrders.length 
-            : filter.value === 'pending_delivery'
-              ? displayOrders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus)).length
-              : displayOrders.filter((order) => order.orderStatus === filter.value).length;
+          const count = filterOrdersByStatus(displayOrders, filter.value).length;
           
           return (
             <button
@@ -636,6 +664,28 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
     }
   }
 
+  const paymentStatus = paymentStatusDetails[order.paymentStatus] || {
+    label: order.paymentStatus || 'Unknown',
+    color: 'text-gray-600',
+  };
+
+  paymentStatusLabel = paymentStatus.label;
+  paymentStatusColor = paymentStatus.color;
+
+  if (order.paymentStatus === 'paid') {
+    amountPaid = order.totalAmount || 0;
+    amountPending = 0;
+  } else if (order.paymentStatus === 'partial_paid') {
+    amountPaid = order.paidAmount || 0;
+    amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
+  } else if (order.paymentStatus === 'pending') {
+    amountPaid = 0;
+    amountPending = order.totalAmount || 0;
+  } else {
+    amountPaid = 0;
+    amountPending = 0;
+  }
+
   return <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div className="p-4 cursor-pointer active:bg-gray-50" onClick={toggle}>
       <div className="flex justify-between items-start mb-2">
@@ -708,7 +758,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
               <span className="font-medium text-orange-600">{formatPrice(amountPending)}</span>
             </p>
           )}
-          {order.paymentMethod === 'online' && (
+          {order.paymentStatus === 'paid' && order.paymentMethod === 'online' && (
             <p className="text-xs text-green-600 mt-1">✅ Fully paid online</p>
           )}
           {order.paymentMethod === 'cod' && order.paymentStatus === 'pending' && (
