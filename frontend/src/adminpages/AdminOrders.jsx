@@ -124,7 +124,7 @@ const AdminOrders = () => {
       setError('');
       const response = await adminAPI.getAllOrders();
       if (response.success) {
-        return response.data;
+        return response.data.filter(order => order.paymentStatus !== 'pending');
       }
       return [];
     } catch (err) {
