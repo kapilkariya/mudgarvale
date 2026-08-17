@@ -2,6 +2,7 @@ const express = require('express');
 const {
   createOrder,
   verifyPayment,
+  cancelPendingOrder,
   getMyOrders,
   getOrderById,
 } = require('../controllers/orderController');
@@ -17,6 +18,9 @@ router.route('/')
 
 router.route('/verify-payment')
   .post(verifyPayment);
+
+router.route('/cancel-pending')
+  .post(cancelPendingOrder);
 
 router.route('/my-orders')
   .get(getMyOrders);

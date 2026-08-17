@@ -3,7 +3,7 @@ const Order = require('../models/Order');
 
 const expirePendingOrders = async () => {
   try {
-    const expiryCutoff = new Date(Date.now() - (30 * 60 * 1000));
+    const expiryCutoff = new Date(Date.now() - (10 * 60 * 1000));
     const result = await Order.updateMany(
       {
         paymentStatus: 'pending',
@@ -22,8 +22,8 @@ const expirePendingOrders = async () => {
 };
 
 const startExpirePendingOrdersJob = () => {
-  cron.schedule('*/15 * * * *', expirePendingOrders);
-  console.log('Expire pending orders job scheduled to run every 15 minutes');
+  cron.schedule('*/5 * * * *', expirePendingOrders);
+  console.log('Expire pending orders job scheduled to run every 5 minutes');
 };
 
 module.exports = startExpirePendingOrdersJob;

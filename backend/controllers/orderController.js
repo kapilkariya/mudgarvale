@@ -1,5 +1,6 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { calculateDeliveryCharge, calculateSubtotal } = require('../utils/deliveryCharge');
@@ -252,6 +253,76 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+// @desc    Cancel a pending Razorpay checkout order
+// @route   POST /api/orders/cancel-pending
+// @access  Private
+const cancelPendingOrder = async (req, res) => {
+  try {
+    const { razorpayOrderId, orderId } = req.body;
+
+    if (!razorpayOrderId && !orderId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Razorpay order id or order id is required',
+      });
+    }
+
+    const query = {
+      userId: req.user.id,
+      paymentStatus: 'pending',
+    };
+
+    if (razorpayOrderId) {
+      query.razorpayOrderId = razorpayOrderId;
+    } else {
+      if (!mongoose.isValidObjectId(orderId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid order id',
+        });
+      }
+
+      query._id = orderId;
+    }
+
+    const order = await Order.findOneAndUpdate(
+      query,
+      {
+        paymentStatus: 'cancelled_by_user',
+        orderStatus: 'cancelled',
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pending order not found or already processed',
+      });
+    }
+
+    console.log('Pending order cancelled by user:', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      razorpayOrderId: order.razorpayOrderId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Pending order cancelled successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Cancel pending order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cancel pending order',
+    });
+  }
+};
+
 // @desc    Get logged in user's orders
 // @route   GET /api/orders/my-orders
 // @access  Private
@@ -331,6 +402,7 @@ const getOrderById = async (req, res) => {
 module.exports = {
   createOrder,
   verifyPayment,
+  cancelPendingOrder,
   getMyOrders,
   getOrderById,
 };

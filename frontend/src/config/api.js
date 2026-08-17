@@ -101,6 +101,11 @@ export const orderAPI = {
     body: JSON.stringify(data),
   }),
 
+  cancelPending: (data) => fetchWithAuth(`${API_URL}/orders/cancel-pending`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
   getMyOrders: () => fetchWithAuth(`${API_URL}/orders/my-orders`),
 
   getOrderById: (id) => fetchWithAuth(`${API_URL}/orders/${id}`),

@@ -171,6 +171,8 @@ const Checkout = () => {
       const { razorpayOrder, orderData: savedOrderData } = response.data;
 
       if (razorpayOrder) {
+        let paymentCompleted = false;
+
         // Initialize Razorpay payment for both online and COD
         const options = {
           key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -181,6 +183,7 @@ const Checkout = () => {
           order_id: razorpayOrder.id,
           handler: async function (response) {
             // Verify payment and create DB order
+            paymentCompleted = true;
             try {
               const verifyResponse = await orderAPI.verifyPayment({
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -217,8 +220,18 @@ const Checkout = () => {
         });
 
         // Handle modal close/cancel
-        razorpay.on('modal.close', function () {
-          setError('Payment cancelled. No order was created.');
+        razorpay.on('modal.close', async function () {
+          if (paymentCompleted) {
+            return;
+          }
+
+          try {
+            await orderAPI.cancelPending({ razorpayOrderId: razorpayOrder.id });
+          } catch (cancelError) {
+            console.error('Failed to cancel pending order:', cancelError);
+          }
+
+          setError('Payment cancelled.');
           setLoading(false);
         });
       } else {
