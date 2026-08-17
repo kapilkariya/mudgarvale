@@ -39,6 +39,7 @@ const filterOrdersByStatus = (orders, filter) => {
   if (filter === 'cancelled_failed') return orders.filter((order) => inactivePaymentStatuses.includes(order.paymentStatus));
   if (filter === 'pending_delivery') return orders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
   if (filter === 'delivered' || filter === 'cancelled') return orders.filter((order) => order.orderStatus === filter);
+  if (filter === 'all') return orders.filter((order) => order.paymentStatus !== 'pending');
   return orders;
 };
 
