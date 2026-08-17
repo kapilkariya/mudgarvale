@@ -83,7 +83,28 @@ const createOrder = async (req, res) => {
       remainingAmount,
     });
 
-    // Return only Razorpay order data - DO NOT create DB order yet
+    // Save the checkout data before opening Razorpay so the webhook can finish
+    // the same order if the browser callback is interrupted.
+    const pendingOrder = await Order.create({
+      userId,
+      items: orderItems,
+      totalAmount: finalTotal,
+      deliveryCharge,
+      paymentMethod,
+      paymentStatus: 'pending',
+      orderStatus: 'pending',
+      address,
+      paidAmount: 0,
+      remainingAmount: finalTotal,
+      razorpayOrderId: razorpayOrder.id,
+    });
+
+    console.log('Pending order created before Razorpay checkout:', {
+      orderId: pendingOrder._id,
+      orderNumber: pendingOrder.orderNumber,
+      razorpayOrderId: razorpayOrder.id,
+    });
+
     res.status(201).json({
       success: true,
       message: 'Razorpay order created successfully',
@@ -142,7 +163,8 @@ const verifyPayment = async (req, res) => {
       });
     }
 
-    // Signature is valid - now create the order in database
+    // Prefer the pending order created before checkout. This is also the record
+    // completed by the webhook when the browser callback is unavailable.
     const { items, paymentMethod, address } = orderData;
     const userId = req.user.id;
     const orderItems = await addCategoriesToItems(items);
@@ -163,21 +185,31 @@ const verifyPayment = async (req, res) => {
       paidAmount = totalAmount;
     }
 
-    // Create order in database
-    const order = await Order.create({
-      userId,
-      items: orderItems,
-      totalAmount,
-      deliveryCharge,
-      paymentMethod,
-      paymentStatus,
-      orderStatus: 'confirmed',
-      address,
-      paidAmount,
-      remainingAmount,
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-    });
+    let order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    if (order) {
+      order.razorpayPaymentId = razorpay_payment_id;
+      order.paymentStatus = paymentStatus;
+      order.orderStatus = 'confirmed';
+      order.paidAmount = paidAmount;
+      order.remainingAmount = remainingAmount;
+      await order.save();
+    } else {
+      // Backward compatibility for payments started before pending-order storage.
+      order = await Order.create({
+        userId,
+        items: orderItems,
+        totalAmount,
+        deliveryCharge,
+        paymentMethod,
+        paymentStatus,
+        orderStatus: 'confirmed',
+        address,
+        paidAmount,
+        remainingAmount,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+      });
+    }
 
     console.log('Order created after payment verification:', {
       orderId: order._id,

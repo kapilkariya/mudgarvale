@@ -16,10 +16,12 @@ const path = require('path');
 
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
+const startExpirePendingOrdersJob = require('./jobs/expirePendingOrders');
 
 const authRoutes    = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes   = require('./routes/orderRoutes');
+const razorpayWebhookRoutes = require('./routes/razorpayWebhookRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const cartRoutes    = require('./routes/cartRoutes');
 const contactRoutes = require('./routes/contactRoutes');
@@ -50,6 +52,9 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Must be before express.json(); Razorpay verifies the original, unparsed body.
+app.use('/api/razorpay-webhook', razorpayWebhookRoutes);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -92,6 +97,9 @@ const server = app.listen(PORT, () => console.log(`🚀 Server running on port $
 
 connectDB()
   .then(() => console.log('✅ DB connected'))
+  .then(() => {
+    startExpirePendingOrdersJob();
+  })
   .catch((err) => {
     console.error('Database startup failed:', err);
     server.close(() => {

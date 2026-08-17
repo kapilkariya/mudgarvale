@@ -95,7 +95,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'partial_paid', 'paid', 'failed', 'refunded'],
+      enum: ['pending', 'partial_paid', 'paid', 'failed', 'expired', 'refunded'],
       default: 'pending',
     },
     orderStatus: {
@@ -111,6 +111,21 @@ const orderSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
+    },
+    razorpayPaymentEmail: {
+      type: String,
+      default: '',
+    },
+    razorpayPaymentContact: {
+      type: String,
+      default: '',
+    },
+    razorpayPaymentNotes: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    paymentCapturedAt: {
+      type: Date,
     },
     confirmationEmailSentAt: {
       type: Date,
