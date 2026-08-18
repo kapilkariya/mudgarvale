@@ -253,7 +253,7 @@ const verifyPayment = async (req, res) => {
   }
 };
 
-// @desc    Cancel a pending Razorpay checkout order
+// @desc    Remove a pending Razorpay checkout order
 // @route   POST /api/orders/cancel-pending
 // @access  Private
 const cancelPendingOrder = async (req, res) => {
@@ -285,16 +285,7 @@ const cancelPendingOrder = async (req, res) => {
       query._id = orderId;
     }
 
-    const order = await Order.findOneAndUpdate(
-      query,
-      {
-        paymentStatus: 'cancelled_by_user',
-        orderStatus: 'cancelled',
-      },
-      {
-        new: true,
-      }
-    );
+    const order = await Order.findOneAndDelete(query);
 
     if (!order) {
       return res.status(404).json({
@@ -303,7 +294,7 @@ const cancelPendingOrder = async (req, res) => {
       });
     }
 
-    console.log('Pending order cancelled by user:', {
+    console.log('Pending order removed by user:', {
       orderId: order._id,
       orderNumber: order.orderNumber,
       razorpayOrderId: order.razorpayOrderId,
@@ -311,7 +302,7 @@ const cancelPendingOrder = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Pending order cancelled successfully',
+      message: 'Pending order removed successfully',
       data: order,
     });
   } catch (error) {

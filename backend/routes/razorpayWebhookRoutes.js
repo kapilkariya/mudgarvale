@@ -61,17 +61,10 @@ const saveCapturedPayment = async (payment) => {
 };
 
 const markPaymentFailed = async (razorpayOrderId) => {
-  const order = await Order.findOneAndUpdate(
+  const order = await Order.findOneAndDelete(
     {
       razorpayOrderId,
       paymentStatus: 'pending',
-    },
-    {
-      paymentStatus: 'failed',
-      orderStatus: 'cancelled',
-    },
-    {
-      new: true,
     }
   );
 
@@ -80,10 +73,9 @@ const markPaymentFailed = async (razorpayOrderId) => {
     return null;
   }
 
-  console.log('Razorpay webhook order updated successfully:', {
+  console.log('Razorpay webhook removed failed pending order:', {
     orderId: order._id,
     orderNumber: order.orderNumber,
-    paymentStatus: order.paymentStatus,
   });
 
   return order;

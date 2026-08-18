@@ -172,6 +172,21 @@ const Checkout = () => {
 
       if (razorpayOrder) {
         let paymentCompleted = false;
+        let pendingOrderRemoved = false;
+
+        const removePendingOrder = async () => {
+          if (paymentCompleted || pendingOrderRemoved) {
+            return;
+          }
+
+          pendingOrderRemoved = true;
+          try {
+            await orderAPI.cancelPending({ razorpayOrderId: razorpayOrder.id });
+          } catch (error) {
+            pendingOrderRemoved = false;
+            throw error;
+          }
+        };
 
         // Initialize Razorpay payment for both online and COD
         const options = {
@@ -214,7 +229,13 @@ const Checkout = () => {
         const razorpay = new window.Razorpay(options);
         razorpay.open();
 
-        razorpay.on('payment.failed', function () {
+        razorpay.on('payment.failed', async function () {
+          try {
+            await removePendingOrder();
+          } catch (removeError) {
+            console.error('Failed to remove pending order after payment failure:', removeError);
+          }
+
           setError('Payment failed. Please try again.');
           setLoading(false);
         });
@@ -226,9 +247,9 @@ const Checkout = () => {
           }
 
           try {
-            await orderAPI.cancelPending({ razorpayOrderId: razorpayOrder.id });
-          } catch (cancelError) {
-            console.error('Failed to cancel pending order:', cancelError);
+            await removePendingOrder();
+          } catch (removeError) {
+            console.error('Failed to remove pending order:', removeError);
           }
 
           setError('Payment cancelled.');
