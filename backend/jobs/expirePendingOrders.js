@@ -3,7 +3,7 @@ const Order = require('../models/Order');
 
 const expirePendingOrders = async () => {
   try {
-    const expiryCutoff = new Date(Date.now() - (1 * 60 * 1000));
+    const expiryCutoff = new Date(Date.now() - (10 * 60 * 1000));
     const result = await Order.deleteMany(
       {
         paymentStatus: 'pending',
