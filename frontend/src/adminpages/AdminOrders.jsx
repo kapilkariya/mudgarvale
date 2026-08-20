@@ -673,6 +673,16 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   paymentStatusLabel = paymentStatus.label;
   paymentStatusColor = paymentStatus.color;
 
+ // NEW CODE - Check payment method first
+if (order.paymentMethod === 'cod') {
+  // COD: Always show pending amount (total - delivery charge)
+  amountPaid = 0;
+  amountPending = order.totalAmount || 0;
+  paymentMethodLabel = '💰 Cash on Delivery';
+  paymentStatusLabel = 'Pending Payment';
+  paymentStatusColor = 'text-yellow-600';
+} else {
+  // Online: Use payment status logic
   if (order.paymentStatus === 'paid') {
     amountPaid = order.totalAmount || 0;
     amountPending = 0;
@@ -686,6 +696,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
     amountPaid = 0;
     amountPending = 0;
   }
+}
 
   return <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div className="p-4 cursor-pointer active:bg-gray-50" onClick={toggle}>
