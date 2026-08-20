@@ -58,13 +58,13 @@ const AdminOrders = () => {
   const [form, setForm] = useState(null);
   const [formError, setFormError] = useState('');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-  
+
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
   const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [allOrdersLoaded, setAllOrdersLoaded] = useState(false);
-  
+
   // Date Range States
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -96,7 +96,7 @@ const AdminOrders = () => {
         setLoading(true);
       }
       setError('');
-      
+
       const response = await adminAPI.getOrdersPaginated(page, 20);
       if (response.success) {
         if (append) {
@@ -170,20 +170,20 @@ const AdminOrders = () => {
     fromDate.setHours(0, 0, 0, 0);
 
     const allOrders = await fetchAllOrdersForExport();
-    
+
     const filtered = allOrders.filter(order => {
       const orderDate = new Date(order.createdAt);
       const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
       const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
       const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-      
+
       return orderDateOnly >= fromDateOnly && orderDateOnly <= toDateOnly;
     });
 
     setDateFilteredOrders(filtered);
     setFilteredDateOrders(filtered);
     setIsDateFilterActive(true);
-    
+
     if (filtered.length > 0) {
       setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
     } else {
@@ -278,7 +278,7 @@ const AdminOrders = () => {
   // Prepare data for export
   const prepareExportData = (ordersToExport) => {
     return ordersToExport.map((order) => {
-      const itemsList = order.items?.map(item => 
+      const itemsList = order.items?.map(item =>
         `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
       ).join('; ') || '';
 
@@ -295,19 +295,16 @@ const AdminOrders = () => {
       let amountPaid = 0;
       let amountPending = 0;
 
-      // Fix for export data - COD orders show pending amount
+      // CORRECTED LOGIC FOR EXPORT
       if (order.paymentMethod === 'cod') {
-        amountPending = order.totalAmount || 0;
-        amountPaid = 0;
+        // COD: Delivery charge is paid, rest is pending
+        const deliveryCharge = order.deliveryCharge || 0;
+        amountPaid = deliveryCharge;
+        amountPending = (order.totalAmount || 0) - deliveryCharge;
       } else {
-        if (order.paymentStatus === 'paid') {
-          amountPaid = order.totalAmount || 0;
-        } else if (order.paymentStatus === 'partial_paid') {
-          amountPaid = order.paidAmount || 0;
-          amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-        } else if (order.paymentStatus === 'pending') {
-          amountPending = order.totalAmount || 0;
-        }
+        // Online: Full amount paid
+        amountPaid = order.totalAmount || 0;
+        amountPending = 0;
       }
 
       return {
@@ -336,7 +333,7 @@ const AdminOrders = () => {
   const exportToExcel = async () => {
     try {
       let ordersToExport;
-      
+
       if (isDateFilterActive) {
         // If date filter is active, use filtered orders
         ordersToExport = filteredDateOrders;
@@ -344,16 +341,16 @@ const AdminOrders = () => {
         // If no date filter, fetch ALL orders
         ordersToExport = await fetchAllOrdersForExport();
       }
-      
+
       if (!ordersToExport || !ordersToExport.length) {
         setError('No orders to export');
         return;
       }
-      
+
       const rows = prepareExportData(ordersToExport);
       const workbook = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
-      
+
       const colWidths = [
         { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
         { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
@@ -361,7 +358,7 @@ const AdminOrders = () => {
         { wch: 18 }, { wch: 15 }
       ];
       ws['!cols'] = colWidths;
-      
+
       XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
       const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
       XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -376,24 +373,24 @@ const AdminOrders = () => {
   const exportToCSV = async () => {
     try {
       let ordersToExport;
-      
+
       if (isDateFilterActive) {
         ordersToExport = filteredDateOrders;
       } else {
         ordersToExport = await fetchAllOrdersForExport();
       }
-      
+
       if (!ordersToExport || !ordersToExport.length) {
         setError('No orders to export');
         return;
       }
-      
+
       const rows = prepareExportData(ordersToExport);
       const headers = Object.keys(rows[0]);
       const csvRows = [];
-      
+
       csvRows.push(headers.join(','));
-      
+
       for (const row of rows) {
         const values = headers.map(header => {
           const val = row[header] || '';
@@ -401,7 +398,7 @@ const AdminOrders = () => {
         });
         csvRows.push(values.join(','));
       }
-      
+
       const csvString = csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -421,24 +418,24 @@ const AdminOrders = () => {
   const exportToPDF = async () => {
     try {
       let ordersToExport;
-      
+
       if (isDateFilterActive) {
         ordersToExport = filteredDateOrders;
       } else {
         ordersToExport = await fetchAllOrdersForExport();
       }
-      
+
       if (!ordersToExport || !ordersToExport.length) {
         setError('No orders to export');
         return;
       }
-      
+
       const doc = new jsPDF('landscape', 'mm', 'a4');
       const rows = prepareExportData(ordersToExport);
-      
+
       const tableHeaders = Object.keys(rows[0]);
       const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
-      
+
       doc.setFontSize(16);
       doc.text('Orders Report', 14, 15);
       doc.setFontSize(10);
@@ -447,7 +444,7 @@ const AdminOrders = () => {
       if (isDateFilterActive) {
         doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
       }
-      
+
       autoTable(doc, {
         head: [tableHeaders],
         body: tableRows,
@@ -461,12 +458,12 @@ const AdminOrders = () => {
           2: { cellWidth: 28 },
           7: { cellWidth: 38 },
         },
-        didDrawPage: function(data) {
+        didDrawPage: function (data) {
           doc.setFontSize(8);
           doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
         }
       });
-      
+
       const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
       doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
       setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
@@ -482,7 +479,7 @@ const AdminOrders = () => {
     <div className="h-20" />
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
-      
+
       <div className="flex items-center gap-2">
         <button
           onClick={refreshOrders}
@@ -494,46 +491,45 @@ const AdminOrders = () => {
 
         {/* Download Dropdown - Always enabled */}
         <div className="relative">
-        <button
-          onClick={() => {
-            setShowDownloadMenu(!showDownloadMenu);
-          }}
-          disabled={loadingExport}
-          className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${
-            !loadingExport
-              ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-gray-400 text-white cursor-not-allowed'
-          }`}
-        >
-          <span>⬇ Download</span>
-          <span className="text-xs">▾</span>
-          {loadingExport && <span className="ml-2">Loading...</span>}
-          {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
-          {!isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">(All)</span>}
-        </button>
-        
-        {showDownloadMenu && !loadingExport && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-            <button
-              onClick={exportToExcel}
-              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
-            >
-              <span className="text-lg mr-2">📊</span> Excel (.xlsx)
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
-            >
-              <span className="text-lg mr-2">📄</span> CSV (.csv)
-            </button>
-            <button
-              onClick={exportToPDF}
-              className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"
-            >
-              <span className="text-lg mr-2">📕</span> PDF (.pdf)
-            </button>
-          </div>
-        )}
+          <button
+            onClick={() => {
+              setShowDownloadMenu(!showDownloadMenu);
+            }}
+            disabled={loadingExport}
+            className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-gray-400 text-white cursor-not-allowed'
+              }`}
+          >
+            <span>⬇ Download</span>
+            <span className="text-xs">▾</span>
+            {loadingExport && <span className="ml-2">Loading...</span>}
+            {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
+            {!isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">(All)</span>}
+          </button>
+
+          {showDownloadMenu && !loadingExport && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <button
+                onClick={exportToExcel}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
+              >
+                <span className="text-lg mr-2">📊</span> Excel (.xlsx)
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
+              >
+                <span className="text-lg mr-2">📄</span> CSV (.csv)
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"
+              >
+                <span className="text-lg mr-2">📕</span> PDF (.pdf)
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -583,12 +579,12 @@ const AdminOrders = () => {
 
     {error && <Notice tone="red" message={error} dismiss={() => setError('')} />}
     {success && <Notice tone="green" message={success} dismiss={() => setSuccess('')} />}
-    
+
     <div className="mb-6 overflow-x-auto pb-2">
       <div className="flex gap-2 min-w-max">
         {filterOptions.map((filter) => {
           const count = filterOrdersByStatus(displayOrders, filter.value).length;
-          
+
           return (
             <button
               key={filter.value}
@@ -601,7 +597,7 @@ const AdminOrders = () => {
         })}
       </div>
     </div>
-    
+
     <div className="space-y-4">
       {filteredOrders.map((order) => <OrderCard key={order._id} order={order} expanded={expandedOrder === order._id} toggle={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)} openEdit={() => openEdit(order)} status={getStatus(order.orderStatus)} statusOptions={statusOptions} updating={updatingId === order._id} onStatusChange={handleStatusChange} formatDate={formatDate} formatPrice={formatPrice} />)}
       {!filteredOrders.length && <div className="text-center py-12 bg-white rounded-xl text-gray-500">
@@ -638,46 +634,29 @@ const Notice = ({ tone, message, dismiss }) => <div className={`mb-4 p-3 bg-${to
 const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, updating, onStatusChange, formatDate, formatPrice }) => {
   const subtotal = order.totalAmount - (order.deliveryCharge || 0);
   const deliveryCharge = order.deliveryCharge || 0;
-  
+
   let amountPaid = 0;
   let amountPending = 0;
   let paymentMethodLabel = '';
   let paymentStatusLabel = '';
   let paymentStatusColor = '';
 
-  // ONLY THIS LOGIC - Clean payment handling
+  // CORRECTED LOGIC FOR ORDER CARD
   if (order.paymentMethod === 'cod') {
-    // COD: Always show pending amount
-    amountPaid = 0;
-    amountPending = order.totalAmount || 0;
+    // COD: Delivery charge is paid, rest is pending
+    const deliveryCharge = order.deliveryCharge || 0;
+    amountPaid = deliveryCharge;
+    amountPending = (order.totalAmount || 0) - deliveryCharge;
     paymentMethodLabel = '💰 Cash on Delivery';
     paymentStatusLabel = 'Pending Payment';
     paymentStatusColor = 'text-yellow-600';
   } else {
-    // Online: Use payment status logic
+    // Online: Full amount paid
     paymentMethodLabel = '💳 Online Payment';
-    
-    if (order.paymentStatus === 'paid') {
-      amountPaid = order.totalAmount || 0;
-      amountPending = 0;
-      paymentStatusLabel = 'Fully Paid';
-      paymentStatusColor = 'text-green-600';
-    } else if (order.paymentStatus === 'partial_paid') {
-      amountPaid = order.paidAmount || 0;
-      amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-      paymentStatusLabel = 'Partial Paid';
-      paymentStatusColor = 'text-blue-600';
-    } else if (order.paymentStatus === 'pending') {
-      amountPaid = 0;
-      amountPending = order.totalAmount || 0;
-      paymentStatusLabel = 'Pending';
-      paymentStatusColor = 'text-yellow-600';
-    } else {
-      amountPaid = 0;
-      amountPending = 0;
-      paymentStatusLabel = order.paymentStatus || 'Unknown';
-      paymentStatusColor = 'text-gray-600';
-    }
+    amountPaid = order.totalAmount || 0;
+    amountPending = 0;
+    paymentStatusLabel = 'Fully Paid';
+    paymentStatusColor = 'text-green-600';
   }
 
   return <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -713,7 +692,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
           <p className="text-gray-600 text-xs">{item.selectedWeight} kg × {item.quantity} · {formatPrice(item.price)} each</p>
         </div>)}
       </section>
-      
+
       <section className="text-sm border-t pt-2">
         <p className="flex justify-between">
           <span className="text-gray-600">Subtotal</span>
