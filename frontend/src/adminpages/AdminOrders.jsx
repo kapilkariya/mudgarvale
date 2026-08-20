@@ -276,61 +276,62 @@ const AdminOrders = () => {
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   // Prepare data for export
-  const prepareExportData = (ordersToExport) => {
-    return ordersToExport.map((order) => {
-      const itemsList = order.items?.map(item =>
-        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
-      ).join('; ') || '';
+  // Prepare data for export
+const prepareExportData = (ordersToExport) => {
+  return ordersToExport.map((order) => {
+    const itemsList = order.items?.map(item =>
+      `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
+    ).join('; ') || '';
 
-      const totalWeight = order.items?.reduce((sum, item) => {
-        let itemWeight = 0;
-        if (item.category === 'senaboard') {
-          itemWeight = 2 * item.quantity;
-        } else {
-          itemWeight = parseFloat(item.selectedWeight) * item.quantity;
-        }
-        return sum + itemWeight;
-      }, 0) || 0;
-
-      let amountPaid = 0;
-      let amountPending = 0;
-      let paymentStatusDisplay = '';
-
-      // CORRECTED LOGIC FOR EXPORT
-      if (order.paymentMethod === 'cod') {
-        // COD: Delivery charge is paid (advance), rest is pending
-        const deliveryCharge = order.deliveryCharge || 0;
-        amountPaid = deliveryCharge;
-        amountPending = (order.totalAmount || 0) - deliveryCharge;
-        paymentStatusDisplay = 'Advance Received - Balance Pending';
+    const totalWeight = order.items?.reduce((sum, item) => {
+      let itemWeight = 0;
+      if (item.category === 'senaboard') {
+        itemWeight = 2 * item.quantity;
       } else {
-        // Online: Full amount paid
-        amountPaid = order.totalAmount || 0;
-        amountPending = 0;
-        paymentStatusDisplay = 'Fully Paid';
+        itemWeight = parseFloat(item.selectedWeight) * item.quantity;
       }
+      return sum + itemWeight;
+    }, 0) || 0;
 
-      return {
-        'Order Number': order.orderNumber || '',
-        'Customer Name': order.user?.name || order.address?.name || '',
-        'Customer Email': order.user?.email || order.address?.email || '',
-        'Address': order.address?.address || '',
-        'City': order.address?.city || '',
-        'State': order.address?.state || '',
-        'Pincode': order.address?.pincode || '',
-        'Items': itemsList,
-        'Phone': order.address?.phone || '',
-        'Total Weight (kg)': totalWeight.toFixed(2),
-        'Total Amount': order.totalAmount || 0,
-        'Amount Paid': amountPaid,
-        'Amount Pending': amountPending,
-        'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
-        'Payment Status': paymentStatusDisplay,
-        'Order Status': order.orderStatus || '',
-        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
-      };
-    });
-  };
+    let amountPaid = 0;
+    let amountPending = 0;
+    let paymentStatusDisplay = '';
+
+    // CORRECTED LOGIC FOR EXPORT
+    if (order.paymentMethod === 'cod') {
+      // COD: Delivery charge is paid (advance), rest is pending
+      const deliveryCharge = order.deliveryCharge || 0;
+      amountPaid = deliveryCharge;
+      amountPending = (order.totalAmount || 0) - deliveryCharge;
+      paymentStatusDisplay = 'Partially Paid';  // Changed to "Partially Paid"
+    } else {
+      // Online: Full amount paid
+      amountPaid = order.totalAmount || 0;
+      amountPending = 0;
+      paymentStatusDisplay = 'Fully Paid';
+    }
+
+    return {
+      'Order Number': order.orderNumber || '',
+      'Customer Name': order.user?.name || order.address?.name || '',
+      'Customer Email': order.user?.email || order.address?.email || '',
+      'Address': order.address?.address || '',
+      'City': order.address?.city || '',
+      'State': order.address?.state || '',
+      'Pincode': order.address?.pincode || '',
+      'Items': itemsList,
+      'Phone': order.address?.phone || '',
+      'Total Weight (kg)': totalWeight.toFixed(2),
+      'Total Amount': order.totalAmount || 0,
+      'Amount Paid': amountPaid,
+      'Amount Pending': amountPending,
+      'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
+      'Payment Status': paymentStatusDisplay,
+      'Order Status': order.orderStatus || '',
+      'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
+    };
+  });
+};
 
   // Export to Excel
   const exportToExcel = async () => {
