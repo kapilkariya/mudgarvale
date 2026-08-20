@@ -613,7 +613,7 @@ const AdminOrders = () => {
           disabled={loadingMore}
           className="px-6 py-3 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50"
         >
-          {loadingMore ? 'Loading...' : 'Load More Orders'}
+          {loadingMore ? 'Loading...' : 'Load More Orderss'}
         </button>
       </div>
     )}
