@@ -295,13 +295,19 @@ const AdminOrders = () => {
       let amountPaid = 0;
       let amountPending = 0;
 
-      if (order.paymentStatus === 'paid') {
-        amountPaid = order.totalAmount || 0;
-      } else if (order.paymentStatus === 'partial_paid') {
-        amountPaid = order.paidAmount || 0;
-        amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-      } else if (order.paymentStatus === 'pending') {
+      // Fix for export data - COD orders show pending amount
+      if (order.paymentMethod === 'cod') {
         amountPending = order.totalAmount || 0;
+        amountPaid = 0;
+      } else {
+        if (order.paymentStatus === 'paid') {
+          amountPaid = order.totalAmount || 0;
+        } else if (order.paymentStatus === 'partial_paid') {
+          amountPaid = order.paidAmount || 0;
+          amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
+        } else if (order.paymentStatus === 'pending') {
+          amountPending = order.totalAmount || 0;
+        }
       }
 
       return {
@@ -638,65 +644,41 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   let paymentMethodLabel = '';
   let paymentStatusLabel = '';
   let paymentStatusColor = '';
-  
-  if (order.paymentMethod === 'online') {
-    amountPaid = order.totalAmount || 0;
-    amountPending = 0;
-    paymentMethodLabel = '💳 Online Payment';
-    paymentStatusLabel = 'Fully Paid';
-    paymentStatusColor = 'text-green-600';
-  } else if (order.paymentMethod === 'cod') {
+
+  // ONLY THIS LOGIC - Clean payment handling
+  if (order.paymentMethod === 'cod') {
+    // COD: Always show pending amount
+    amountPaid = 0;
+    amountPending = order.totalAmount || 0;
     paymentMethodLabel = '💰 Cash on Delivery';
+    paymentStatusLabel = 'Pending Payment';
+    paymentStatusColor = 'text-yellow-600';
+  } else {
+    // Online: Use payment status logic
+    paymentMethodLabel = '💳 Online Payment';
+    
     if (order.paymentStatus === 'paid') {
       amountPaid = order.totalAmount || 0;
       amountPending = 0;
-      paymentStatusLabel = 'Paid';
+      paymentStatusLabel = 'Fully Paid';
       paymentStatusColor = 'text-green-600';
     } else if (order.paymentStatus === 'partial_paid') {
       amountPaid = order.paidAmount || 0;
       amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-      paymentStatusLabel = 'Advance Paid';
+      paymentStatusLabel = 'Partial Paid';
       paymentStatusColor = 'text-blue-600';
-    } else {
+    } else if (order.paymentStatus === 'pending') {
       amountPaid = 0;
       amountPending = order.totalAmount || 0;
       paymentStatusLabel = 'Pending';
       paymentStatusColor = 'text-yellow-600';
+    } else {
+      amountPaid = 0;
+      amountPending = 0;
+      paymentStatusLabel = order.paymentStatus || 'Unknown';
+      paymentStatusColor = 'text-gray-600';
     }
   }
-
-  const paymentStatus = paymentStatusDetails[order.paymentStatus] || {
-    label: order.paymentStatus || 'Unknown',
-    color: 'text-gray-600',
-  };
-
-  paymentStatusLabel = paymentStatus.label;
-  paymentStatusColor = paymentStatus.color;
-
- // NEW CODE - Check payment method first
-if (order.paymentMethod === 'cod') {
-  // COD: Always show pending amount (total - delivery charge)
-  amountPaid = 0;
-  amountPending = order.totalAmount || 0;
-  paymentMethodLabel = '💰 Cash on Delivery';
-  paymentStatusLabel = 'Pending Payment';
-  paymentStatusColor = 'text-yellow-600';
-} else {
-  // Online: Use payment status logic
-  if (order.paymentStatus === 'paid') {
-    amountPaid = order.totalAmount || 0;
-    amountPending = 0;
-  } else if (order.paymentStatus === 'partial_paid') {
-    amountPaid = order.paidAmount || 0;
-    amountPending = (order.totalAmount || 0) - (order.paidAmount || 0);
-  } else if (order.paymentStatus === 'pending') {
-    amountPaid = 0;
-    amountPending = order.totalAmount || 0;
-  } else {
-    amountPaid = 0;
-    amountPending = 0;
-  }
-}
 
   return <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div className="p-4 cursor-pointer active:bg-gray-50" onClick={toggle}>
