@@ -294,17 +294,20 @@ const AdminOrders = () => {
 
       let amountPaid = 0;
       let amountPending = 0;
+      let paymentStatusDisplay = '';
 
       // CORRECTED LOGIC FOR EXPORT
       if (order.paymentMethod === 'cod') {
-        // COD: Delivery charge is paid, rest is pending
+        // COD: Delivery charge is paid (advance), rest is pending
         const deliveryCharge = order.deliveryCharge || 0;
         amountPaid = deliveryCharge;
         amountPending = (order.totalAmount || 0) - deliveryCharge;
+        paymentStatusDisplay = 'Advance Received - Balance Pending';
       } else {
         // Online: Full amount paid
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
+        paymentStatusDisplay = 'Fully Paid';
       }
 
       return {
@@ -322,7 +325,7 @@ const AdminOrders = () => {
         'Amount Paid': amountPaid,
         'Amount Pending': amountPending,
         'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
-        'Payment Status': order.paymentStatus || '',
+        'Payment Status': paymentStatusDisplay,
         'Order Status': order.orderStatus || '',
         'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
       };
@@ -613,7 +616,7 @@ const AdminOrders = () => {
           disabled={loadingMore}
           className="px-6 py-3 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50"
         >
-          {loadingMore ? 'Loading...' : 'Load More Orderss'}
+          {loadingMore ? 'Loading...' : 'Load More Orders'}
         </button>
       </div>
     )}
@@ -643,13 +646,13 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
 
   // CORRECTED LOGIC FOR ORDER CARD
   if (order.paymentMethod === 'cod') {
-    // COD: Delivery charge is paid, rest is pending
+    // COD: Delivery charge is paid (advance), rest is pending
     const deliveryCharge = order.deliveryCharge || 0;
     amountPaid = deliveryCharge;
     amountPending = (order.totalAmount || 0) - deliveryCharge;
     paymentMethodLabel = '💰 Cash on Delivery';
-    paymentStatusLabel = 'Pending Payment';
-    paymentStatusColor = 'text-yellow-600';
+    paymentStatusLabel = 'Advance Received - Balance Pending';
+    paymentStatusColor = 'text-blue-600';
   } else {
     // Online: Full amount paid
     paymentMethodLabel = '💳 Online Payment';
@@ -731,17 +734,11 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
               <span className="font-medium text-orange-600">{formatPrice(amountPending)}</span>
             </p>
           )}
-          {order.paymentStatus === 'paid' && order.paymentMethod === 'online' && (
+          {order.paymentMethod === 'cod' && (
+            <p className="text-xs text-blue-600 mt-1">ℹ️ Advance payment of {formatPrice(deliveryCharge)} received, balance {formatPrice(amountPending)} pending</p>
+          )}
+          {order.paymentMethod === 'online' && (
             <p className="text-xs text-green-600 mt-1">✅ Fully paid online</p>
-          )}
-          {order.paymentMethod === 'cod' && order.paymentStatus === 'pending' && (
-            <p className="text-xs text-orange-600 mt-1">⚠️ Payment pending on delivery</p>
-          )}
-          {order.paymentMethod === 'cod' && order.paymentStatus === 'partial_paid' && (
-            <p className="text-xs text-blue-600 mt-1">ℹ️ Advance payment received, balance pending</p>
-          )}
-          {order.paymentMethod === 'cod' && order.paymentStatus === 'paid' && (
-            <p className="text-xs text-green-600 mt-1">✅ Fully paid</p>
           )}
         </div>
       </section>
