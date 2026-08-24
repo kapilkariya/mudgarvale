@@ -278,6 +278,7 @@ const AdminOrders = () => {
   // Prepare data for export
   // Prepare data for export
 // Prepare data for export
+// Prepare data for export
 const prepareExportData = (ordersToExport) => {
   return ordersToExport.map((order) => {
     const itemsList = order.items?.map(item =>
@@ -312,30 +313,12 @@ const prepareExportData = (ordersToExport) => {
       paymentStatusDisplay = 'Fully Paid';
     }
 
-    // Create full address with building/flat no
-    const addressParts = [];
-    if (order.address?.buildingFlatNo) {
-      addressParts.push(order.address.buildingFlatNo);
-    }
-    if (order.address?.address) {
-      addressParts.push(order.address.address);
-    }
-    if (order.address?.city) {
-      addressParts.push(order.address.city);
-    }
-    if (order.address?.state) {
-      addressParts.push(order.address.state);
-    }
-    if (order.address?.pincode) {
-      addressParts.push(order.address.pincode);
-    }
-    const fullAddress = addressParts.join(', ');
-
     return {
       'Order Number': order.orderNumber || '',
       'Customer Name': order.user?.name || order.address?.name || '',
       'Customer Email': order.user?.email || order.address?.email || '',
-      'Address': fullAddress,  // ← Now includes building/flat no, address, city, state, pincode
+      'Building/Flat No': order.address?.buildingFlatNo || '',
+      'Address': order.address?.address || '',
       'City': order.address?.city || '',
       'State': order.address?.state || '',
       'Pincode': order.address?.pincode || '',
@@ -352,7 +335,6 @@ const prepareExportData = (ordersToExport) => {
     };
   });
 };
-
   // Export to Excel
   const exportToExcel = async () => {
     try {
