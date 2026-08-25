@@ -279,6 +279,7 @@ const AdminOrders = () => {
   // Prepare data for export
 // Prepare data for export
 // Prepare data for export
+// Prepare data for export
 const prepareExportData = (ordersToExport) => {
   return ordersToExport.map((order) => {
     const itemsList = order.items?.map(item =>
@@ -313,12 +314,18 @@ const prepareExportData = (ordersToExport) => {
       paymentStatusDisplay = 'Fully Paid';
     }
 
+    // Combine building/flat no and address
+    const buildingFlat = order.address?.buildingFlatNo || '';
+    const addressLine = order.address?.address || '';
+    const fullAddress = buildingFlat && addressLine 
+      ? `${buildingFlat}, ${addressLine}` 
+      : buildingFlat || addressLine;
+
     return {
       'Order Number': order.orderNumber || '',
       'Customer Name': order.user?.name || order.address?.name || '',
       'Customer Email': order.user?.email || order.address?.email || '',
-      'Building/Flat No': order.address?.buildingFlatNo || '',
-      'Address': order.address?.address || '',
+      'Address': fullAddress,
       'City': order.address?.city || '',
       'State': order.address?.state || '',
       'Pincode': order.address?.pincode || '',
