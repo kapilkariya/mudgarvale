@@ -376,49 +376,53 @@ const prepareExportData = (ordersToExport) => {
   };
 
   // Export to CSV
-  const exportToCSV = async () => {
-    try {
-      let ordersToExport;
+  // Export to CSV
+const exportToCSV = async () => {
+  try {
+    let ordersToExport;
 
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
-      }
-
-      if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
-        return;
-      }
-
-      const rows = prepareExportData(ordersToExport);
-      const headers = Object.keys(rows[0]);
-      const csvRows = [];
-
-      csvRows.push(headers.join(','));
-
-      for (const row of rows) {
-        const values = headers.map(header => {
-          const val = row[header] || '';
-          return `"${String(val).replace(/"/g, '""')}"`;
-        });
-        csvRows.push(values.join(','));
-      }
-
-      const csvString = csvRows.join('\n');
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-      link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
-      setShowDownloadMenu(false);
-    } catch (err) {
-      setError(err.message || 'Failed to export to CSV');
+    if (isDateFilterActive) {
+      ordersToExport = filteredDateOrders;
+    } else {
+      ordersToExport = await fetchAllOrdersForExport();
     }
-  };
+
+    if (!ordersToExport || !ordersToExport.length) {
+      setError('No orders to export');
+      return;
+    }
+
+    const rows = prepareExportData(ordersToExport);
+    const headers = Object.keys(rows[0]);
+    const csvRows = [];
+
+    csvRows.push(headers.join(','));
+
+    for (const row of rows) {
+      const values = headers.map(header => {
+        let val = row[header] || '';
+        // Replace Unicode multiplication symbol with ASCII x for Excel compatibility
+        val = String(val).replace(/×/g, 'x');
+        return `"${val.replace(/"/g, '""')}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+
+    // Add UTF-8 BOM for Excel compatibility
+    const csvString = '\uFEFF' + csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+    link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
+    setShowDownloadMenu(false);
+  } catch (err) {
+    setError(err.message || 'Failed to export to CSV');
+  }
+};
 
   // Export to PDF
   const exportToPDF = async () => {
