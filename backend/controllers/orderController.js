@@ -16,8 +16,9 @@ const getProductId = (item) => String(item.productId?._id || item.productId);
 
 const addCategoriesToItems = async (items = []) => {
   const productIds = [...new Set(items.map(getProductId).filter(Boolean))];
-  const products = await Product.find({ _id: { $in: productIds } }).select('category').lean();
+  const products = await Product.find({ _id: { $in: productIds } }).select('category isSpecial').lean();
   const categoryByProductId = new Map(products.map((product) => [String(product._id), product.category]));
+  const specialByProductId = new Map(products.map((product) => [String(product._id), product.isSpecial || false]));
 
   return items.map((item) => {
     const productId = getProductId(item);
@@ -26,6 +27,7 @@ const addCategoriesToItems = async (items = []) => {
       ...item,
       productId,
       category: item.category || categoryByProductId.get(productId) || '',
+      isSpecial: specialByProductId.get(productId) || false,
     };
   });
 };

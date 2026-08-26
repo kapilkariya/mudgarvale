@@ -4,6 +4,16 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// List of special product names (exact match)
+const SPECIAL_PRODUCT_NAMES = [
+  'Traditional Mudgar Model: 201',
+  'Traditional Mudgar Model: 1',
+  'Traditional Mudgar Model: 13',
+  'Indian Hanuman Gada Model: 13',
+  'Angad Gada',
+  // Add more special product names here as needed
+];
+
 const emptyForm = (order) => ({
   customer: {
     name: order.user?.name || order.address?.name || '',
@@ -41,6 +51,12 @@ const filterOrdersByStatus = (orders, filter) => {
   if (filter === 'delivered' || filter === 'cancelled') return orders.filter((order) => order.orderStatus === filter);
   if (filter === 'all') return orders.filter((order) => order.paymentStatus !== 'pending');
   return orders;
+};
+
+// Helper function to check if order contains special products by name
+const hasSpecialProducts = (order) => {
+  if (!order.items || !order.items.length) return false;
+  return order.items.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
 };
 
 const AdminOrders = () => {
@@ -276,72 +292,73 @@ const AdminOrders = () => {
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   // Prepare data for export
-  // Prepare data for export
-// Prepare data for export
-// Prepare data for export
-// Prepare data for export
-const prepareExportData = (ordersToExport) => {
-  return ordersToExport.map((order) => {
-    const itemsList = order.items?.map(item =>
-      `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
-    ).join('; ') || '';
+  const prepareExportData = (ordersToExport) => {
+    return ordersToExport.map((order) => {
+      const itemsList = order.items?.map(item =>
+        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
+      ).join('; ') || '';
 
-    const totalWeight = order.items?.reduce((sum, item) => {
-      let itemWeight = 0;
-      if (item.category === 'senaboard') {
-        itemWeight = 2 * item.quantity;
+      const totalWeight = order.items?.reduce((sum, item) => {
+        let itemWeight = 0;
+        if (item.category === 'senaboard') {
+          itemWeight = 2 * item.quantity;
+        } else {
+          itemWeight = parseFloat(item.selectedWeight) * item.quantity;
+        }
+        return sum + itemWeight;
+      }, 0) || 0;
+
+      let amountPaid = 0;
+      let amountPending = 0;
+      let paymentStatusDisplay = '';
+
+      // CORRECTED LOGIC FOR EXPORT
+      if (order.paymentMethod === 'cod') {
+        // COD: Delivery charge is paid (advance), rest is pending
+        const deliveryCharge = order.deliveryCharge || 0;
+        amountPaid = deliveryCharge;
+        amountPending = (order.totalAmount || 0) - deliveryCharge;
+        paymentStatusDisplay = 'Partially Paid';
       } else {
-        itemWeight = parseFloat(item.selectedWeight) * item.quantity;
+        // Online: Full amount paid
+        amountPaid = order.totalAmount || 0;
+        amountPending = 0;
+        paymentStatusDisplay = 'Fully Paid';
       }
-      return sum + itemWeight;
-    }, 0) || 0;
 
-    let amountPaid = 0;
-    let amountPending = 0;
-    let paymentStatusDisplay = '';
+      // Combine building/flat no and address
+      const buildingFlat = order.address?.buildingFlatNo || '';
+      const addressLine = order.address?.address || '';
+      const fullAddress = buildingFlat && addressLine
+        ? `${buildingFlat}, ${addressLine}`
+        : buildingFlat || addressLine;
 
-    // CORRECTED LOGIC FOR EXPORT
-    if (order.paymentMethod === 'cod') {
-      // COD: Delivery charge is paid (advance), rest is pending
-      const deliveryCharge = order.deliveryCharge || 0;
-      amountPaid = deliveryCharge;
-      amountPending = (order.totalAmount || 0) - deliveryCharge;
-      paymentStatusDisplay = 'Partially Paid';
-    } else {
-      // Online: Full amount paid
-      amountPaid = order.totalAmount || 0;
-      amountPending = 0;
-      paymentStatusDisplay = 'Fully Paid';
-    }
+      const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name))
+        .map(item => `⭐⭐⭐ `)
+        .join('; ') || '';
 
-    // Combine building/flat no and address
-    const buildingFlat = order.address?.buildingFlatNo || '';
-    const addressLine = order.address?.address || '';
-    const fullAddress = buildingFlat && addressLine 
-      ? `${buildingFlat}, ${addressLine}` 
-      : buildingFlat || addressLine;
-
-    return {
-      'Order Number': order.orderNumber || '',
-      'Customer Name': order.user?.name || order.address?.name || '',
-      'Customer Email': order.user?.email || order.address?.email || '',
-      'Address': fullAddress,
-      'City': order.address?.city || '',
-      'State': order.address?.state || '',
-      'Pincode': order.address?.pincode || '',
-      'Items': itemsList,
-      'Phone': order.address?.phone || '',
-      'Total Weight (kg)': totalWeight.toFixed(2),
-      'Total Amount': order.totalAmount || 0,
-      'Amount Paid': amountPaid,
-      'Amount Pending': amountPending,
-      'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
-      'Payment Status': paymentStatusDisplay,
-      'Order Status': order.orderStatus || '',
-      'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
-    };
-  });
-};
+      return {
+        'Order Number': order.orderNumber || '',
+        'Customer Name': order.user?.name || order.address?.name || '',
+        'Customer Email': order.user?.email || order.address?.email || '',
+        'Address': fullAddress,
+        'City': order.address?.city || '',
+        'State': order.address?.state || '',
+        'Pincode': order.address?.pincode || '',
+        'Items': itemsList,
+        'Phone': order.address?.phone || '',
+        'Total Weight (kg)': totalWeight.toFixed(2),
+        'Total Amount': order.totalAmount || 0,
+        'Amount Paid': amountPaid,
+        'Amount Pending': amountPending,
+        'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
+        'Payment Status': paymentStatusDisplay,
+        'Order Status': order.orderStatus || '',
+        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
+        'Special Items': specialItems,
+      };
+    });
+  };
   // Export to Excel
   const exportToExcel = async () => {
     try {
@@ -368,7 +385,7 @@ const prepareExportData = (ordersToExport) => {
         { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
         { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
         { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 },
-        { wch: 18 }, { wch: 15 }
+        { wch: 18 }, { wch: 15 }, { wch: 18 }, { wch: 35 }
       ];
       ws['!cols'] = colWidths;
 
@@ -383,53 +400,52 @@ const prepareExportData = (ordersToExport) => {
   };
 
   // Export to CSV
-  // Export to CSV
-const exportToCSV = async () => {
-  try {
-    let ordersToExport;
+  const exportToCSV = async () => {
+    try {
+      let ordersToExport;
 
-    if (isDateFilterActive) {
-      ordersToExport = filteredDateOrders;
-    } else {
-      ordersToExport = await fetchAllOrdersForExport();
+      if (isDateFilterActive) {
+        ordersToExport = filteredDateOrders;
+      } else {
+        ordersToExport = await fetchAllOrdersForExport();
+      }
+
+      if (!ordersToExport || !ordersToExport.length) {
+        setError('No orders to export');
+        return;
+      }
+
+      const rows = prepareExportData(ordersToExport);
+      const headers = Object.keys(rows[0]);
+      const csvRows = [];
+
+      csvRows.push(headers.join(','));
+
+      for (const row of rows) {
+        const values = headers.map(header => {
+          let val = row[header] || '';
+          // Replace Unicode multiplication symbol with ASCII x for Excel compatibility
+          val = String(val).replace(/×/g, 'x');
+          return `"${val.replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+
+      // Add UTF-8 BOM for Excel compatibility
+      const csvString = '\uFEFF' + csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
+      link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
+      setShowDownloadMenu(false);
+    } catch (err) {
+      setError(err.message || 'Failed to export to CSV');
     }
-
-    if (!ordersToExport || !ordersToExport.length) {
-      setError('No orders to export');
-      return;
-    }
-
-    const rows = prepareExportData(ordersToExport);
-    const headers = Object.keys(rows[0]);
-    const csvRows = [];
-
-    csvRows.push(headers.join(','));
-
-    for (const row of rows) {
-      const values = headers.map(header => {
-        let val = row[header] || '';
-        // Replace Unicode multiplication symbol with ASCII x for Excel compatibility
-        val = String(val).replace(/×/g, 'x');
-        return `"${val.replace(/"/g, '""')}"`;
-      });
-      csvRows.push(values.join(','));
-    }
-
-    // Add UTF-8 BOM for Excel compatibility
-    const csvString = '\uFEFF' + csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-    link.download = `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
-    setShowDownloadMenu(false);
-  } catch (err) {
-    setError(err.message || 'Failed to export to CSV');
-  }
-};
+  };
 
   // Export to PDF
   const exportToPDF = async () => {
@@ -474,6 +490,7 @@ const exportToCSV = async () => {
           1: { cellWidth: 22 },
           2: { cellWidth: 28 },
           7: { cellWidth: 38 },
+          19: { cellWidth: 45 },
         },
         didDrawPage: function (data) {
           doc.setFontSize(8);
@@ -514,8 +531,8 @@ const exportToCSV = async () => {
             }}
             disabled={loadingExport}
             className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gray-400 text-white cursor-not-allowed'
+              ? 'bg-green-600 text-white hover:bg-green-700'
+              : 'bg-gray-400 text-white cursor-not-allowed'
               }`}
           >
             <span>⬇ Download</span>
@@ -652,6 +669,12 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   const subtotal = order.totalAmount - (order.deliveryCharge || 0);
   const deliveryCharge = order.deliveryCharge || 0;
 
+  // Check if order contains special products by name
+  const hasSpecialProducts = (order) => {
+    if (!order.items || !order.items.length) return false;
+    return order.items.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
+  };
+
   let amountPaid = 0;
   let amountPending = 0;
   let paymentMethodLabel = '';
@@ -680,7 +703,12 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
     <div className="p-4 cursor-pointer active:bg-gray-50" onClick={toggle}>
       <div className="flex justify-between items-start mb-2">
         <div>
-          <span className="font-semibold text-[#5C3A21] text-sm">#{order.orderNumber}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-[#5C3A21] text-sm">#{order.orderNumber}</span>
+            {hasSpecialProducts(order) && (
+              <span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.color}`}>{status.label}</span>
             <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
@@ -705,7 +733,12 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
       <section>
         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Items</h4>
         {order.items?.map((item) => <div key={item._id || item.productId} className="bg-white rounded-lg p-2 text-sm mb-2">
-          <p className="font-medium">{item.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{item.name}</p>
+            {SPECIAL_PRODUCT_NAMES.includes(item.name) && (
+              <span className="text-red-500 text-xs font-bold">★★★</span>
+            )}
+          </div>
           <p className="text-gray-600 text-xs">{item.selectedWeight} kg × {item.quantity} · {formatPrice(item.price)} each</p>
         </div>)}
       </section>
