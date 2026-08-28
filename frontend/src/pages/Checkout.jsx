@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { orderAPI, configAPI, addressAPI } from '../config/api';
+import { orderAPI, configAPI, addressAPI, otpAPI } from '../config/api';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 const Checkout = () => {
@@ -34,6 +34,14 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // OTP verification states
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpResendTimer, setOtpResendTimer] = useState(0);
 
   // Fetch config and saved addresses from backend
   useEffect(() => {
@@ -69,6 +77,26 @@ const Checkout = () => {
     fetchData();
   }, []);
 
+  // OTP resend timer
+  useEffect(() => {
+    let interval;
+    if (otpResendTimer > 0) {
+      interval = setInterval(() => {
+        setOtpResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpResendTimer]);
+
+  // Reset OTP verification when phone number or address changes
+  useEffect(() => {
+    setOtpSent(false);
+    setOtpVerified(false);
+    setOtp('');
+    setOtpError('');
+    setOtpResendTimer(0);
+  }, [selectedAddressId, useNewAddress, formData.phone]);
+
   const formatPrice = (price) => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
@@ -100,6 +128,61 @@ const Checkout = () => {
     return null;
   };
 
+  const handleSendOTP = async () => {
+    const phoneNumber = useNewAddress ? formData.phone : (savedAddresses.find(a => a._id === selectedAddressId)?.phone || '');
+    
+    if (!phoneNumber || phoneNumber.length !== 10) {
+      setOtpError('Invalid phone number');
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await otpAPI.send({ mobile: phoneNumber });
+      
+      if (response.success) {
+        setOtpSent(true);
+        setOtpResendTimer(60); // 60 seconds timer
+        setOtpError('');
+      } else {
+        setOtpError(response.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    const phoneNumber = useNewAddress ? formData.phone : (savedAddresses.find(a => a._id === selectedAddressId)?.phone || '');
+    
+    if (!otp || otp.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await otpAPI.verify({ mobile: phoneNumber, otp });
+      
+      if (response.success) {
+        setOtpVerified(true);
+        setOtpError('');
+      } else {
+        setOtpError(response.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to verify OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   // Get address data for order (either from saved address or form)
   const getOrderAddress = () => {
     if (!useNewAddress && selectedAddressId) {
@@ -127,6 +210,12 @@ const Checkout = () => {
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
+      return;
+    }
+
+    // Check if OTP is verified before proceeding
+    if (!otpVerified) {
+      setError('Please verify your phone number with OTP before proceeding');
       return;
     }
 
@@ -518,6 +607,72 @@ const Checkout = () => {
                   </div>
                 )}
 
+                {/* OTP Verification Section */}
+                <div className="pt-4 border-t">
+                  <label className="block text-gray-700 font-medium mb-3">Phone Verification *</label>
+                  
+                  {!otpSent ? (
+                    <button
+                      type="button"
+                      onClick={handleSendOTP}
+                      disabled={otpLoading}
+                      className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {otpLoading ? 'Sending OTP...' : 'Send OTP to verify phone'}
+                    </button>
+                  ) : otpVerified ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        <span className="text-green-800 font-medium">Phone number verified successfully</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={otp}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setOtp(value);
+                          }}
+                          placeholder="Enter 6-digit OTP"
+                          maxLength="6"
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyOTP}
+                          disabled={otpLoading || otp.length !== 6}
+                          className="px-6 py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {otpLoading ? 'Verifying...' : 'Verify'}
+                        </button>
+                      </div>
+                      
+                      {otpResendTimer > 0 ? (
+                        <p className="text-sm text-gray-600">
+                          Resend OTP in <span className="font-medium">{otpResendTimer}s</span>
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendOTP}
+                          disabled={otpLoading}
+                          className="text-sm text-[#5C3A21] hover:underline"
+                        >
+                          Resend OTP
+                        </button>
+                      )}
+                      
+                      {otpError && (
+                        <p className="text-red-600 text-sm">{otpError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Payment Method */}
                 <div className="pt-4">
                   <label className="block text-gray-700 font-medium mb-3">Payment Method *</label>
@@ -556,10 +711,10 @@ const Checkout = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !otpVerified}
                   className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                 >
-                  {loading ? 'Processing...' : `Pay ${formatPrice(amountToPayNow)}`}
+                  {loading ? 'Processing...' : otpVerified ? `Pay ${formatPrice(amountToPayNow)}` : 'Verify phone number first'}
                 </button>
               </form>
             </div>

@@ -28,6 +28,7 @@ const contactRoutes = require('./routes/contactRoutes');
 const configRoutes  = require('./routes/configRoutes');
 const adminRoutes   = require('./routes/adminRoutes');
 const feedRoutes = require('./routes/feedRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 
 
 const app = express();
@@ -71,6 +72,7 @@ app.use('/api/cart',      cartRoutes);
 app.use('/api/contact',   contactRoutes);
 app.use('/api/config',    configRoutes);
 app.use('/api/admin',     adminRoutes);
+app.use('/api/otp',       otpRoutes);
 
 
 // Serve React frontend (must be after API routes)

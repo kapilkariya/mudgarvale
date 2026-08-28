@@ -65,6 +65,19 @@ export const authAPI = {
   logout: () => fetchWithAuth(`${API_URL}/auth/logout`, { method: 'POST' }),
 };
 
+// OTP API calls
+export const otpAPI = {
+  send: (data) => fetchWithAuth(`${API_URL}/otp/send`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  verify: (data) => fetchWithAuth(`${API_URL}/otp/verify`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+};
+
 // Products API calls
 export const productAPI = {
   getAll: (params = {}) => {
