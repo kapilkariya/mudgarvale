@@ -19,6 +19,7 @@ const emptyForm = (order) => ({
     name: order.user?.name || order.address?.name || '',
     email: order.user?.email || order.address?.email || '',
     phone: order.user?.phone || order.address?.phone || '',
+    phone2: order.address?.phone2 || '',  // Add this line
   },
   address: {
     buildingFlatNo: order.address?.buildingFlatNo || '',
@@ -260,32 +261,37 @@ const AdminOrders = () => {
   const updateItem = (index, field, value) => setForm((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item) }));
 
   const submitEdit = async (event) => {
-    event.preventDefault();
-    const subtotal = Number(form.subtotal);
-    const totalAmount = Number(form.totalAmount);
-    const itemsValid = form.items.every((item) => Number(item.selectedWeight) >= 0 && Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0 && Number(item.price) >= 0);
-    if (!form.customer.name.trim() || !form.customer.phone.trim() || !itemsValid || !Number.isFinite(subtotal) || subtotal < 0 || !Number.isFinite(totalAmount) || totalAmount < subtotal) {
-      setFormError('Enter a name and phone, complete valid product values, and a total that is not below subtotal.');
-      return;
+  event.preventDefault();
+  const subtotal = Number(form.subtotal);
+  const totalAmount = Number(form.totalAmount);
+  const itemsValid = form.items.every((item) => Number(item.selectedWeight) >= 0 && Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0 && Number(item.price) >= 0);
+  if (!form.customer.name.trim() || !form.customer.phone.trim() || !itemsValid || !Number.isFinite(subtotal) || subtotal < 0 || !Number.isFinite(totalAmount) || totalAmount < subtotal) {
+    setFormError('Enter a name and phone, complete valid product values, and a total that is not below subtotal.');
+    return;
+  }
+  try {
+    setUpdatingId(editingOrder._id);
+    setFormError('');
+    const response = await adminAPI.updateOrder(editingOrder._id, {
+      ...form,
+      subtotal,
+      totalAmount,
+      items: form.items.map((item) => ({ ...item, selectedWeight: String(item.selectedWeight), quantity: Number(item.quantity), price: Number(item.price) })),
+      // Add phone2 to the update payload
+      customer: {
+        ...form.customer,
+        phone2: form.customer.phone2 || '',
+      },
+    });
+    if (response.success) {
+      updateOrderInList(response.data);
+      setEditingOrder(null);
+      setForm(null);
+      setSuccess(response.message || 'Order updated successfully.');
     }
-    try {
-      setUpdatingId(editingOrder._id);
-      setFormError('');
-      const response = await adminAPI.updateOrder(editingOrder._id, {
-        ...form,
-        subtotal,
-        totalAmount,
-        items: form.items.map((item) => ({ ...item, selectedWeight: String(item.selectedWeight), quantity: Number(item.quantity), price: Number(item.price) })),
-      });
-      if (response.success) {
-        updateOrderInList(response.data);
-        setEditingOrder(null);
-        setForm(null);
-        setSuccess(response.message || 'Order updated successfully.');
-      }
-    } catch (err) { setFormError(err.message || 'Failed to update order'); }
-    finally { setUpdatingId(null); }
-  };
+  } catch (err) { setFormError(err.message || 'Failed to update order'); }
+  finally { setUpdatingId(null); }
+};
 
   const formatPrice = (price) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price || 0);
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
@@ -347,6 +353,7 @@ const AdminOrders = () => {
         'Pincode': order.address?.pincode || '',
         'Items': itemsList,
         'Phone': order.address?.phone || '',
+        'Phone 2': order.address?.phone2 || '',  // Add this line
         'Total Weight (kg)': totalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
         'Amount Paid': amountPaid,
@@ -382,10 +389,25 @@ const AdminOrders = () => {
       const ws = XLSX.utils.json_to_sheet(rows);
 
       const colWidths = [
-        { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
-        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 16 },
-        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 },
-        { wch: 18 }, { wch: 15 }, { wch: 18 }, { wch: 35 }
+        { wch: 15 }, // Order Number
+        { wch: 20 }, // Customer Name
+        { wch: 25 }, // Customer Email
+        { wch: 30 }, // Address
+        { wch: 15 }, // City
+        { wch: 15 }, // State
+        { wch: 12 }, // Pincode
+        { wch: 40 }, // Items
+        { wch: 15 }, // Phone
+        { wch: 15 }, // Phone 2  <-- Add this line
+        { wch: 16 }, // Total Weight
+        { wch: 15 }, // Total Amount
+        { wch: 15 }, // Amount Paid
+        { wch: 15 }, // Amount Pending
+        { wch: 20 }, // Payment Method
+        { wch: 18 }, // Payment Status
+        { wch: 18 }, // Order Status
+        { wch: 15 }, // Created Date
+        { wch: 35 }, // Special Items
       ];
       ws['!cols'] = colWidths;
 
@@ -728,6 +750,9 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
       <section className="text-sm space-y-1">
         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Customer & Shipping</h4>
         <p><span className="text-gray-600">Phone:</span> {order.address?.phone}</p>
+        {order.address?.phone2 && (
+          <p><span className="text-gray-600">Alt Phone:</span> {order.address?.phone2}</p>
+        )}
         <p><span className="text-gray-600">Address:</span> {[order.address?.buildingFlatNo, order.address?.address, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', ')}</p>
       </section>
       <section>
@@ -807,11 +832,21 @@ const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, erro
       <button type="button" onClick={onClose} disabled={saving} className="text-gray-500">Close</button>
     </div>
     {error && <div className="mb-4 p-3 bg-red-100 text-red-800 rounded text-sm">{error}</div>}
-    <h3 className="font-semibold mb-2">Customer information</h3>
+  <h3 className="font-semibold mb-2">Customer information</h3>
+<div className="grid sm:grid-cols-3 gap-3 mb-5">
+  <Field label="Customer name" value={form.customer.name} onChange={(value) => updateField('customer', 'name', value)} required />
+  <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
+  <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
+</div>
+<div className="grid sm:grid-cols-3 gap-3 mb-5">
+  <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
+</div>
+<div className="grid sm:grid-cols-3 gap-3 mb-5">
+  <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
+</div>
+    {/* Add phone2 field */}
     <div className="grid sm:grid-cols-3 gap-3 mb-5">
-      <Field label="Customer name" value={form.customer.name} onChange={(value) => updateField('customer', 'name', value)} required />
-      <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
-      <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
+      <Field label="Alternate Phone" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} placeholder="Optional" />
     </div>
     <h3 className="font-semibold mb-2">Shipping address</h3>
     <div className="grid sm:grid-cols-2 gap-3 mb-5">

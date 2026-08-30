@@ -13,7 +13,7 @@ const Checkout = () => {
 
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
-  
+
   // Saved addresses from backend
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -23,6 +23,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    phone2: '',  // Add this line
     buildingFlatNo: '',
     address: '',
     city: '',
@@ -109,6 +110,7 @@ const Checkout = () => {
           name: selectedAddress.name,
           email: selectedAddress.email,
           phone: selectedAddress.phone,
+          phone2: selectedAddress.phone2 || '',  // Add this line
           buildingFlatNo: selectedAddress.buildingFlatNo || '',
           address: selectedAddress.address,
           city: selectedAddress.city,
@@ -142,12 +144,14 @@ const Checkout = () => {
       };
 
       // Save address if checkbox is checked (and user is using new address)
+      // Save address if checkbox is checked (and user is using new address)
       if (saveAddress && useNewAddress) {
         try {
           await addressAPI.add({
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
+            phone2: formData.phone2,  // Add this line
             buildingFlatNo: formData.buildingFlatNo,
             address: formData.address,
             city: formData.city,
@@ -350,6 +354,9 @@ const Checkout = () => {
                           <div>
                             <p className="font-semibold text-gray-800">{addr.name}</p>
                             <p className="text-sm text-gray-600">{addr.phone}</p>
+                            {addr.phone2 && (
+                              <p className="text-sm text-gray-600">Alt: {addr.phone2}</p>
+                            )}
                             {addr.buildingFlatNo && (
                               <p className="text-sm text-gray-600 mt-1">{addr.buildingFlatNo}</p>
                             )}
@@ -423,16 +430,32 @@ const Checkout = () => {
                         }}
                         required
                         maxLength="10"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${
-                          formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
                             ? 'border-red-500'
                             : 'border-gray-300'
-                        }`}
+                          }`}
                         placeholder="Enter 10-digit phone number"
                       />
                       {formData.phone && formData.phone.length !== 10 && formData.phone.length > 0 && (
                         <p className="text-red-500 text-sm mt-1">Phone number must be exactly 10 digits</p>
                       )}
+                    </div>
+
+                    {/* Add this new phone2 field */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Alternate Phone Number (Optional)</label>
+                      <input
+                        type="tel"
+                        name="phone2"
+                        value={formData.phone2}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFormData({ ...formData, phone2: value });
+                        }}
+                        maxLength="10"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
+                        placeholder="Enter alternate phone number (optional)"
+                      />
                     </div>
 
                     <div>
