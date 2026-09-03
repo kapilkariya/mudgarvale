@@ -63,7 +63,7 @@ const Cart = () => {
               >
                 {/* Product Image */}
                 <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                  <img  
+                  <img
                     src={`/products/${item.image}.jpeg`}
                     alt={item.name}
                     className="w-full h-full object-cover"
@@ -73,8 +73,9 @@ const Cart = () => {
                 {/* Product Info */}
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                  <p className="text-sm text-gray-500">Weight: {item.selectedWeight}</p>
-                  <p className="text-[#5C3A21] font-semibold">
+                  <p className="text-sm text-gray-500">
+                    {item.category === 'decor' ? 'Size' : 'Weight'}: {item.selectedWeight} {item.category === 'decor' ? 'in' : 'kg'}
+                  </p>                  <p className="text-[#5C3A21] font-semibold">
                     {formatPrice(item.price * item.quantity)}
                   </p>
                   <p className="text-xs text-gray-400">
