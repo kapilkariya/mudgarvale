@@ -197,7 +197,7 @@ const ProductDetails = () => {
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
                         }`}
                     >
-                      {weight} kg
+                      {weight} {product.category === 'decor' ? 'in' : 'kg'}
                       <span className="block text-xs opacity-80">
                         {formatPrice(product.pricePerWeight[weight] || 0)}
                       </span>

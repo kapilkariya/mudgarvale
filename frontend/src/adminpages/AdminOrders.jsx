@@ -261,37 +261,37 @@ const AdminOrders = () => {
   const updateItem = (index, field, value) => setForm((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item) }));
 
   const submitEdit = async (event) => {
-  event.preventDefault();
-  const subtotal = Number(form.subtotal);
-  const totalAmount = Number(form.totalAmount);
-  const itemsValid = form.items.every((item) => Number(item.selectedWeight) >= 0 && Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0 && Number(item.price) >= 0);
-  if (!form.customer.name.trim() || !form.customer.phone.trim() || !itemsValid || !Number.isFinite(subtotal) || subtotal < 0 || !Number.isFinite(totalAmount) || totalAmount < subtotal) {
-    setFormError('Enter a name and phone, complete valid product values, and a total that is not below subtotal.');
-    return;
-  }
-  try {
-    setUpdatingId(editingOrder._id);
-    setFormError('');
-    const response = await adminAPI.updateOrder(editingOrder._id, {
-      ...form,
-      subtotal,
-      totalAmount,
-      items: form.items.map((item) => ({ ...item, selectedWeight: String(item.selectedWeight), quantity: Number(item.quantity), price: Number(item.price) })),
-      // Add phone2 to the update payload
-      customer: {
-        ...form.customer,
-        phone2: form.customer.phone2 || '',
-      },
-    });
-    if (response.success) {
-      updateOrderInList(response.data);
-      setEditingOrder(null);
-      setForm(null);
-      setSuccess(response.message || 'Order updated successfully.');
+    event.preventDefault();
+    const subtotal = Number(form.subtotal);
+    const totalAmount = Number(form.totalAmount);
+    const itemsValid = form.items.every((item) => Number(item.selectedWeight) >= 0 && Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0 && Number(item.price) >= 0);
+    if (!form.customer.name.trim() || !form.customer.phone.trim() || !itemsValid || !Number.isFinite(subtotal) || subtotal < 0 || !Number.isFinite(totalAmount) || totalAmount < subtotal) {
+      setFormError('Enter a name and phone, complete valid product values, and a total that is not below subtotal.');
+      return;
     }
-  } catch (err) { setFormError(err.message || 'Failed to update order'); }
-  finally { setUpdatingId(null); }
-};
+    try {
+      setUpdatingId(editingOrder._id);
+      setFormError('');
+      const response = await adminAPI.updateOrder(editingOrder._id, {
+        ...form,
+        subtotal,
+        totalAmount,
+        items: form.items.map((item) => ({ ...item, selectedWeight: String(item.selectedWeight), quantity: Number(item.quantity), price: Number(item.price) })),
+        // Add phone2 to the update payload
+        customer: {
+          ...form.customer,
+          phone2: form.customer.phone2 || '',
+        },
+      });
+      if (response.success) {
+        updateOrderInList(response.data);
+        setEditingOrder(null);
+        setForm(null);
+        setSuccess(response.message || 'Order updated successfully.');
+      }
+    } catch (err) { setFormError(err.message || 'Failed to update order'); }
+    finally { setUpdatingId(null); }
+  };
 
   const formatPrice = (price) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price || 0);
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
@@ -301,8 +301,9 @@ const AdminOrders = () => {
   const prepareExportData = (ordersToExport) => {
     return ordersToExport.map((order) => {
       const itemsList = order.items?.map(item =>
-        `${item.name}${item.category !== 'senaboard' ? ` (${item.selectedWeight}kg)` : ''} × ${item.quantity}`
-      ).join('; ') || '';
+        `${item.name}${item.category !== 'senaboard'
+          ? ` (${item.selectedWeight}${item.category === 'decor' ? 'in' : 'kg'})`
+          : ''} × ${item.quantity}`).join('; ') || '';
 
       const totalWeight = order.items?.reduce((sum, item) => {
         let itemWeight = 0;
@@ -764,8 +765,9 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
               <span className="text-red-500 text-xs font-bold">★★★</span>
             )}
           </div>
-          <p className="text-gray-600 text-xs">{item.selectedWeight} kg × {item.quantity} · {formatPrice(item.price)} each</p>
-        </div>)}
+          <p className="text-gray-600 text-xs">
+            {item.selectedWeight} {item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each
+          </p>        </div>)}
       </section>
 
       <section className="text-sm border-t pt-2">
@@ -832,18 +834,18 @@ const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, erro
       <button type="button" onClick={onClose} disabled={saving} className="text-gray-500">Close</button>
     </div>
     {error && <div className="mb-4 p-3 bg-red-100 text-red-800 rounded text-sm">{error}</div>}
-  <h3 className="font-semibold mb-2">Customer information</h3>
-<div className="grid sm:grid-cols-3 gap-3 mb-5">
-  <Field label="Customer name" value={form.customer.name} onChange={(value) => updateField('customer', 'name', value)} required />
-  <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
-  <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
-</div>
-<div className="grid sm:grid-cols-3 gap-3 mb-5">
-  <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
-</div>
-<div className="grid sm:grid-cols-3 gap-3 mb-5">
-  <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
-</div>
+    <h3 className="font-semibold mb-2">Customer information</h3>
+    <div className="grid sm:grid-cols-3 gap-3 mb-5">
+      <Field label="Customer name" value={form.customer.name} onChange={(value) => updateField('customer', 'name', value)} required />
+      <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
+      <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
+    </div>
+    <div className="grid sm:grid-cols-3 gap-3 mb-5">
+      <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
+    </div>
+    <div className="grid sm:grid-cols-3 gap-3 mb-5">
+      <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
+    </div>
     {/* Add phone2 field */}
     <div className="grid sm:grid-cols-3 gap-3 mb-5">
       <Field label="Alternate Phone" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} placeholder="Optional" />
