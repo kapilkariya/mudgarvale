@@ -25,6 +25,11 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Product image is required'],
     },
+    image2: {
+      type: String,
+      required: false,  // 👈 OPTIONAL - not compulsory
+      default: null,    // Optional: sets default to null if not provided
+    },
     weights: [
       {
         type: String,

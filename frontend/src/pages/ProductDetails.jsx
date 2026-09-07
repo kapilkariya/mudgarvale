@@ -17,6 +17,7 @@ const ProductDetails = () => {
   const [selectedWeight, setSelectedWeight] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // 👈 State for image carousel
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -32,6 +33,8 @@ const ProductDetails = () => {
           if (response.data.weights && response.data.weights.length > 0) {
             setSelectedWeight(response.data.weights[0]);
           }
+          // Reset image index when product changes
+          setCurrentImageIndex(0);
         } else {
           throw new Error(response.message || 'Failed to fetch product');
         }
@@ -45,6 +48,46 @@ const ProductDetails = () => {
 
     fetchProduct();
   }, [id]);
+
+  // Get all available images
+  const getProductImages = () => {
+    if (!product) return [];
+    const images = [];
+    if (product.image) {
+      images.push(product.image);
+    }
+    if (product.image2) {
+      images.push(product.image2);
+    }
+    return images;
+  };
+
+  // Get current image
+  const getCurrentImage = () => {
+    const images = getProductImages();
+    return images[currentImageIndex] || product?.image || '';
+  };
+
+  // Navigate to next image
+  const nextImage = () => {
+    const images = getProductImages();
+    if (images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }
+  };
+
+  // Navigate to previous image
+  const prevImage = () => {
+    const images = getProductImages();
+    if (images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
+  };
+
+  // Check if multiple images exist
+  const hasMultipleImages = () => {
+    return getProductImages().length > 1;
+  };
 
   // Get price for selected weight
   const getPrice = () => {
@@ -62,7 +105,6 @@ const ProductDetails = () => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
 
-  // Handle add to cart
   // Handle add to cart
   const handleAddToCart = () => {
     if (!product || !selectedWeight) return;
@@ -97,6 +139,7 @@ const ProductDetails = () => {
       setAddingToCart(false);
     }, 500);
   };
+
   // Handle buy now
   const handleBuyNow = () => {
     handleAddToCart();
@@ -145,13 +188,70 @@ const ProductDetails = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Product Image */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          {/* Product Image Carousel */}
+          <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm group">
             <img
-              src={`/products/${product.image}.jpeg`}
-              alt={product.name}
-              className="w-full h-full object-cover"
+              src={`/products/${getCurrentImage()}.jpeg`}
+              alt={`${product.name} - Image ${currentImageIndex + 1}`}
+              className="w-full h-full object-cover min-h-[400px]"
             />
+
+            {/* Navigation Arrows - Only show if multiple images exist */}
+            {hasMultipleImages() && (
+              <>
+                {/* Left Arrow */}
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#5C3A21] w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 backdrop-blur-sm"
+                  aria-label="Previous image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Right Arrow */}
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-[#5C3A21] w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 backdrop-blur-sm"
+                  aria-label="Next image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Image Counter/Dots */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {getProductImages().map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2.5 h-2.5 rounded-full transition ${
+                        currentImageIndex === index
+                          ? 'bg-[#5C3A21] w-6'
+                          : 'bg-white/60 hover:bg-white/80'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Image Counter Text */}
+                <div className="absolute top-4 right-4 bg-black/60 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm">
+                  {currentImageIndex + 1} / {getProductImages().length}
+                </div>
+              </>
+            )}
+
+            {/* If only one image, show a small indicator */}
+            {!hasMultipleImages() && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <span className="bg-black/40 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+                  1 / 1
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -192,10 +292,11 @@ const ProductDetails = () => {
                     <button
                       key={weight}
                       onClick={() => setSelectedWeight(weight)}
-                      className={`px-4 py-2 rounded-lg border-2 transition ${selectedWeight === weight
+                      className={`px-4 py-2 rounded-lg border-2 transition ${
+                        selectedWeight === weight
                           ? 'border-[#5C3A21] bg-[#5C3A21] text-white'
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
-                        }`}
+                      }`}
                     >
                       {weight} {product.category === 'decor' ? 'in' : 'kg'}
                       <span className="block text-xs opacity-80">
@@ -205,9 +306,7 @@ const ProductDetails = () => {
                   ))}
                 </div>
               </div>
-            )
-
-            }
+            )}
 
             {/* Quantity Selection */}
             <div className="mb-6">
