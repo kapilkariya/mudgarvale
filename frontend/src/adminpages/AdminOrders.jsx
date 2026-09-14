@@ -302,7 +302,7 @@ const AdminOrders = () => {
     return ordersToExport.map((order) => {
       const itemsList = order.items?.map(item =>
         `${item.name}${item.category !== 'senaboard'
-          ? ` (${item.selectedWeight}${item.category === 'decor' ? 'in' : 'kg'})`
+          ? ` (${item.selectedWeight}${item.category === 'sticks' ? 'in' : 'kg'})`
           : ''} × ${item.quantity}`).join('; ') || '';
 
       const totalWeight = order.items?.reduce((sum, item) => {
@@ -766,7 +766,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
             )}
           </div>
           <p className="text-gray-600 text-xs">
-            {item.selectedWeight} {item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each
+            {item.selectedWeight} {item.category === 'sticks' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each
           </p>        </div>)}
       </section>
 

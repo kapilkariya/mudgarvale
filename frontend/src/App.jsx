@@ -82,7 +82,7 @@ const AppRoutes = () => {
       <Route path="/products/gada" element={<Products />} />
       <Route path="/products/samtola" element={<Products />} />
       <Route path="/products/senaboard" element={<Products />} />
-      <Route path="/products/decor" element={<Products />} />
+      <Route path="/products/sticks" element={<Products />} />
       <Route
         path="/checkout"
         element={

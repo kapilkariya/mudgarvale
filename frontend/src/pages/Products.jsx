@@ -14,7 +14,7 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'decor'];
+  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
 
   // Category metadata configuration
   const categoryMeta = {
@@ -43,10 +43,10 @@ const Products = () => {
       description: 'Improve your upper body strength with a durable Sena Push-Up Board. Ideal for home workouts, gyms, and professional fitness training.',
       keywords: 'sena push-up board, upper body training, home workout, push-up board, fitness equipment',
     },
-    decor: {
-      title: 'Wooden Decor & Showpieces | Mudgarvale',
-      description: 'Explore our collection of wooden decor and handcrafted showpieces.',
-      keywords: 'wooden decor, wooden showpieces, wooden crafts, Mudgarvale',
+    sticks: {
+      title: 'Premium Lathi Chhada Utar | Mudgarvale',
+      description: 'Explore our collection of premium lathi chhada utar, handcrafted wooden sticks designed with traditional craftsmanship and quality.',
+      keywords: 'premium lathi, lathi chhada utar, chhada utar, wooden lathi, traditional lathi, Mudgarvale',
     }
   };
 
@@ -142,7 +142,7 @@ const Products = () => {
     gada: 2,
     samtola: 3,
     senaboard: 4,
-    decor: 5,
+    sticks: 5,
   };
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -288,7 +288,7 @@ const Products = () => {
                       {product.category !== 'senaboard' && product.weights && product.weights.length > 0 && (
                         <p className="text-[10px] xs:text-xs text-gray-500 text-center mt-1 truncate">
                           {product.weights.slice(0, 3).map(weight =>
-                            `${weight} ${product.category === 'decor' ? 'in' : 'kg'}`
+                            `${weight} ${product.category === 'sticks' ? 'in' : 'kg'}`
                           ).join(', ')}
                           {product.weights.length > 3 && '...'}
                         </p>

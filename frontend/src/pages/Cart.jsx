@@ -74,7 +74,7 @@ const Cart = () => {
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800">{item.name}</h3>
                   <p className="text-sm text-gray-500">
-                    {item.category === 'decor' ? 'Size' : 'Weight'}: {item.selectedWeight} {item.category === 'decor' ? 'in' : 'kg'}
+                    {item.category === 'sticks' ? 'Size' : 'Weight'}: {item.selectedWeight} {item.category === 'sticks' ? 'in' : 'kg'}
                   </p>                  <p className="text-[#5C3A21] font-semibold">
                     {formatPrice(item.price * item.quantity)}
                   </p>
