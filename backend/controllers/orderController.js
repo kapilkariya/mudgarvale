@@ -37,13 +37,20 @@ const addCategoriesToItems = async (items = []) => {
 // @access  Private
 const createOrder = async (req, res) => {
   try {
-    const { items, totalAmount, paymentMethod, address } = req.body;
+    const { items, totalAmount, paymentMethod, address, freeGift } = req.body;
     const userId = req.user.id;
 
     const orderItems = await addCategoriesToItems(items);
     const deliveryCharge = calculateDeliveryCharge(orderItems);
     const subtotal = calculateSubtotal(orderItems);
-    
+
+    // Server-side validation: only allow freeGift 1 or 2 if subtotal >= 3000.
+    // Anything invalid is forced to 0.
+    let validatedFreeGift = 0;
+    if (freeGift === 1 || freeGift === 2) {
+      validatedFreeGift = subtotal >= 3000 ? freeGift : 0;
+    }
+
     const codAdvance = deliveryCharge;
 
     // DEBUG: Log received values
@@ -53,17 +60,19 @@ const createOrder = async (req, res) => {
       calculatedSubtotal: subtotal,
       paymentMethod,
       codAdvance,
+      freeGift,
+      validatedFreeGift,
     });
 
     const finalTotal = subtotal + deliveryCharge;
-    
+
     // Calculate amounts based on payment method
     const amountToPayNow = paymentMethod === 'cod' ? codAdvance : finalTotal;
     const remainingAmount = paymentMethod === 'cod' ? finalTotal - codAdvance : 0;
 
     // Create Razorpay order for payment
     let razorpayOrder = null;
-    
+
     if (paymentMethod === 'online') {
       // Online: Full amount via Razorpay
       razorpayOrder = await razorpay.orders.create({
@@ -97,6 +106,7 @@ const createOrder = async (req, res) => {
       paymentStatus: 'pending',
       orderStatus: 'pending',
       address,
+      freeGift: validatedFreeGift,
       paidAmount: 0,
       remainingAmount: finalTotal,
       razorpayOrderId: razorpayOrder.id,
@@ -120,6 +130,7 @@ const createOrder = async (req, res) => {
           deliveryCharge,
           paymentMethod,
           address,
+          freeGift: validatedFreeGift,
           remainingAmount,
         },
       },
@@ -168,13 +179,16 @@ const verifyPayment = async (req, res) => {
 
     // Prefer the pending order created before checkout. This is also the record
     // completed by the webhook when the browser callback is unavailable.
-    const { items, paymentMethod, address } = orderData;
+    const { items, paymentMethod, address, freeGift } = orderData;
     const userId = req.user.id;
     const orderItems = await addCategoriesToItems(items);
     const deliveryCharge = calculateDeliveryCharge(orderItems);
     const subtotal = calculateSubtotal(orderItems);
     const totalAmount = subtotal + deliveryCharge;
-    
+
+    // Server-side validation mirrors createOrder for the backward-compat path.
+    const validatedFreeGift = (freeGift === 1 || freeGift === 2) && subtotal >= 3000 ? freeGift : 0;
+
     const codAdvance = deliveryCharge;
     const remainingAmount = paymentMethod === 'cod' ? totalAmount - codAdvance : 0;
 
@@ -207,6 +221,7 @@ const verifyPayment = async (req, res) => {
         paymentStatus,
         orderStatus: 'confirmed',
         address,
+        freeGift: validatedFreeGift,
         paidAmount,
         remainingAmount,
         razorpayOrderId: razorpay_order_id,

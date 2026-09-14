@@ -13,6 +13,7 @@ const Checkout = () => {
 
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
+  const [freeGift, setFreeGift] = useState(0); // 0 = none, 1 = 1 KG Gada, 2 = Sena Board
 
   // Saved addresses from backend
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -75,6 +76,7 @@ const Checkout = () => {
   };
 
   const subtotal = getCartTotal();
+  const isEligibleForFreeGift = subtotal >= 3000;
   const deliveryCharge = calculateDeliveryCharge(cart);
   const codAdvance = paymentMethod === 'cod' ? deliveryCharge : 0;
   const total = subtotal + deliveryCharge;
@@ -141,9 +143,9 @@ const Checkout = () => {
         totalAmount: total,
         paymentMethod: paymentMethod,
         address: address,
+        freeGift: isEligibleForFreeGift ? freeGift : 0,
       };
 
-      // Save address if checkbox is checked (and user is using new address)
       // Save address if checkbox is checked (and user is using new address)
       if (saveAddress && useNewAddress) {
         try {
@@ -577,6 +579,58 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                {/* Free Gift Selection - only for orders ₹3000+ */}
+                {isEligibleForFreeGift && (
+                  <div className="pt-4">
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-400">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xl">🎁</span>
+                        <h3 className="font-bold text-green-800">
+                          Congratulations! You're eligible for a FREE gift
+                        </h3>
+                      </div>
+                      <p className="text-sm text-green-700 mb-3">
+                        Choose any <strong>one</strong> of the following:
+                      </p>
+                      <div className="space-y-2">
+                        <label
+                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 1
+                            ? 'border-green-600 bg-white'
+                            : 'border-gray-200 bg-white hover:border-green-400'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="freeGift"
+                            value={1}
+                            checked={freeGift === 1}
+                            onChange={() => setFreeGift(1)}
+                            className="mr-3 w-4 h-4 text-green-600"
+                          />
+                          <span className="font-medium text-gray-800">1 KG Gada (Free)</span>
+                        </label>
+
+                        <label
+                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 2
+                            ? 'border-green-600 bg-white'
+                            : 'border-gray-200 bg-white hover:border-green-400'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="freeGift"
+                            value={2}
+                            checked={freeGift === 2}
+                            onChange={() => setFreeGift(2)}
+                            className="mr-3 w-4 h-4 text-green-600"
+                          />
+                          <span className="font-medium text-gray-800">Sena Board (Free)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -588,7 +642,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Order Summary */}
+         {/* Order Summary */}
           <div>
             <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
               <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
@@ -606,6 +660,19 @@ const Checkout = () => {
                     <span>{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
+
+                {/* Free Gift item - shown last in the product list */}
+                {isEligibleForFreeGift && freeGift !== 0 && (
+                  <div className="flex justify-between text-sm">
+                    <div>
+                      <span className="font-medium">
+                        🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}
+                      </span>
+                      <span className="text-gray-500"> (Free Gift)</span>
+                    </div>
+                    <span>FREE</span>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4 space-y-2">

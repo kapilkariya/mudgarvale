@@ -88,6 +88,11 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    freeGift: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: 0,
+    },
     deliveryCharge: {
       type: Number,
       default: 0,

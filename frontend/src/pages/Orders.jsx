@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { orderAPI } from '../config/api';
 
+const FREE_GIFT_LABELS = {
+  1: '1 KG Gada',
+  2: 'Sena Board',
+};
+
 const Orders = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -181,6 +186,22 @@ const Orders = () => {
                       </div>
                     </div>
                   ))}
+
+                  {/* Free Gift row */}
+                  {FREE_GIFT_LABELS[order.freeGift] && (
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-green-50 flex items-center justify-center text-3xl">
+                        🎁
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-800">
+                          {FREE_GIFT_LABELS[order.freeGift]}
+                        </h3>
+                        <p className="text-sm text-gray-500">Free Gift</p>
+                        <p className="text-[#5C3A21] font-semibold">FREE</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Order Footer */}

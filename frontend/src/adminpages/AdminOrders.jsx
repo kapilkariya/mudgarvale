@@ -14,6 +14,14 @@ const SPECIAL_PRODUCT_NAMES = [
   // Add more special product names here as needed
 ];
 
+// Free gift code → label mapping (0 = none)
+const FREE_GIFT_LABELS = {
+  0: null,
+  1: 'Free 1 KG Gada',
+  2: 'Free Sena Board',
+};
+const getFreeGiftLabel = (code) => FREE_GIFT_LABELS[code] || null;
+
 const emptyForm = (order) => ({
   customer: {
     name: order.user?.name || order.address?.name || '',
@@ -364,6 +372,7 @@ const AdminOrders = () => {
         'Order Status': order.orderStatus || '',
         'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
         'Special Items': specialItems,
+        'Free Gift': getFreeGiftLabel(order.freeGift) || '',
       };
     });
   };
@@ -399,7 +408,7 @@ const AdminOrders = () => {
         { wch: 12 }, // Pincode
         { wch: 40 }, // Items
         { wch: 15 }, // Phone
-        { wch: 15 }, // Phone 2  <-- Add this line
+        { wch: 15 }, // Phone 2
         { wch: 16 }, // Total Weight
         { wch: 15 }, // Total Amount
         { wch: 15 }, // Amount Paid
@@ -409,6 +418,7 @@ const AdminOrders = () => {
         { wch: 18 }, // Order Status
         { wch: 15 }, // Created Date
         { wch: 35 }, // Special Items
+        { wch: 20 }, // Free Gift
       ];
       ws['!cols'] = colWidths;
 
@@ -731,6 +741,11 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
             {hasSpecialProducts(order) && (
               <span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>
             )}
+            {getFreeGiftLabel(order.freeGift) && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">
+                🎁 {getFreeGiftLabel(order.freeGift)}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.color}`}>{status.label}</span>
@@ -768,6 +783,14 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
           <p className="text-gray-600 text-xs">
             {item.selectedWeight} {item.category === 'sticks' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each
           </p>        </div>)}
+
+        {getFreeGiftLabel(order.freeGift) && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm">
+            <span className="font-medium text-green-800">
+              🎁 {getFreeGiftLabel(order.freeGift)}
+            </span>
+          </div>
+        )}
       </section>
 
       <section className="text-sm border-t pt-2">
