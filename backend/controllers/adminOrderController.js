@@ -120,7 +120,7 @@ const getOrdersByDateRange = async (req, res) => {
 
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    
+
     // Set to end of day for 'to' date
     toDate.setHours(23, 59, 59, 999);
 
@@ -158,7 +158,7 @@ const getOrdersByDateRange = async (req, res) => {
     orders.forEach(order => {
       const amount = order.totalAmount || 0;
       totalSales += amount;
-      
+
       if (order.paymentMethod === 'online') {
         onlineAmount += amount;
         onlineOrders += 1;
@@ -272,6 +272,7 @@ const updateOrder = async (req, res) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      phone2: String(customer.phone2 || address.phone2 || '').trim(), // ✅ Now saves phone2
       buildingFlatNo: String(address.buildingFlatNo || '').trim(),
       address: address.address.trim(),
       city: address.city.trim(),
@@ -340,6 +341,136 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// @desc    Bulk update order status for a date range
+// @route   PATCH /api/admin/orders/bulk-status
+// @access  Private (Admin)
+// NOTE: Skips orders with paymentStatus 'pending' and orders already 'cancelled'
+const bulkUpdateOrderStatus = async (req, res) => {
+  try {
+    const { from, to, orderStatus } = req.body;
+
+    // 1. Validate target status
+    // NOTE: 'pending' is intentionally excluded — bulk actions should never
+    // revert an order back to pending. Use the per-order dropdown if needed.
+    const allowedBulkStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    if (!allowedBulkStatuses.includes(orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid bulk status. Allowed: confirmed, processing, shipped, delivered, cancelled.',
+      });
+    }
+
+    // 2. Validate dates
+    if (!from || !to) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both "from" and "to" dates are required',
+      });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Use YYYY-MM-DD',
+      });
+    }
+
+    if (fromDate > toDate) {
+      return res.status(400).json({
+        success: false,
+        message: '"From" date must be before "To" date',
+      });
+    }
+
+    // 3. Update ONLY orders that are:
+    //    - within the date range
+    //    - NOT pending payment (webhook flow untouched)
+    //    - NOT already cancelled
+    const result = await Order.updateMany(
+      {
+        createdAt: { $gte: fromDate, $lte: toDate },
+        paymentStatus: { $ne: 'pending' },
+        orderStatus: { $nin: ['cancelled', 'pending'] },  // ✅ skip cancelled AND pending
+      },
+      { $set: { orderStatus } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Updated ${result.modifiedCount} order(s) to "${orderStatus}" (${result.matchedCount} matched). Pending-payment and cancelled orders were skipped.`,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error('Bulk update order status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to bulk update order status',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Preview how many orders would be affected by bulk status update
+// @route   GET /api/admin/orders/bulk-status/preview
+// @access  Private (Admin)
+const previewBulkUpdateOrderStatus = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    if (!from || !to) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both "from" and "to" dates are required',
+      });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    fromDate.setHours(0, 0, 0, 0);
+    toDate.setHours(23, 59, 59, 999);
+
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid date format' });
+    }
+
+    const matchFilter = {
+      createdAt: { $gte: fromDate, $lte: toDate },
+      paymentStatus: { $ne: 'pending' },
+      orderStatus: { $nin: ['cancelled', 'pending'] },  // ✅ skip cancelled AND pending
+    };
+
+    const affectedCount = await Order.countDocuments(matchFilter);
+
+    // Also show how many were skipped
+    const totalInRange = await Order.countDocuments({
+      createdAt: { $gte: fromDate, $lte: toDate },
+    });
+    const skippedCount = totalInRange - affectedCount;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        affectedCount,
+        skippedCount,
+        totalInRange,
+      },
+    });
+  } catch (error) {
+    console.error('Preview bulk update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to preview bulk update',
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Get order statistics (Keep as is)
 // @route   GET /api/admin/orders/stats
 // @access  Private (Admin)
@@ -385,5 +516,7 @@ module.exports = {
   getOrdersByDateRange,
   updateOrder,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
+  previewBulkUpdateOrderStatus,
   getOrderStats,
 };

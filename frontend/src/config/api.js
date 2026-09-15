@@ -190,4 +190,16 @@ export const adminAPI = {
     method: 'PATCH',
     body: JSON.stringify({ orderStatus: status }),
   }),
+
+  // ✅ NEW - Bulk update order status for a date range
+  // Skips orders with paymentStatus 'pending' and orders already 'cancelled'
+  bulkUpdateOrderStatus: (data) => fetchWithAuth(`${API_URL}/admin/orders/bulk-status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // ✅ NEW - Preview how many orders would be affected by bulk update
+  previewBulkUpdateOrderStatus: (from, to) => {
+    return fetchWithAuth(`${API_URL}/admin/orders/bulk-status/preview?from=${from}&to=${to}`);
+  },
 };

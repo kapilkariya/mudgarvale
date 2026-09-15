@@ -52,7 +52,7 @@ const Thankyou = () => {
             📦 Tracking Information
           </p>
           <p className="text-[#6b4b3a] text-sm mb-3">
-            Your tracking ID will be shared within <span className="font-bold text-[#5C3A21]">4 days</span>
+            Your tracking ID will be shared within <span className="font-bold text-[#5C3A21]">6 days</span>
           </p>
           <div className="h-px bg-[#5C3A21]/20 my-3"></div>
           <p className="text-[#6b4b3a] text-sm">

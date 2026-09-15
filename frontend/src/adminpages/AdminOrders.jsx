@@ -27,7 +27,7 @@ const emptyForm = (order) => ({
     name: order.user?.name || order.address?.name || '',
     email: order.user?.email || order.address?.email || '',
     phone: order.user?.phone || order.address?.phone || '',
-    phone2: order.address?.phone2 || '',  // Add this line
+    phone2: order.address?.phone2 || '',
   },
   address: {
     buildingFlatNo: order.address?.buildingFlatNo || '',
@@ -56,7 +56,10 @@ const paymentStatusDetails = {
 const filterOrdersByStatus = (orders, filter) => {
   if (filter === 'active') return orders.filter((order) => !inactivePaymentStatuses.includes(order.paymentStatus) && order.paymentStatus !== 'pending');
   if (filter === 'cancelled_failed') return orders.filter((order) => inactivePaymentStatuses.includes(order.paymentStatus));
-  if (filter === 'pending_delivery') return orders.filter((order) => !['delivered', 'cancelled'].includes(order.orderStatus));
+  if (filter === 'pending_delivery') return orders.filter((order) =>
+    !['delivered', 'cancelled', 'pending'].includes(order.orderStatus) &&
+    order.paymentStatus !== 'pending'
+  );
   if (filter === 'delivered' || filter === 'cancelled') return orders.filter((order) => order.orderStatus === filter);
   if (filter === 'all') return orders.filter((order) => order.paymentStatus !== 'pending');
   return orders;
@@ -95,6 +98,12 @@ const AdminOrders = () => {
   const [dateTo, setDateTo] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
+
+  // Bulk status update states
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [bulkPreviewCount, setBulkPreviewCount] = useState(null);
+  const [bulkSkippedCount, setBulkSkippedCount] = useState(0);
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -256,6 +265,96 @@ const AdminOrders = () => {
     finally { setUpdatingId(null); }
   };
 
+  // Preview how many orders will be affected by bulk update
+  const previewBulkUpdate = async () => {
+    if (!dateFrom || !dateTo) {
+      setBulkPreviewCount(null);
+      setBulkSkippedCount(0);
+      return;
+    }
+    try {
+      const response = await adminAPI.previewBulkUpdateOrderStatus(dateFrom, dateTo);
+      if (response.success) {
+        setBulkPreviewCount(response.data.affectedCount);
+        setBulkSkippedCount(response.data.skippedCount);
+      }
+    } catch (err) {
+      // silent fail on preview
+      setBulkPreviewCount(null);
+      setBulkSkippedCount(0);
+    }
+  };
+
+  // Auto-preview whenever the date filter becomes active
+  useEffect(() => {
+    if (isDateFilterActive) {
+      previewBulkUpdate();
+    } else {
+      setBulkPreviewCount(null);
+      setBulkSkippedCount(0);
+      setBulkStatus('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDateFilterActive, dateFrom, dateTo]);
+
+  // Apply bulk status update
+  const handleBulkStatusUpdate = async () => {
+    if (!dateFrom || !dateTo) {
+      setError('Please select both From and To dates.');
+      return;
+    }
+    if (!bulkStatus) {
+      setError('Please choose a status to apply.');
+      return;
+    }
+
+    const statusLabel = statusOptions.find((o) => o.value === bulkStatus)?.label || bulkStatus;
+    const fromLabel = new Date(dateFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const toLabel = new Date(dateTo).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    const confirmed = window.confirm(
+      `⚠️ BULK STATUS UPDATE\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `You are about to change the status of multiple orders.\n\n` +
+      `📅 Date Range:  ${fromLabel}  →  ${toLabel}\n` +
+      `🔄 New Status:  ${statusLabel}\n` +
+      `📦 Orders Affected:  ${bulkPreviewCount ?? '?'}\n` +
+      (bulkSkippedCount > 0 ? `⏭️  Orders Skipped:  ${bulkSkippedCount}\n` : '') +
+      `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚠️  This action cannot be undone.\n\n` +
+      `✅ Eligible orders will be updated.\n` +
+      `🚫 Pending-payment orders will NOT be changed.\n` +
+      `🚫 Cancelled orders will NOT be changed.\n\n` +
+      `Do you want to proceed?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setBulkUpdating(true);
+      setError('');
+      setSuccess('');
+
+      const response = await adminAPI.bulkUpdateOrderStatus({
+        from: dateFrom,
+        to: dateTo,
+        orderStatus: bulkStatus,
+      });
+
+      if (response.success) {
+        setSuccess(response.message || 'Bulk status updated');
+        setBulkStatus('');
+        await refreshOrders();
+        await previewBulkUpdate();
+      } else {
+        throw new Error(response.message || 'Bulk update failed');
+      }
+    } catch (err) {
+      setError(err.message || 'Bulk update failed');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const openEdit = (order) => {
     setEditingOrder(order);
     setForm(emptyForm(order));
@@ -327,21 +426,17 @@ const AdminOrders = () => {
       let amountPending = 0;
       let paymentStatusDisplay = '';
 
-      // CORRECTED LOGIC FOR EXPORT
       if (order.paymentMethod === 'cod') {
-        // COD: Delivery charge is paid (advance), rest is pending
         const deliveryCharge = order.deliveryCharge || 0;
         amountPaid = deliveryCharge;
         amountPending = (order.totalAmount || 0) - deliveryCharge;
         paymentStatusDisplay = 'Partially Paid';
       } else {
-        // Online: Full amount paid
         amountPaid = order.totalAmount || 0;
         amountPending = 0;
         paymentStatusDisplay = 'Fully Paid';
       }
 
-      // Combine building/flat no and address
       const buildingFlat = order.address?.buildingFlatNo || '';
       const addressLine = order.address?.address || '';
       const fullAddress = buildingFlat && addressLine
@@ -362,7 +457,7 @@ const AdminOrders = () => {
         'Pincode': order.address?.pincode || '',
         'Items': itemsList,
         'Phone': order.address?.phone || '',
-        'Phone 2': order.address?.phone2 || '',  // Add this line
+        'Phone 2': order.address?.phone2 || '',
         'Total Weight (kg)': totalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
         'Amount Paid': amountPaid,
@@ -376,16 +471,15 @@ const AdminOrders = () => {
       };
     });
   };
+
   // Export to Excel
   const exportToExcel = async () => {
     try {
       let ordersToExport;
 
       if (isDateFilterActive) {
-        // If date filter is active, use filtered orders
         ordersToExport = filteredDateOrders;
       } else {
-        // If no date filter, fetch ALL orders
         ordersToExport = await fetchAllOrdersForExport();
       }
 
@@ -399,26 +493,10 @@ const AdminOrders = () => {
       const ws = XLSX.utils.json_to_sheet(rows);
 
       const colWidths = [
-        { wch: 15 }, // Order Number
-        { wch: 20 }, // Customer Name
-        { wch: 25 }, // Customer Email
-        { wch: 30 }, // Address
-        { wch: 15 }, // City
-        { wch: 15 }, // State
-        { wch: 12 }, // Pincode
-        { wch: 40 }, // Items
-        { wch: 15 }, // Phone
-        { wch: 15 }, // Phone 2
-        { wch: 16 }, // Total Weight
-        { wch: 15 }, // Total Amount
-        { wch: 15 }, // Amount Paid
-        { wch: 15 }, // Amount Pending
-        { wch: 20 }, // Payment Method
-        { wch: 18 }, // Payment Status
-        { wch: 18 }, // Order Status
-        { wch: 15 }, // Created Date
-        { wch: 35 }, // Special Items
-        { wch: 20 }, // Free Gift
+        { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
+        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
+        { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
+        { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 },
       ];
       ws['!cols'] = colWidths;
 
@@ -457,14 +535,12 @@ const AdminOrders = () => {
       for (const row of rows) {
         const values = headers.map(header => {
           let val = row[header] || '';
-          // Replace Unicode multiplication symbol with ASCII x for Excel compatibility
           val = String(val).replace(/×/g, 'x');
           return `"${val.replace(/"/g, '""')}"`;
         });
         csvRows.push(values.join(','));
       }
 
-      // Add UTF-8 BOM for Excel compatibility
       const csvString = '\uFEFF' + csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -556,7 +632,7 @@ const AdminOrders = () => {
           Refresh
         </button>
 
-        {/* Download Dropdown - Always enabled */}
+        {/* Download Dropdown */}
         <div className="relative">
           <button
             onClick={() => {
@@ -601,7 +677,7 @@ const AdminOrders = () => {
       </div>
     </div>
 
-    {/* Date Range Filter - Auto-filter on date change */}
+    {/* Date Range Filter + Bulk Status */}
     <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
       <div className="flex flex-wrap items-end gap-4">
         <div>
@@ -630,6 +706,48 @@ const AdminOrders = () => {
             ✕ Clear Dates
           </button>
         )}
+
+        {/* Bulk status update UI */}
+        {isDateFilterActive && (
+          <div className="flex items-end gap-2 ml-auto border-l border-gray-200 pl-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bulk change status
+              </label>
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+                disabled={bulkUpdating}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white disabled:opacity-50"
+              >
+                <option value="">— Choose status —</option>
+                {statusOptions
+                  .filter((opt) => opt.value !== 'pending')   // ✅ Exclude 'pending'
+                  .map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+              </select>
+              {bulkPreviewCount !== null && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Will affect <span className="font-semibold text-[#5C3A21]">{bulkPreviewCount}</span> order(s)
+                  {bulkSkippedCount > 0 && (
+                    <> · <span className="text-orange-600">{bulkSkippedCount} skipped</span></>
+                  )}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleBulkStatusUpdate}
+              disabled={bulkUpdating || !bulkStatus || bulkPreviewCount === 0}
+              className="px-4 py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 font-medium"
+            >
+              {bulkUpdating ? 'Updating…' : 'Apply to all'}
+            </button>
+          </div>
+        )}
+
         {isDateFilterActive && (
           <span className="text-sm text-gray-600 ml-2">
             Showing <span className="font-bold text-[#5C3A21]">{filteredDateOrders.length}</span> orders
@@ -672,7 +790,7 @@ const AdminOrders = () => {
       </div>}
     </div>
 
-    {/* Load More Button - Only when no date filter */}
+    {/* Load More Button */}
     {!isDateFilterActive && hasMoreOrders && (
       <div className="mt-6 text-center">
         <button
@@ -702,7 +820,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   const subtotal = order.totalAmount - (order.deliveryCharge || 0);
   const deliveryCharge = order.deliveryCharge || 0;
 
-  // Check if order contains special products by name
   const hasSpecialProducts = (order) => {
     if (!order.items || !order.items.length) return false;
     return order.items.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
@@ -714,9 +831,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
   let paymentStatusLabel = '';
   let paymentStatusColor = '';
 
-  // CORRECTED LOGIC FOR ORDER CARD
   if (order.paymentMethod === 'cod') {
-    // COD: Delivery charge is paid (advance), rest is pending
     const deliveryCharge = order.deliveryCharge || 0;
     amountPaid = deliveryCharge;
     amountPending = (order.totalAmount || 0) - deliveryCharge;
@@ -724,7 +839,6 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
     paymentStatusLabel = 'Advance Received - Balance Pending';
     paymentStatusColor = 'text-blue-600';
   } else {
-    // Online: Full amount paid
     paymentMethodLabel = '💳 Online Payment';
     amountPaid = order.totalAmount || 0;
     amountPending = 0;
@@ -842,8 +956,22 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
 
       <div className="flex gap-2">
         <button onClick={(event) => { event.stopPropagation(); openEdit(); }} className="px-3 py-2 text-sm bg-[#5C3A21] text-white rounded-lg">Edit order</button>
-        <select value={order.orderStatus} onClick={(event) => event.stopPropagation()} onChange={(event) => onStatusChange(order._id, event.target.value)} disabled={updating} className="flex-1 text-sm border rounded-lg px-3 py-2 bg-white">
-          {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        <select
+          value={order.orderStatus}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onStatusChange(order._id, event.target.value)}
+          disabled={updating || order.orderStatus === 'pending'}
+          title={order.orderStatus === 'pending' ? 'Pending orders are managed by the payment system' : ''}
+          className="flex-1 text-sm border rounded-lg px-3 py-2 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+        >
+          {order.orderStatus === 'pending' && (
+            <option value="pending" disabled>Pending (auto-managed)</option>
+          )}
+          {statusOptions
+            .filter((option) => option.value !== 'pending')
+            .map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
         </select>
       </div>
     </div>}
@@ -863,13 +991,7 @@ const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, erro
       <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
       <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
     </div>
-    <div className="grid sm:grid-cols-3 gap-3 mb-5">
-      <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
-    </div>
-    <div className="grid sm:grid-cols-3 gap-3 mb-5">
-      <Field label="Alternate Phone (Optional)" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} />
-    </div>
-    {/* Add phone2 field */}
+    {/* Single Alternate Phone field */}
     <div className="grid sm:grid-cols-3 gap-3 mb-5">
       <Field label="Alternate Phone" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} placeholder="Optional" />
     </div>

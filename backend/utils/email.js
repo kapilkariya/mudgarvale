@@ -142,7 +142,7 @@ const sendOrderConfirmationEmail = async (email, customerName, orderNumber) => {
         <p>Hi <strong>${safeName}</strong>,</p>
         <p>We're excited to let you know that your order has been placed successfully and is now confirmed.</p>
         <p><strong>Order Number:</strong> ${safeOrderNumber}</p>
-        <p>Our team will begin preparing your order shortly. You will receive your tracking details within <strong>4 days</strong>.</p>
+        <p>Our team will begin preparing your order shortly. You will receive your tracking details within <strong>6 days</strong>.</p>
         <p>If you have any questions or need any assistance, feel free to contact us.</p>
         <p>📞 <strong>7016243133</strong></p>
         <p>Thank you for choosing <strong>MudgarVale</strong>. We truly appreciate your support and look forward to serving you again!</p>

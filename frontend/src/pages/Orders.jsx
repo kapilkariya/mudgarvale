@@ -20,7 +20,7 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders();
-    
+
     // Show success message if redirected from checkout
     if (location.state?.success) {
       setShowSuccess(true);
@@ -163,6 +163,25 @@ const Orders = () => {
                        order.paymentStatus}
                     </span>
                   </div>
+                </div>
+
+                {/* Order Status Message */}
+                <div className="mb-4 p-4 bg-[#fdf6ec] border border-[#e8d9c5] rounded-lg">
+                  <p className="text-[#5C3A21] font-semibold mb-1">
+                    ✅ Your order is placed.
+                  </p>
+                  <p className="text-sm text-[#7a5c3e]">
+                    Our team will prepare your order shortly. You will receive a tracking ID within 6 days.
+                  </p>
+                  <p className="text-sm text-[#7a5c3e] mt-2">
+                    For any queries, contact{' '}
+                    <a href="tel:7016243133" className="font-semibold underline hover:no-underline">
+                      7016243133
+                    </a>
+                  </p>
+                  <p className="text-sm font-medium text-[#5C3A21] mt-2">
+                    Thanks for choosing Mudgarvale 🙏
+                  </p>
                 </div>
 
                 {/* Order Items */}
