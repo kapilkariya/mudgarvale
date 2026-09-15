@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
+// ✅ Products that require a minimum order quantity of 2
+const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
+
 const Cart = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -16,13 +19,20 @@ const Cart = () => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
 
+  // ✅ Minimum quantity per item (2 for Tar Sort Danda, else 1)
+  const getMinQty = (item) => {
+    return MIN_QTY_PRODUCTS.includes(item.name) ? 2 : 1;
+  };
+
+  // ✅ True if ANY item in the cart is below its minimum
+  const hasMinQtyViolation = cart.some((item) => item.quantity < getMinQty(item));
+
   const subtotal = getCartTotal();
   const total = subtotal + deliveryCharge;
 
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-[#fdf6ec]">
-        {/* Header Spacer */}
         <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -44,11 +54,9 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf6ec]">
-      {/* Header Spacer */}
       <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
         <h1 className="text-3xl font-bold text-[#5C3A21] mb-8" style={{ fontFamily: 'Georgia, serif' }}>
           Shopping Cart ({cart.length} items)
         </h1>
@@ -56,61 +64,82 @@ const Cart = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.map((item) => (
-              <div
-                key={`${item.productId}-${item.selectedWeight}`}
-                className="bg-white rounded-xl p-4 flex gap-4 shadow-sm"
-              >
-                {/* Product Image */}
-                <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                  <img
-                    src={`/products/${item.image}.jpeg`}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            {cart.map((item) => {
+              const minQty = getMinQty(item);
+              const belowMin = item.quantity < minQty;
+              const isAtHardMin = item.quantity <= 1;
 
-                {/* Product Info */}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {item.category === 'sticks' ? 'Size' : 'Weight'}: {item.selectedWeight} {item.category === 'sticks' ? 'ft' : 'kg'}
-                  </p>                  <p className="text-[#5C3A21] font-semibold">
-                    {formatPrice(item.price * item.quantity)}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {formatPrice(item.price)} × {item.quantity}
-                  </p>
-                </div>
+              return (
+                <div
+                  key={`${item.productId}-${item.selectedWeight}`}
+                  className={`bg-white rounded-xl p-4 flex gap-4 shadow-sm transition ${
+                    belowMin ? 'border-2 border-red-400' : ''
+                  }`}
+                >
+                  {/* Product Image */}
+                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+                    <img
+                      src={`/products/${item.image}.jpeg`}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                {/* Quantity Controls */}
-                <div className="flex flex-col items-end justify-between">
-                  <button
-                    onClick={() => removeFromCart(item.productId, item.selectedWeight)}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    ✕ Remove
-                  </button>
+                  {/* Product Info */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-800">{item.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {item.category === 'sticks' ? 'Size' : 'Weight'}: {item.selectedWeight}{' '}
+                      {item.category === 'sticks' ? 'in' : 'kg'}
+                    </p>
+                    <p className="text-[#5C3A21] font-semibold">
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {formatPrice(item.price)} × {item.quantity}
+                    </p>
 
-                  <div className="flex items-center gap-2">
+                    {/* ✅ Warning if below minimum */}
+                    {belowMin && (
+                      <p className="text-xs text-red-600 font-semibold mt-1">
+                        ⚠️ Minimum {minQty} required — please add {minQty - item.quantity} more
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex flex-col items-end justify-between">
                     <button
-                      onClick={() => updateQuantity(item.productId, item.selectedWeight, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:border-[#5C3A21] disabled:opacity-50"
+                      onClick={() => removeFromCart(item.productId, item.selectedWeight)}
+                      className="text-red-500 hover:text-red-700 text-sm"
                     >
-                      -
+                      ✕ Remove
                     </button>
-                    <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.selectedWeight, item.quantity + 1)}
-                      className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:border-[#5C3A21]"
-                    >
-                      +
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.productId, item.selectedWeight, item.quantity - 1)
+                        }
+                        disabled={isAtHardMin}
+                        className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:border-[#5C3A21] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300"
+                      >
+                        -
+                      </button>
+                      <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.productId, item.selectedWeight, item.quantity + 1)
+                        }
+                        className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:border-[#5C3A21]"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Order Summary */}
@@ -137,11 +166,19 @@ const Cart = () => {
                 </div>
               </div>
 
+              {/* ✅ Blocking message when a minimum is not met */}
+              {hasMinQtyViolation && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-700">
+                  ⚠️ Some items don't meet the minimum quantity. Please fix them to continue.
+                </div>
+              )}
+
               <button
                 onClick={() => navigate('/checkout')}
-                className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition"
+                disabled={hasMinQtyViolation}
+                className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Proceed to Checkout
+                {hasMinQtyViolation ? 'Fix quantities to continue' : 'Proceed to Checkout'}
               </button>
 
               <button

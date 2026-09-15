@@ -4,6 +4,9 @@ import { useCart } from '../context/CartContext';
 import { orderAPI, configAPI, addressAPI } from '../config/api';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
+// ✅ Products that require a minimum order quantity of 2
+const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
+
 const Checkout = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,9 +40,16 @@ const Checkout = () => {
     email: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // ✅ Minimum quantity helpers
+  const getMinQty = (item) => {
+    return MIN_QTY_PRODUCTS.includes(item.name) ? 2 : 1;
+  };
+  const hasMinQtyViolation = cart.some((item) => item.quantity < getMinQty(item));
+  const violatedItems = cart.filter((item) => item.quantity < getMinQty(item));
 
   // Fetch config and saved addresses from backend
   useEffect(() => {
@@ -88,7 +98,6 @@ const Checkout = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Reset "saved" state when user edits fields again
     if (addressSaved) setAddressSaved(false);
   };
 
@@ -106,7 +115,6 @@ const Checkout = () => {
     return null;
   };
 
-  // Validate address-only fields (used by the Save Address button)
   const validateAddressOnly = () => {
     if (!formData.name.trim()) return 'Please enter your name';
     if (!formData.phone.trim()) return 'Please enter your phone number';
@@ -118,7 +126,6 @@ const Checkout = () => {
     return null;
   };
 
-  // Get address data for order (either from saved address or form)
   const getOrderAddress = () => {
     if (!useNewAddress && selectedAddressId) {
       const selectedAddress = savedAddresses.find(a => a._id === selectedAddressId);
@@ -139,7 +146,6 @@ const Checkout = () => {
     return formData;
   };
 
-  // Save address to backend
   const handleSaveAddress = async () => {
     setAddressError('');
     setAddressSaved(false);
@@ -153,14 +159,12 @@ const Checkout = () => {
     try {
       setSavingAddress(true);
 
-      // Delete all existing saved addresses first — we only keep ONE
       if (savedAddresses.length > 0) {
         await Promise.all(
           savedAddresses.map((addr) => addressAPI.delete(addr._id))
         );
       }
 
-      // Save the new address
       await addressAPI.add({
         name: formData.name,
         email: formData.email,
@@ -174,12 +178,10 @@ const Checkout = () => {
         isDefault: true,
       });
 
-      // Refresh saved addresses list
       try {
         const addressesResponse = await addressAPI.getAll();
         if (addressesResponse.success) {
           setSavedAddresses(addressesResponse.data);
-          // Select the newly saved address (it's the only one now)
           if (addressesResponse.data.length > 0) {
             setSelectedAddressId(addressesResponse.data[0]._id);
             setUseNewAddress(false);
@@ -203,6 +205,12 @@ const Checkout = () => {
     e.preventDefault();
     setError('');
 
+    // ✅ Block submit if any item violates its minimum quantity
+    if (hasMinQtyViolation) {
+      setError('Some items do not meet the minimum quantity. Please go back to the cart and fix them.');
+      return;
+    }
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -221,7 +229,6 @@ const Checkout = () => {
         freeGift: isEligibleForFreeGift ? freeGift : 0,
       };
 
-      // Create Razorpay order (not DB order yet)
       const response = await orderAPI.create(orderData);
 
       if (!response.success) {
@@ -324,7 +331,6 @@ const Checkout = () => {
     }
   };
 
-  // Load Razorpay script
   React.useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -363,13 +369,32 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf6ec]">
-      {/* Header Spacer */}
       <div className="w-full" style={{ height: '75px', backgroundColor: '#5C3A21' }}></div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-[#5C3A21] mb-8" style={{ fontFamily: 'Georgia, serif' }}>
           Checkout
         </h1>
+
+        {/* ✅ Minimum quantity violation banner */}
+        {hasMinQtyViolation && (
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-400 text-red-800 rounded-lg">
+            <p className="font-semibold mb-1">⚠️ Minimum quantity not met</p>
+            <ul className="text-sm list-disc list-inside">
+              {violatedItems.map((item, idx) => (
+                <li key={idx}>
+                  <strong>{item.name}</strong>: requires at least {getMinQty(item)}, currently {item.quantity}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => navigate('/cart')}
+              className="mt-2 text-sm underline hover:no-underline font-medium"
+            >
+              Go to cart to fix
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
@@ -386,7 +411,6 @@ const Checkout = () => {
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Saved Addresses */}
                 {savedAddresses.length > 0 && (
                   <div className="space-y-3">
                     <label className="block text-gray-700 font-medium">Select Saved Address</label>
@@ -440,7 +464,6 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {/* New Address Form */}
                 {useNewAddress && (
                   <div className="space-y-4 pt-4 border-t">
                     <div>
@@ -575,15 +598,14 @@ const Checkout = () => {
                       />
                     </div>
 
-                    {/* Save Address button — replaces the old checkbox */}
                     <div className="pt-2">
                       <button
                         type="button"
                         onClick={handleSaveAddress}
                         disabled={savingAddress || addressSaved}
                         className={`w-full py-3 rounded-lg font-semibold transition border-2 ${addressSaved
-                            ? 'bg-green-50 border-green-500 text-green-700 cursor-default'
-                            : 'bg-white border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] disabled:opacity-50'
+                          ? 'bg-green-50 border-green-500 text-green-700 cursor-default'
+                          : 'bg-white border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] disabled:opacity-50'
                           }`}
                       >
                         {savingAddress
@@ -635,7 +657,7 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Free Gift Selection - only for orders ₹3000+ */}
+                {/* Free Gift */}
                 {isEligibleForFreeGift && (
                   <div className="pt-4">
                     <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-400">
@@ -689,10 +711,14 @@ const Checkout = () => {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || hasMinQtyViolation}
                   className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                 >
-                  {loading ? 'Processing...' : `Pay ${formatPrice(amountToPayNow)}`}
+                  {hasMinQtyViolation
+                    ? 'Fix quantities to continue'
+                    : loading
+                      ? 'Processing...'
+                      : `Pay ${formatPrice(amountToPayNow)}`}
                 </button>
               </form>
             </div>
@@ -705,17 +731,25 @@ const Checkout = () => {
                 Order Summary
               </h2>
 
-              {/* Items */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {cart.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <div>
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-gray-500"> ({item.selectedWeight} × {item.quantity})</span>
+                {cart.map((item, index) => {
+                  const belowMin = item.quantity < getMinQty(item);
+                  return (
+                    <div
+                      key={index}
+                      className={`flex justify-between text-sm ${belowMin ? 'text-red-600' : ''}`}
+                    >
+                      <div>
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-gray-500"> ({item.selectedWeight} × {item.quantity})</span>
+                        {belowMin && (
+                          <span className="block text-xs text-red-600">Min {getMinQty(item)} required</span>
+                        )}
+                      </div>
+                      <span>{formatPrice(item.price * item.quantity)}</span>
                     </div>
-                    <span>{formatPrice(item.price * item.quantity)}</span>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {isEligibleForFreeGift && freeGift !== 0 && (
                   <div className="flex justify-between text-sm">
