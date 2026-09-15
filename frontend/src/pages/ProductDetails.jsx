@@ -227,11 +227,10 @@ const ProductDetails = () => {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`w-2.5 h-2.5 rounded-full transition ${
-                        currentImageIndex === index
+                      className={`w-2.5 h-2.5 rounded-full transition ${currentImageIndex === index
                           ? 'bg-[#5C3A21] w-6'
                           : 'bg-white/60 hover:bg-white/80'
-                      }`}
+                        }`}
                       aria-label={`Go to image ${index + 1}`}
                     />
                   ))}
@@ -286,17 +285,17 @@ const ProductDetails = () => {
             {/* Weight Selection */}
             {product.category !== 'senaboard' && (
               <div className="mb-6">
-                <label className="block text-gray-700 font-medium mb-3">Select Weight *</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-gray-700 font-medium mb-3">
+                  Select {product.category === 'sticks' ? 'Length' : 'Weight'} *
+                </label>                <div className="flex flex-wrap gap-2">
                   {product.weights.map((weight) => (
                     <button
                       key={weight}
                       onClick={() => setSelectedWeight(weight)}
-                      className={`px-4 py-2 rounded-lg border-2 transition ${
-                        selectedWeight === weight
+                      className={`px-4 py-2 rounded-lg border-2 transition ${selectedWeight === weight
                           ? 'border-[#5C3A21] bg-[#5C3A21] text-white'
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
-                      }`}
+                        }`}
                     >
                       {weight} {product.category === 'sticks' ? 'ft' : 'kg'}
                       <span className="block text-xs opacity-80">

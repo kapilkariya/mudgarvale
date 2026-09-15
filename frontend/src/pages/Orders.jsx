@@ -158,9 +158,9 @@ const Orders = () => {
                       {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-                      {order.paymentStatus === 'paid' ? 'Paid' : 
-                       order.paymentStatus === 'partial_paid' ? 'Advance Paid' : 
-                       order.paymentStatus}
+                      {order.paymentStatus === 'paid' ? 'Paid' :
+                        order.paymentStatus === 'partial_paid' ? 'Advance Paid' :
+                          order.paymentStatus}
                     </span>
                   </div>
                 </div>
@@ -197,8 +197,10 @@ const Orders = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                        <p className="text-sm text-gray-500">Weight: {item.selectedWeight}</p>
-                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                        <p className="text-sm text-gray-500">
+                          {item.category === 'sticks' ? 'Length' : 'Weight'}: {item.selectedWeight}
+                          {item.category === 'sticks' ? ' ft' : ' kg'}
+                        </p>                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         <p className="text-[#5C3A21] font-semibold">
                           {formatPrice(item.price * item.quantity)}
                         </p>
