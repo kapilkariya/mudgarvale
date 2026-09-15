@@ -149,6 +149,16 @@ export const cartAPI = {
   }),
 };
 
+// Checkout Session API calls
+export const checkoutSessionAPI = {
+  get: () => fetchWithAuth(`${API_URL}/checkout-session`),
+
+  save: (data) => fetchWithAuth(`${API_URL}/checkout-session`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+};
+
 // Config API calls
 export const configAPI = {
   get: () => fetchWithAuth(`${API_URL}/config`),

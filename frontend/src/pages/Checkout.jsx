@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { orderAPI, configAPI, addressAPI } from '../config/api';
+import { orderAPI, configAPI, addressAPI, checkoutSessionAPI } from '../config/api';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 // ✅ Products that require a minimum order quantity of 2
@@ -51,6 +51,10 @@ const Checkout = () => {
   const hasMinQtyViolation = cart.some((item) => item.quantity < getMinQty(item));
   const violatedItems = cart.filter((item) => item.quantity < getMinQty(item));
 
+  // ✅ Address must be saved before paying
+  const hasSavedAddress =
+    (!useNewAddress && !!selectedAddressId) || addressSaved;
+
   // Fetch config and saved addresses from backend
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +78,14 @@ const Checkout = () => {
           } else {
             setUseNewAddress(true);
           }
+
+          // ✅ Auto-sync CheckoutSession when a saved address already exists
+          const effectiveAddr =
+            addressesResponse.data.find(a => a.isDefault) ||
+            addressesResponse.data[0];
+          if (effectiveAddr) {
+            syncCheckoutSession(effectiveAddr);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -94,6 +106,18 @@ const Checkout = () => {
   const codAdvance = paymentMethod === 'cod' ? deliveryCharge : 0;
   const total = subtotal + deliveryCharge;
   const amountToPayNow = paymentMethod === 'cod' ? codAdvance : total;
+
+  // ✅ Mirror current address + cart into CheckoutSession (fire-and-forget)
+  const syncCheckoutSession = (addressObj) => {
+    if (!addressObj) return;
+    checkoutSessionAPI
+      .save({
+        address: addressObj,
+        items: cart,
+        totalAmount: total,
+      })
+      .catch((err) => console.error('CheckoutSession sync failed:', err));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -193,6 +217,18 @@ const Checkout = () => {
 
       setAddressSaved(true);
       setAddressError('');
+
+      // ✅ Mirror the freshly saved address + cart into CheckoutSession
+      try {
+        const latest = await addressAPI.getAll();
+        const effectiveAddr =
+          latest?.data?.find(a => a.isDefault) || latest?.data?.[0];
+        if (effectiveAddr) {
+          syncCheckoutSession(effectiveAddr);
+        }
+      } catch (err) {
+        console.error('Post-save session sync failed:', err);
+      }
     } catch (err) {
       console.error('Failed to save address:', err);
       setAddressError(err.message || 'Failed to save address. Please try again.');
@@ -204,6 +240,12 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // ✅ Block if address not saved yet
+    if (!hasSavedAddress) {
+      setError('Please save your address before proceeding to payment.');
+      return;
+    }
 
     // ✅ Block submit if any item violates its minimum quantity
     if (hasMinQtyViolation) {
@@ -617,6 +659,11 @@ const Checkout = () => {
                       {addressError && (
                         <p className="text-red-500 text-sm mt-2">{addressError}</p>
                       )}
+                      {!addressSaved && (
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          You must save this address before proceeding to payment.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -709,16 +756,25 @@ const Checkout = () => {
                   </div>
                 )}
 
+                {/* ✅ Address-save hint above the pay button */}
+                {!hasSavedAddress && (
+                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800">
+                    ⚠️ Please save your address first to enable payment.
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={loading || hasMinQtyViolation}
+                  disabled={loading || hasMinQtyViolation || !hasSavedAddress}
                   className="w-full py-3 bg-[#5C3A21] text-white font-semibold rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                 >
-                  {hasMinQtyViolation
-                    ? 'Fix quantities to continue'
-                    : loading
-                      ? 'Processing...'
-                      : `Pay ${formatPrice(amountToPayNow)}`}
+                  {!hasSavedAddress
+                    ? 'Save address to continue'
+                    : hasMinQtyViolation
+                      ? 'Fix quantities to continue'
+                      : loading
+                        ? 'Processing...'
+                        : `Pay ${formatPrice(amountToPayNow)}`}
                 </button>
               </form>
             </div>
