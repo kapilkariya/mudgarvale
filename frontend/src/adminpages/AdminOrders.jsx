@@ -433,7 +433,7 @@ const AdminOrders = () => {
         paymentStatusDisplay = 'Partially Paid';
       } else {
         amountPaid = order.totalAmount || 0;
-        amountPending = 0;
+        amountPending = 'Paid';
         paymentStatusDisplay = 'Fully Paid';
       }
 
