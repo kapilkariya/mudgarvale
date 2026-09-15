@@ -25,10 +25,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Product image is required'],
     },
-    image2: {
-      type: String,
-      required: false,
-      default: null,
+    // ✅ Array of additional images (any length, optional)
+    images: {
+      type: [String],
+      default: [],
     },
     weights: [
       {

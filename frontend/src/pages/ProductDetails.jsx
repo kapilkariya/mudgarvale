@@ -56,12 +56,23 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
-  // Get all available images
+  // ✅ Get all available images — primary + any extras in the images[] array
   const getProductImages = () => {
     if (!product) return [];
     const images = [];
-    if (product.image) images.push(product.image);
-    if (product.image2) images.push(product.image2);
+
+    if (product.image) {
+      images.push(product.image);
+    }
+
+    if (Array.isArray(product.images)) {
+      for (const img of product.images) {
+        if (img && !images.includes(img)) {
+          images.push(img);
+        }
+      }
+    }
+
     return images;
   };
 
