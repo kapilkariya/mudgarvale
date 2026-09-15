@@ -19,12 +19,16 @@ const Checkout = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [useNewAddress, setUseNewAddress] = useState(false);
-  const [saveAddress, setSaveAddress] = useState(false);
+
+  // Address save state
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const [addressError, setAddressError] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    phone2: '',  // Add this line
+    phone2: '',
     buildingFlatNo: '',
     address: '',
     city: '',
@@ -52,14 +56,13 @@ const Checkout = () => {
 
         if (addressesResponse.success) {
           setSavedAddresses(addressesResponse.data);
-          // Auto-select default address if exists
           const defaultAddr = addressesResponse.data.find(a => a.isDefault);
           if (defaultAddr) {
             setSelectedAddressId(defaultAddr._id);
           } else if (addressesResponse.data.length > 0) {
             setSelectedAddressId(addressesResponse.data[0]._id);
           } else {
-            setUseNewAddress(true); // No saved addresses, use new
+            setUseNewAddress(true);
           }
         }
       } catch (err) {
@@ -85,14 +88,26 @@ const Checkout = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // Reset "saved" state when user edits fields again
+    if (addressSaved) setAddressSaved(false);
   };
 
   const validateForm = () => {
-    // If using saved address, no need to validate form
     if (!useNewAddress && selectedAddressId) {
       return null;
     }
-    // Validate new address form
+    if (!formData.name.trim()) return 'Please enter your name';
+    if (!formData.phone.trim()) return 'Please enter your phone number';
+    if (!formData.address.trim()) return 'Please enter your address';
+    if (!formData.city.trim()) return 'Please enter your city';
+    if (!formData.state.trim()) return 'Please enter your state';
+    if (!formData.pincode.trim()) return 'Please enter your pincode';
+    if (formData.phone.length !== 10) return 'Phone number must be exactly 10 digits';
+    return null;
+  };
+
+  // Validate address-only fields (used by the Save Address button)
+  const validateAddressOnly = () => {
     if (!formData.name.trim()) return 'Please enter your name';
     if (!formData.phone.trim()) return 'Please enter your phone number';
     if (!formData.address.trim()) return 'Please enter your address';
@@ -112,7 +127,7 @@ const Checkout = () => {
           name: selectedAddress.name,
           email: selectedAddress.email,
           phone: selectedAddress.phone,
-          phone2: selectedAddress.phone2 || '',  // Add this line
+          phone2: selectedAddress.phone2 || '',
           buildingFlatNo: selectedAddress.buildingFlatNo || '',
           address: selectedAddress.address,
           city: selectedAddress.city,
@@ -122,6 +137,66 @@ const Checkout = () => {
       }
     }
     return formData;
+  };
+
+  // Save address to backend
+  const handleSaveAddress = async () => {
+    setAddressError('');
+    setAddressSaved(false);
+
+    const validationError = validateAddressOnly();
+    if (validationError) {
+      setAddressError(validationError);
+      return;
+    }
+
+    try {
+      setSavingAddress(true);
+
+      // Delete all existing saved addresses first — we only keep ONE
+      if (savedAddresses.length > 0) {
+        await Promise.all(
+          savedAddresses.map((addr) => addressAPI.delete(addr._id))
+        );
+      }
+
+      // Save the new address
+      await addressAPI.add({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        phone2: formData.phone2,
+        buildingFlatNo: formData.buildingFlatNo,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        isDefault: true,
+      });
+
+      // Refresh saved addresses list
+      try {
+        const addressesResponse = await addressAPI.getAll();
+        if (addressesResponse.success) {
+          setSavedAddresses(addressesResponse.data);
+          // Select the newly saved address (it's the only one now)
+          if (addressesResponse.data.length > 0) {
+            setSelectedAddressId(addressesResponse.data[0]._id);
+            setUseNewAddress(false);
+          }
+        }
+      } catch (refreshErr) {
+        console.error('Failed to refresh addresses:', refreshErr);
+      }
+
+      setAddressSaved(true);
+      setAddressError('');
+    } catch (err) {
+      console.error('Failed to save address:', err);
+      setAddressError(err.message || 'Failed to save address. Please try again.');
+    } finally {
+      setSavingAddress(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -145,27 +220,6 @@ const Checkout = () => {
         address: address,
         freeGift: isEligibleForFreeGift ? freeGift : 0,
       };
-
-      // Save address if checkbox is checked (and user is using new address)
-      if (saveAddress && useNewAddress) {
-        try {
-          await addressAPI.add({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            phone2: formData.phone2,  // Add this line
-            buildingFlatNo: formData.buildingFlatNo,
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-            isDefault: true,
-          });
-        } catch (addrErr) {
-          console.error('Failed to save address:', addrErr);
-          // Don't block order if address save fails
-        }
-      }
 
       // Create Razorpay order (not DB order yet)
       const response = await orderAPI.create(orderData);
@@ -194,7 +248,6 @@ const Checkout = () => {
           }
         };
 
-        // Initialize Razorpay payment for both online and COD
         const options = {
           key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: razorpayOrder.amount,
@@ -203,7 +256,6 @@ const Checkout = () => {
           description: paymentMethod === 'cod' ? 'COD Advance Payment' : 'Order Payment',
           order_id: razorpayOrder.id,
           handler: async function (response) {
-            // Verify payment and create DB order
             paymentCompleted = true;
             try {
               const verifyResponse = await orderAPI.verifyPayment({
@@ -246,7 +298,6 @@ const Checkout = () => {
           setLoading(false);
         });
 
-        // Handle modal close/cancel
         razorpay.on('modal.close', async function () {
           if (paymentCompleted) {
             return;
@@ -262,7 +313,6 @@ const Checkout = () => {
           setLoading(false);
         });
       } else {
-        // No Razorpay order - should not happen now
         setError('Payment initialization failed. Please try again.');
         setLoading(false);
       }
@@ -375,7 +425,6 @@ const Checkout = () => {
                       </div>
                     ))}
 
-                    {/* Use New Address Option */}
                     <div
                       onClick={() => {
                         setUseNewAddress(true);
@@ -429,12 +478,13 @@ const Checkout = () => {
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                           setFormData({ ...formData, phone: value });
+                          if (addressSaved) setAddressSaved(false);
                         }}
                         required
                         maxLength="10"
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
-                            ? 'border-red-500'
-                            : 'border-gray-300'
+                          ? 'border-red-500'
+                          : 'border-gray-300'
                           }`}
                         placeholder="Enter 10-digit phone number"
                       />
@@ -443,7 +493,6 @@ const Checkout = () => {
                       )}
                     </div>
 
-                    {/* Add this new phone2 field */}
                     <div>
                       <label className="block text-gray-700 font-medium mb-2">Alternate Phone Number (Optional)</label>
                       <input
@@ -453,6 +502,7 @@ const Checkout = () => {
                         onChange={(e) => {
                           const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                           setFormData({ ...formData, phone2: value });
+                          if (addressSaved) setAddressSaved(false);
                         }}
                         maxLength="10"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
@@ -525,21 +575,27 @@ const Checkout = () => {
                       />
                     </div>
 
-                    {/* Save this address checkbox - only if no saved address exists */}
-                    {savedAddresses.length === 0 && (
-                      <div className="flex items-center pt-2">
-                        <input
-                          type="checkbox"
-                          id="saveAddress"
-                          checked={saveAddress}
-                          onChange={(e) => setSaveAddress(e.target.checked)}
-                          className="w-4 h-4 text-[#5C3A21] border-gray-300 rounded focus:ring-[#5C3A21]"
-                        />
-                        <label htmlFor="saveAddress" className="ml-2 text-gray-700 text-sm cursor-pointer">
-                          Save this address for future orders
-                        </label>
-                      </div>
-                    )}
+                    {/* Save Address button — replaces the old checkbox */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveAddress}
+                        disabled={savingAddress || addressSaved}
+                        className={`w-full py-3 rounded-lg font-semibold transition border-2 ${addressSaved
+                            ? 'bg-green-50 border-green-500 text-green-700 cursor-default'
+                            : 'bg-white border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] disabled:opacity-50'
+                          }`}
+                      >
+                        {savingAddress
+                          ? 'Saving…'
+                          : addressSaved
+                            ? '✓ Address Saved'
+                            : 'Save this address'}
+                      </button>
+                      {addressError && (
+                        <p className="text-red-500 text-sm mt-2">{addressError}</p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -642,7 +698,7 @@ const Checkout = () => {
             </div>
           </div>
 
-         {/* Order Summary */}
+          {/* Order Summary */}
           <div>
             <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
               <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
@@ -661,7 +717,6 @@ const Checkout = () => {
                   </div>
                 ))}
 
-                {/* Free Gift item - shown last in the product list */}
                 {isEligibleForFreeGift && freeGift !== 0 && (
                   <div className="flex justify-between text-sm">
                     <div>
