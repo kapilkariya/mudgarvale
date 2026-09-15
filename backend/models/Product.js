@@ -17,8 +17,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Category is required'],
       enum: {
-        values: ['mudgar', 'gada', 'samtola', 'senaboard','sticks'],
-        message: 'Category must be mudgar, gada, samtola, or senaboard',
+        values: ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks'],
+        message: 'Category must be mudgar, gada, samtola, senaboard, or sticks',
       },
     },
     image: {
@@ -27,8 +27,8 @@ const productSchema = new mongoose.Schema(
     },
     image2: {
       type: String,
-      required: false,  // 👈 OPTIONAL - not compulsory
-      default: null,    // Optional: sets default to null if not provided
+      required: false,
+      default: null,
     },
     weights: [
       {
@@ -57,16 +57,41 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Virtual to get minimum price for display
+// ✅ Bulletproof virtual — handles Map, plain object, or malformed data
+// Never throws, so a bad product can't crash the whole listing endpoint.
 productSchema.virtual('minPrice').get(function () {
-  const prices = Array.from(this.pricePerWeight.values());
-  return prices.length > 0 ? Math.min(...prices) : 0;
+  try {
+    if (!this.pricePerWeight) return 0;
+
+    // Mongoose Map has .values(), plain objects don't
+    const rawValues =
+      typeof this.pricePerWeight.values === 'function'
+        ? Array.from(this.pricePerWeight.values())
+        : Object.values(this.pricePerWeight);
+
+    const nums = rawValues
+      .map((v) => Number(v))
+      .filter((n) => Number.isFinite(n));
+
+    return nums.length > 0 ? Math.min(...nums) : 0;
+  } catch (err) {
+    // Log once so you know which product is bad, but don't crash
+    console.warn(
+      `[Product] minPrice virtual failed for product ${this._id}:`,
+      err.message
+    );
+    return 0;
+  }
 });
 
-// Virtual to get formatted price display
+// ✅ Bulletproof priceDisplay — same reasoning
 productSchema.virtual('priceDisplay').get(function () {
-  const minPrice = this.minPrice;
-  return `From Rs. ${minPrice.toLocaleString('en-IN')}`;
+  try {
+    const minPrice = this.minPrice;
+    return `From Rs. ${Number(minPrice || 0).toLocaleString('en-IN')}`;
+  } catch {
+    return 'From Rs. 0';
+  }
 });
 
 module.exports = mongoose.model('Product', productSchema);

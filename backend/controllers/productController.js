@@ -1,5 +1,44 @@
 const Product = require('../models/Product');
 
+// Helper: normalize pricePerWeight to a plain object with string keys & number values
+const normalizePricePerWeight = (raw) => {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+
+  // Handle Map
+  if (typeof raw.entries === 'function' && typeof raw.get === 'function') {
+    for (const [k, v] of raw.entries()) {
+      const key = String(k).trim();
+      const num = Number(v);
+      if (key && Number.isFinite(num)) out[key] = num;
+    }
+    return out;
+  }
+
+  // Handle plain object
+  for (const [k, v] of Object.entries(raw)) {
+    const key = String(k).trim();
+    const num = Number(v);
+    if (key && Number.isFinite(num)) out[key] = num;
+  }
+  return out;
+};
+
+// Helper: attach computed virtuals to a lean product object
+const attachVirtuals = (product) => {
+  const priceMap = normalizePricePerWeight(product.pricePerWeight);
+  const prices = Object.values(priceMap);
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+  return {
+    ...product,
+    pricePerWeight: priceMap,
+    weights: Array.isArray(product.weights) ? product.weights.map(String) : [],
+    minPrice,
+    priceDisplay: `From Rs. ${minPrice.toLocaleString('en-IN')}`,
+  };
+};
+
 // @desc    Create new product (Admin only)
 // @route   POST /api/products
 // @access  Private/Admin
@@ -7,16 +46,14 @@ const createProduct = async (req, res) => {
   try {
     const { name, description, category, weights, pricePerWeight, image } = req.body;
 
-    // Parse weights and pricePerWeight if sent as JSON strings
     const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
     const parsedPricePerWeight = typeof pricePerWeight === 'string' ? JSON.parse(pricePerWeight) : pricePerWeight;
 
-    // Validate category
-    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard'];
+    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
     if (!allowedCategories.includes(category)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid category. Must be one of: mudgar, gada, samtola, senaboard',
+        message: 'Invalid category. Must be one of: mudgar, gada, samtola, senaboard, sticks',
       });
     }
 
@@ -27,13 +64,19 @@ const createProduct = async (req, res) => {
       });
     }
 
+    const normalizedWeights = Array.isArray(parsedWeights)
+      ? parsedWeights.map((w) => String(w).trim()).filter(Boolean)
+      : [];
+
+    const normalizedPricePerWeight = normalizePricePerWeight(parsedPricePerWeight);
+
     const product = await Product.create({
       name,
       description,
       category,
       image: String(image).trim(),
-      weights: parsedWeights,
-      pricePerWeight: parsedPricePerWeight,
+      weights: normalizedWeights,
+      pricePerWeight: normalizedPricePerWeight,
     });
 
     res.status(201).json({
@@ -54,30 +97,28 @@ const createProduct = async (req, res) => {
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const { category, search, minPrice, maxPrice } = req.query;
-    let query = { isActive: true };
+    const { category, search } = req.query;
+    const query = { isActive: true };
 
-    // Filter by category
-    if (category) {
-      query.category = category;
-    }
+    if (category) query.category = category;
+    if (search) query.name = { $regex: search, $options: 'i' };
 
-    // Search by name
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
-    }
+    // .lean() returns plain objects — Maps become plain objects automatically
+    const products = await Product.find(query).sort({ createdAt: -1 }).lean();
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const safeProducts = products.map(attachVirtuals);
 
     res.status(200).json({
       success: true,
-      count: products.length,
-      data: products,
+      count: safeProducts.length,
+      data: safeProducts,
     });
   } catch (error) {
+    console.error('Get products error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch products',
+      error: error.message,
     });
   }
 };
@@ -87,7 +128,7 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
 
     if (!product) {
       return res.status(404).json({
@@ -96,14 +137,18 @@ const getProduct = async (req, res) => {
       });
     }
 
+    const safeProduct = attachVirtuals(product);
+
     res.status(200).json({
       success: true,
-      data: product,
+      data: safeProduct,
     });
   } catch (error) {
+    console.error('Get product error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch product',
+      error: error.message,
     });
   }
 };
@@ -124,12 +169,19 @@ const updateProduct = async (req, res) => {
 
     const updateData = { ...req.body };
 
-    // Parse JSON fields if needed
     if (updateData.weights && typeof updateData.weights === 'string') {
       updateData.weights = JSON.parse(updateData.weights);
     }
     if (updateData.pricePerWeight && typeof updateData.pricePerWeight === 'string') {
       updateData.pricePerWeight = JSON.parse(updateData.pricePerWeight);
+    }
+
+    if (Array.isArray(updateData.weights)) {
+      updateData.weights = updateData.weights.map((w) => String(w).trim()).filter(Boolean);
+    }
+
+    if (updateData.pricePerWeight && typeof updateData.pricePerWeight === 'object') {
+      updateData.pricePerWeight = normalizePricePerWeight(updateData.pricePerWeight);
     }
 
     product = await Product.findByIdAndUpdate(req.params.id, updateData, {
@@ -164,7 +216,6 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    // Instead of hard delete, mark as inactive (soft delete)
     product.isActive = false;
     await product.save();
 
@@ -173,6 +224,7 @@ const deleteProduct = async (req, res) => {
       message: 'Product deleted successfully',
     });
   } catch (error) {
+    console.error('Delete product error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete product',
@@ -186,7 +238,7 @@ const deleteProduct = async (req, res) => {
 const getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard'];
+    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
 
     if (!allowedCategories.includes(category)) {
       return res.status(400).json({
@@ -195,20 +247,23 @@ const getProductsByCategory = async (req, res) => {
       });
     }
 
-    const products = await Product.find({
-      category,
-      isActive: true,
-    }).sort({ createdAt: -1 });
+    const products = await Product.find({ category, isActive: true })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const safeProducts = products.map(attachVirtuals);
 
     res.status(200).json({
       success: true,
-      count: products.length,
-      data: products,
+      count: safeProducts.length,
+      data: safeProducts,
     });
   } catch (error) {
+    console.error('Get products by category error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch products',
+      error: error.message,
     });
   }
 };

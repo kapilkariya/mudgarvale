@@ -298,7 +298,7 @@ const ProductDetails = () => {
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
                       }`}
                     >
-                      {weight} {product.category === 'sticks' ? 'in' : 'kg'}
+                      {weight} {product.category === 'sticks' ? 'ft' : 'kg'}
                       <span className="block text-xs opacity-80">
                         {formatPrice(product.pricePerWeight[weight] || 0)}
                       </span>
