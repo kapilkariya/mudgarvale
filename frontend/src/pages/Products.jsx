@@ -154,6 +154,7 @@ const Products = () => {
   // Get display title
   const getDisplayTitle = () => {
     if (selectedCategory === 'all') return 'All Products';
+    if (selectedCategory === 'sticks') return 'Bamboo Sticks/Lathi';
     return selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
   };
 
@@ -210,7 +211,7 @@ const Products = () => {
                 }
               `}
             >
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              {cat === 'sticks' ? 'Bamboo Sticks/Lathi' : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
           ))}
         </div>
