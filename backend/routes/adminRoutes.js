@@ -15,6 +15,9 @@ const {
   previewBulkUpdateOrderStatus,   // ✅ NEW
   getOrderStats,
 } = require('../controllers/adminOrderController');
+const {
+  getCheckoutSessions,
+} = require('../controllers/adminCheckoutSessionController');
 
 const router = express.Router();
 
@@ -41,5 +44,8 @@ router.get('/orders/bulk-status/preview', previewBulkUpdateOrderStatus); // ✅ 
 // Single-order routes (with :id param) — must come LAST
 router.put('/orders/:id', updateOrder);
 router.patch('/orders/:id/status', updateOrderStatus);
+
+// ✅ Checkout sessions (admin view)
+router.get('/checkout-sessions', getCheckoutSessions);
 
 module.exports = router;

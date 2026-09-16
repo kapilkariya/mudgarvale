@@ -25,6 +25,7 @@ import AdminDashboard from "./adminpages/AdminDashboard";
 import AdminProducts from "./adminpages/AdminProducts";
 import EditProduct from "./adminpages/EditProduct";
 import AdminOrders from "./adminpages/AdminOrders";
+import AdminCheckoutSessions from "./adminpages/AdminCheckoutSessions";
 import Reviews from "./pages/Reviews";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -230,6 +231,7 @@ const AppRoutes = () => {
         <Route path="products/add" element={<Add />} />
         <Route path="products/edit/:id" element={<EditProduct />} />
         <Route path="orders" element={<AdminOrders />} />
+        <Route path="checkout-sessions" element={<AdminCheckoutSessions />} />
       </Route>
       {/* Legacy admin route */}
       <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />

@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const CheckoutSession = require('../models/CheckoutSession');
 const { calculateDeliveryCharge, calculateSubtotal } = require('../utils/deliveryCharge');
 const { sendOrderConfirmationEmail } = require('../utils/email');
 
@@ -235,6 +236,17 @@ const verifyPayment = async (req, res) => {
       paymentStatus,
       paidAmount,
     });
+
+    // ✅ Order confirmed — clear the user's CheckoutSession.
+    // Non-blocking: a cleanup failure must never break order confirmation.
+    try {
+      const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
+      if (deleted.deletedCount > 0) {
+        console.log(`CheckoutSession cleared for user ${req.user.id}`);
+      }
+    } catch (sessionErr) {
+      console.error('Failed to clear CheckoutSession:', sessionErr);
+    }
 
     // Prefer the verified account email over checkout input. Delivery failures
     // are deliberately non-blocking for order completion.

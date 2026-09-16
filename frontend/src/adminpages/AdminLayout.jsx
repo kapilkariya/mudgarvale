@@ -21,6 +21,7 @@ const AdminLayout = () => {
     { path: '/admin', label: 'Dashboard', icon: '📊' },
     { path: '/admin/products', label: 'Products', icon: '📦' },
     { path: '/admin/orders', label: 'Orders', icon: '🛒' },
+    { path: '/admin/checkout-sessions', label: 'Checkout Sessions', icon: '🧾' },
     { path: '/', label: 'Back to Store', icon: '🏠' },
   ];
 

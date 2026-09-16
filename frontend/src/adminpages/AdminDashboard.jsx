@@ -875,6 +875,17 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-500">Manage customer orders</p>
             </div>
           </Link>
+
+          <Link
+            to="/admin/checkout-sessions"
+            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-[#5C3A21] hover:bg-[#5C3A21]/5 transition"
+          >
+            <span className="text-2xl mr-3">🧾</span>
+            <div>
+              <p className="font-medium text-gray-900">Checkout Sessions</p>
+              <p className="text-sm text-gray-500">Users on checkout with saved address</p>
+            </div>
+          </Link>
           
           <a
             href="/"
