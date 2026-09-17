@@ -197,10 +197,8 @@ const Orders = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {item.category === 'sticks' ? 'Length' : 'Weight'}: {item.selectedWeight}
-                          {item.category === 'sticks' ? ' ft' : ' kg'}
-                        </p>                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                                     
+                        <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         <p className="text-[#5C3A21] font-semibold">
                           {formatPrice(item.price * item.quantity)}
                         </p>

@@ -285,7 +285,7 @@ const ProductDetails = () => {
             {product.category !== 'senaboard' && (
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-3">
-                  Select {product.category === 'sticks' ? 'Length' : 'Weight'} *
+                  Select {product.category === 'sticks' || product.category === 'decor' ? 'Length' : 'Weight'} *
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {product.weights.map((weight) => (
@@ -297,7 +297,7 @@ const ProductDetails = () => {
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
                         }`}
                     >
-                      {weight} {product.category === 'sticks' ? 'in' : 'kg'}
+                      {weight} {product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}
                       <span className="block text-xs opacity-80">
                         {formatPrice(product.pricePerWeight[weight] || 0)}
                       </span>

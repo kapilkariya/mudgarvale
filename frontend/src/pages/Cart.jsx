@@ -72,9 +72,8 @@ const Cart = () => {
               return (
                 <div
                   key={`${item.productId}-${item.selectedWeight}`}
-                  className={`bg-white rounded-xl p-4 flex gap-4 shadow-sm transition ${
-                    belowMin ? 'border-2 border-red-400' : ''
-                  }`}
+                  className={`bg-white rounded-xl p-4 flex gap-4 shadow-sm transition ${belowMin ? 'border-2 border-red-400' : ''
+                    }`}
                 >
                   {/* Product Image */}
                   <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
@@ -89,8 +88,8 @@ const Cart = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-800">{item.name}</h3>
                     <p className="text-sm text-gray-500">
-                      {item.category === 'sticks' ? 'Size' : 'Weight'}: {item.selectedWeight}{' '}
-                      {item.category === 'sticks' ? 'in' : 'kg'}
+                      {item.category === 'sticks' || item.category === 'decor' ? 'Length' : 'Weight'}: {item.selectedWeight}{' '}
+                      {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'}
                     </p>
                     <p className="text-[#5C3A21] font-semibold">
                       {formatPrice(item.price * item.quantity)}

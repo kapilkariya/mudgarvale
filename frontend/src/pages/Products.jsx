@@ -300,7 +300,7 @@ const Products = () => {
                       {product.category !== 'senaboard' && product.weights && product.weights.length > 0 && (
                         <p className="text-[10px] xs:text-xs text-gray-500 text-center mt-1 truncate">
                           {product.weights.slice(0, 3).map(weight =>
-                            `${weight} ${product.category === 'sticks' ? 'ft' : 'kg'}`
+                            `${weight} ${product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}`
                           ).join(', ')}
                           {product.weights.length > 3 && '...'}
                         </p>
