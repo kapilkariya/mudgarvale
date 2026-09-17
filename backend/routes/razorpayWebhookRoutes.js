@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const CheckoutSession = require('../models/CheckoutSession');
 
 const router = express.Router();
 
@@ -56,6 +57,17 @@ const saveCapturedPayment = async (payment) => {
     orderNumber: order.orderNumber,
     razorpayPaymentId: payment.id,
   });
+
+  // ✅ Order confirmed — remove this user's CheckoutSession.
+  // Non-blocking: a cleanup failure must never break order confirmation.
+  try {
+    const deleted = await CheckoutSession.deleteOne({ userId: order.userId });
+    if (deleted.deletedCount > 0) {
+      console.log(`CheckoutSession cleared for user ${order.userId} (webhook)`);
+    }
+  } catch (sessionErr) {
+    console.error('Failed to clear CheckoutSession (webhook):', sessionErr);
+  }
 
   return order;
 };

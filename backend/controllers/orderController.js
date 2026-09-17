@@ -211,6 +211,16 @@ const verifyPayment = async (req, res) => {
       order.paidAmount = paidAmount;
       order.remainingAmount = remainingAmount;
       await order.save();
+
+      // ✅ Order confirmed — clear the user's CheckoutSession.
+      try {
+        const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
+        if (deleted.deletedCount > 0) {
+          console.log(`CheckoutSession cleared for user ${req.user.id}`);
+        }
+      } catch (sessionErr) {
+        console.error('Failed to clear CheckoutSession:', sessionErr);
+      }
     } else {
       // Backward compatibility for payments started before pending-order storage.
       order = await Order.create({
@@ -228,6 +238,16 @@ const verifyPayment = async (req, res) => {
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
       });
+
+      // ✅ Order confirmed (new order path) — clear the user's CheckoutSession.
+      try {
+        const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
+        if (deleted.deletedCount > 0) {
+          console.log(`CheckoutSession cleared for user ${req.user.id}`);
+        }
+      } catch (sessionErr) {
+        console.error('Failed to clear CheckoutSession:', sessionErr);
+      }
     }
 
     console.log('Order created after payment verification:', {
@@ -236,17 +256,6 @@ const verifyPayment = async (req, res) => {
       paymentStatus,
       paidAmount,
     });
-
-    // ✅ Order confirmed — clear the user's CheckoutSession.
-    // Non-blocking: a cleanup failure must never break order confirmation.
-    try {
-      const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
-      if (deleted.deletedCount > 0) {
-        console.log(`CheckoutSession cleared for user ${req.user.id}`);
-      }
-    } catch (sessionErr) {
-      console.error('Failed to clear CheckoutSession:', sessionErr);
-    }
 
     // Prefer the verified account email over checkout input. Delivery failures
     // are deliberately non-blocking for order completion.
