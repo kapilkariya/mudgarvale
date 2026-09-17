@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { adminAPI, orderAPI } from '../config/api';
+import { adminAPI, orderAPI, fetchWithAuth, API_URL } from '../config/api';
 import {
   LineChart,
   Line,
@@ -19,31 +19,31 @@ const AdminDashboard = () => {
     pendingOrders: 0,
   });
   const [periodStats, setPeriodStats] = useState({
-    today: { 
-      orders: 0, 
-      sales: 0, 
-      onlineRevenue: 0, 
+    today: {
+      orders: 0,
+      sales: 0,
+      onlineRevenue: 0,
       codRevenue: 0,
       deliveryCharges: 0
     },
-    monthly: { 
-      orders: 0, 
-      sales: 0, 
-      onlineRevenue: 0, 
+    monthly: {
+      orders: 0,
+      sales: 0,
+      onlineRevenue: 0,
       codRevenue: 0,
       deliveryCharges: 0
     },
-    annual: { 
-      orders: 0, 
-      sales: 0, 
-      onlineRevenue: 0, 
+    annual: {
+      orders: 0,
+      sales: 0,
+      onlineRevenue: 0,
       codRevenue: 0,
       deliveryCharges: 0
     },
-    lifetime: { 
-      orders: 0, 
-      sales: 0, 
-      onlineRevenue: 0, 
+    lifetime: {
+      orders: 0,
+      sales: 0,
+      onlineRevenue: 0,
       codRevenue: 0,
       deliveryCharges: 0
     },
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [graphView, setGraphView] = useState('monthly');
-
+  const [checkoutSessionCount, setCheckoutSessionCount] = useState(0);
   // Date Range States
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -65,19 +65,27 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchStats();
     fetchAllData();
+    fetchCheckoutSessionCount();
   }, []);
-
+  const fetchCheckoutSessionCount = async () => {
+    try {
+      const res = await fetchWithAuth(`${API_URL}/admin/checkout-sessions?page=1&limit=1`);
+      if (res.success) setCheckoutSessionCount(res.total || 0);
+    } catch (err) {
+      console.error('Failed to fetch checkout session count:', err);
+    }
+  };
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const productsRes = await adminAPI.getAllProducts();
       const totalProducts = productsRes.success ? productsRes.count || productsRes.data?.length || 0 : 0;
 
       const ordersRes = await adminAPI.getOrderStats();
       const orderStats = ordersRes.success ? ordersRes.data : {};
-      
+
       setStats({
         totalProducts,
         totalOrders: orderStats.totalOrders || 0,
@@ -131,7 +139,7 @@ const AdminDashboard = () => {
   const calculatePeriodStats = (orders) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     const todayStart = new Date(today);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const yearStart = new Date(now.getFullYear(), 0, 1);
@@ -155,25 +163,25 @@ const AdminDashboard = () => {
 
     const calculateMetrics = (ordersList) => {
       const totalSales = ordersList.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      
+
       // Calculate online revenue: online payments + delivery charges from COD orders
       const onlineRevenue = ordersList
         .filter(order => order.paymentMethod === 'online')
         .reduce((sum, order) => sum + (order.totalAmount || 0), 0) +
         ordersList
-        .filter(order => order.paymentMethod === 'cod')
-        .reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
-      
+          .filter(order => order.paymentMethod === 'cod')
+          .reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
+
       // Calculate COD revenue: COD payments without delivery charges
       const codRevenue = ordersList
         .filter(order => order.paymentMethod === 'cod')
         .reduce((sum, order) => sum + ((order.totalAmount || 0) - (order.deliveryCharge || 0)), 0);
-      
+
       // Total delivery charges from COD orders
       const deliveryCharges = ordersList
         .filter(order => order.paymentMethod === 'cod')
         .reduce((sum, order) => sum + (order.deliveryCharge || 0), 0);
-      
+
       return {
         orders: ordersList.length,
         sales: totalSales,
@@ -197,7 +205,7 @@ const AdminDashboard = () => {
 
     orders.forEach(order => {
       if (order.orderStatus === 'cancelled') return;
-      
+
       const date = new Date(order.createdAt);
       const year = date.getFullYear();
       const month = date.getMonth();
@@ -207,7 +215,7 @@ const AdminDashboard = () => {
 
       years.add(year);
       const key = `${year}-${month}`;
-      
+
       if (!monthMap[key]) {
         monthMap[key] = {
           year,
@@ -221,10 +229,10 @@ const AdminDashboard = () => {
           deliveryCharges: 0,
         };
       }
-      
+
       monthMap[key].total += amount;
       monthMap[key].count += 1;
-      
+
       if (paymentMethod === 'online') {
         monthMap[key].onlineRevenue += amount;
       } else {
@@ -238,7 +246,7 @@ const AdminDashboard = () => {
     const sortedData = Object.values(monthMap).sort((a, b) => a.year - b.year || a.month - b.month);
     setMonthlyData(sortedData);
     setAvailableYears(Array.from(years).sort());
-    
+
     if (years.size > 0) {
       setSelectedYear(Math.max(...years));
     }
@@ -249,7 +257,7 @@ const AdminDashboard = () => {
 
     orders.forEach(order => {
       if (order.orderStatus === 'cancelled') return;
-      
+
       const date = new Date(order.createdAt);
       const year = date.getFullYear();
       const amount = order.totalAmount || 0;
@@ -266,10 +274,10 @@ const AdminDashboard = () => {
           deliveryCharges: 0,
         };
       }
-      
+
       yearMap[year].total += amount;
       yearMap[year].count += 1;
-      
+
       if (paymentMethod === 'online') {
         yearMap[year].onlineRevenue += amount;
       } else {
@@ -419,6 +427,25 @@ const AdminDashboard = () => {
           </Link>
         ))}
       </div>
+      {/* Checkout Sessions Shortcut */}
+      <div className="mb-8">
+        <Link
+          to="/admin/checkout-sessions"
+          className="flex items-center justify-between p-5 bg-white rounded-xl shadow-sm hover:shadow-md border-l-4 border-[#5C3A21] transition"
+        >
+          <div className="flex items-center">
+            <span className="text-3xl mr-4">🧾</span>
+            <div>
+              <p className="text-sm text-gray-600">Active Checkout Sessions</p>
+              <p className="text-2xl font-bold text-[#5C3A21]">{checkoutSessionCount}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Users on checkout with a saved address
+              </p>
+            </div>
+          </div>
+          <span className="text-[#5C3A21] text-2xl">→</span>
+        </Link>
+      </div>
 
       {/* Date Range Filter - NEW SECTION */}
       <div className="mb-8">
@@ -469,14 +496,14 @@ const AdminDashboard = () => {
             <div className="mt-6 border-t pt-4">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
-                  Showing orders from <span className="font-semibold">{new Date(dateRangeData.dateRange.from).toLocaleDateString('en-IN')}</span> 
+                  Showing orders from <span className="font-semibold">{new Date(dateRangeData.dateRange.from).toLocaleDateString('en-IN')}</span>
                   to <span className="font-semibold">{new Date(dateRangeData.dateRange.to).toLocaleDateString('en-IN')}</span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Total Orders: <span className="font-semibold">{dateRangeData.summary.totalOrders}</span>
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
@@ -595,21 +622,19 @@ const AdminDashboard = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setGraphView('monthly')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                graphView === 'monthly'
-                  ? 'bg-[#5C3A21] text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${graphView === 'monthly'
+                ? 'bg-[#5C3A21] text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setGraphView('yearly')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                graphView === 'yearly'
-                  ? 'bg-[#5C3A21] text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${graphView === 'yearly'
+                ? 'bg-[#5C3A21] text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               Yearly
             </button>
@@ -650,17 +675,17 @@ const AdminDashboard = () => {
               {graphView === 'monthly' ? (
                 <LineChart data={monthlyData.filter(d => d.year === selectedYear)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="monthName" 
+                  <XAxis
+                    dataKey="monthName"
                     stroke="#6b7280"
                     fontSize={12}
                   />
-                  <YAxis 
-                    tickFormatter={(value) => `₹${value/1000}k`}
+                  <YAxis
+                    tickFormatter={(value) => `₹${value / 1000}k`}
                     stroke="#6b7280"
                     fontSize={12}
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => formatPrice(value)}
                     labelFormatter={(label) => `${label} ${selectedYear}`}
                     contentStyle={{
@@ -671,19 +696,19 @@ const AdminDashboard = () => {
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="linear" 
-                    dataKey="onlineRevenue" 
-                    stroke="#22c55e" 
+                  <Line
+                    type="linear"
+                    dataKey="onlineRevenue"
+                    stroke="#22c55e"
                     strokeWidth={3}
                     dot={{ stroke: '#22c55e', strokeWidth: 2, r: 4, fill: 'white' }}
                     activeDot={{ r: 6, fill: '#22c55e' }}
                     name="Online Revenue"
                   />
-                  <Line 
-                    type="linear" 
-                    dataKey="codRevenue" 
-                    stroke="#f97316" 
+                  <Line
+                    type="linear"
+                    dataKey="codRevenue"
+                    stroke="#f97316"
                     strokeWidth={3}
                     dot={{ stroke: '#f97316', strokeWidth: 2, r: 4, fill: 'white' }}
                     activeDot={{ r: 6, fill: '#f97316' }}
@@ -693,17 +718,17 @@ const AdminDashboard = () => {
               ) : (
                 <LineChart data={yearlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="year" 
+                  <XAxis
+                    dataKey="year"
                     stroke="#6b7280"
                     fontSize={12}
                   />
-                  <YAxis 
-                    tickFormatter={(value) => `₹${value/1000}k`}
+                  <YAxis
+                    tickFormatter={(value) => `₹${value / 1000}k`}
                     stroke="#6b7280"
                     fontSize={12}
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => formatPrice(value)}
                     contentStyle={{
                       backgroundColor: 'white',
@@ -713,19 +738,19 @@ const AdminDashboard = () => {
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="linear" 
-                    dataKey="onlineRevenue" 
-                    stroke="#22c55e" 
+                  <Line
+                    type="linear"
+                    dataKey="onlineRevenue"
+                    stroke="#22c55e"
                     strokeWidth={3}
                     dot={{ stroke: '#22c55e', strokeWidth: 2, r: 5, fill: 'white' }}
                     activeDot={{ r: 7, fill: '#22c55e' }}
                     name="Online Revenue"
                   />
-                  <Line 
-                    type="linear" 
-                    dataKey="codRevenue" 
-                    stroke="#f97316" 
+                  <Line
+                    type="linear"
+                    dataKey="codRevenue"
+                    stroke="#f97316"
                     strokeWidth={3}
                     dot={{ stroke: '#f97316', strokeWidth: 2, r: 5, fill: 'white' }}
                     activeDot={{ r: 7, fill: '#f97316' }}
@@ -802,7 +827,7 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                         {formatPrice(
-                          selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0) / 
+                          selectedYearMonthlyData.reduce((sum, m) => sum + m.total, 0) /
                           selectedYearMonthlyData.reduce((sum, m) => sum + m.count, 0) || 0
                         )}
                       </td>
@@ -819,11 +844,10 @@ const AdminDashboard = () => {
       {yearlyData.length > 1 && graphView === 'yearly' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {yearlyData.map((year) => (
-            <div 
-              key={year.year} 
-              className={`bg-white rounded-xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition ${
-                year.year === selectedYear ? 'border-2 border-[#5C3A21]' : ''
-              }`}
+            <div
+              key={year.year}
+              className={`bg-white rounded-xl shadow-sm p-4 text-center cursor-pointer hover:shadow-md transition ${year.year === selectedYear ? 'border-2 border-[#5C3A21]' : ''
+                }`}
               onClick={() => {
                 setSelectedYear(year.year);
                 setGraphView('monthly');
@@ -853,7 +877,7 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-500">View, edit, and delete products</p>
             </div>
           </Link>
-          
+
           <Link
             to="/admin/products/add"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-[#5C3A21] hover:bg-[#5C3A21]/5 transition"
@@ -864,7 +888,7 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-500">Create a new product listing</p>
             </div>
           </Link>
-          
+
           <Link
             to="/admin/orders"
             className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-[#5C3A21] hover:bg-[#5C3A21]/5 transition"
@@ -886,7 +910,7 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-500">Users on checkout with saved address</p>
             </div>
           </Link>
-          
+
           <a
             href="/"
             target="_blank"
@@ -901,7 +925,7 @@ const AdminDashboard = () => {
           </a>
         </div>
       </div>
-    </div> 
+    </div>
   );
 };
 
