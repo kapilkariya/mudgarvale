@@ -14,7 +14,7 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
+  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'decor', 'sticks'];
 
   // Category metadata configuration
   const categoryMeta = {
@@ -42,6 +42,11 @@ const Products = () => {
       title: 'Sena Push-Up Board for Upper Body Training | Mudgarvale',
       description: 'Improve your upper body strength with a durable Sena Push-Up Board. Ideal for home workouts, gyms, and professional fitness training.',
       keywords: 'sena push-up board, upper body training, home workout, push-up board, fitness equipment',
+    },
+    decor: {
+      title: 'Traditional Home Decor | Mudgarvale',
+      description: 'Shop handcrafted traditional home decor items from Mudgarvale. Unique wooden pieces crafted with the same care as our fitness equipment.',
+      keywords: 'traditional home decor, handcrafted decor, wooden decor, Mudgarvale decor',
     },
     sticks: {
       title: 'Premium Lathi Chhada Utar | Mudgarvale',
@@ -136,13 +141,14 @@ const Products = () => {
     }
   };
 
-  // Sort products by category order: mudgar -> gada -> samtola -> senaboard
+  // Sort products by category order: mudgar -> gada -> samtola -> senaboard -> decor -> sticks
   const categoryOrder = {
     mudgar: 1,
     gada: 2,
     samtola: 3,
     senaboard: 4,
-    sticks: 5,
+    decor: 5,
+    sticks: 6,
   };
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -155,6 +161,7 @@ const Products = () => {
   const getDisplayTitle = () => {
     if (selectedCategory === 'all') return 'All Products';
     if (selectedCategory === 'sticks') return 'Bamboo Sticks/Lathi';
+    if (selectedCategory === 'decor') return 'Home Decor';
     return selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
   };
 
@@ -211,7 +218,11 @@ const Products = () => {
                 }
               `}
             >
-              {cat === 'sticks' ? 'Bamboo Sticks/Lathi' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+              {cat === 'sticks'
+                ? 'Bamboo Sticks/Lathi'
+                : cat === 'decor'
+                  ? 'Decor'
+                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
           ))}
         </div>
