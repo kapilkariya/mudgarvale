@@ -9,6 +9,11 @@ const getCheckoutSessions = async (req, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 15));
     const skip = (page - 1) * limit;
 
+    // ✅ On the first page load, purge sessions with 0 items
+    if (page === 1) {
+      await CheckoutSession.deleteMany({ 'items.0': { $exists: false } });
+    }
+
     // Build optional date-range filter on updatedAt
     const query = {};
     const { from, to } = req.query;
