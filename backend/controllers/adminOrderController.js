@@ -214,12 +214,15 @@ const getOrdersByDateRange = async (req, res) => {
   }
 };
 
-// @desc    Update editable order and customer details (Keep as is)
+// @desc    Update editable order and customer details
+// @route   PUT /api/admin/orders/:id
+// @access  Private (Admin)
+// @desc    Update editable order and customer details
 // @route   PUT /api/admin/orders/:id
 // @access  Private (Admin)
 const updateOrder = async (req, res) => {
   try {
-    const { customer, address, items, subtotal, totalAmount } = req.body;
+    const { customer, address, items, subtotal, totalAmount, markPartialPaid } = req.body;
 
     if (!customer?.name?.trim() || !customer?.phone?.trim()) {
       return res.status(400).json({ success: false, message: 'A customer name and phone number are required' });
@@ -250,7 +253,7 @@ const updateOrder = async (req, res) => {
     }
 
     const numericSubtotal = Number(subtotal);
-    const numericTotal = Number(totalAmount);
+    let numericTotal = Number(totalAmount);
     if (!Number.isFinite(numericSubtotal) || numericSubtotal < 0 || !Number.isFinite(numericTotal) || numericTotal < numericSubtotal) {
       return res.status(400).json({ success: false, message: 'Subtotal and total price must be valid, with total not below subtotal' });
     }
@@ -265,6 +268,20 @@ const updateOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer not found' });
     }
 
+    // ✅ Delivery charge rule:
+    // If the order contains any gada or samtola AND current delivery charge is 200,
+    // upgrade it to 400, add +200 to total amount, and force payment method to COD.
+    const currentDeliveryCharge = Number(order.deliveryCharge) || 0;
+    const hasGadaOrSamtola = normalizedItems.some(
+      (item) => item.category === 'gada' || item.category === 'samtola'
+    );
+    const shouldUpgradeDelivery = hasGadaOrSamtola && currentDeliveryCharge === 200;
+    const newDeliveryCharge = shouldUpgradeDelivery ? 400 : currentDeliveryCharge;
+
+    if (shouldUpgradeDelivery) {
+      numericTotal += 200;
+    }
+
     user.name = customer.name.trim();
     user.phone = customer.phone.trim();
     order.items = normalizedItems;
@@ -272,7 +289,7 @@ const updateOrder = async (req, res) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      phone2: String(customer.phone2 || address.phone2 || '').trim(), // ✅ Now saves phone2
+      phone2: String(customer.phone2 || address.phone2 || '').trim(),
       buildingFlatNo: String(address.buildingFlatNo || '').trim(),
       address: address.address.trim(),
       city: address.city.trim(),
@@ -280,7 +297,18 @@ const updateOrder = async (req, res) => {
       pincode: address.pincode.trim(),
     };
     order.totalAmount = numericTotal;
-    order.deliveryCharge = numericTotal - numericSubtotal;
+    order.deliveryCharge = newDeliveryCharge;
+
+    // ✅ Force payment method to COD when the delivery upgrade kicks in
+    if (shouldUpgradeDelivery) {
+      order.paymentMethod = 'cod';
+    }
+
+    // ✅ If admin added new products to the order, flip payment status to partial_paid
+    if (markPartialPaid === true) {
+      order.paymentStatus = 'partial_paid';
+    }
+
     order.remainingAmount = Math.max(0, numericTotal - (order.paidAmount || 0));
 
     await Promise.all([user.save(), order.save()]);
@@ -288,7 +316,9 @@ const updateOrder = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Order updated successfully',
+      message: shouldUpgradeDelivery
+        ? 'Order updated. Delivery charge upgraded to ₹400 (gada/samtola added). Payment method set to COD.'
+        : 'Order updated successfully',
       data: order,
     });
   } catch (error) {
@@ -349,9 +379,6 @@ const bulkUpdateOrderStatus = async (req, res) => {
   try {
     const { from, to, orderStatus } = req.body;
 
-    // 1. Validate target status
-    // NOTE: 'pending' is intentionally excluded — bulk actions should never
-    // revert an order back to pending. Use the per-order dropdown if needed.
     const allowedBulkStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!allowedBulkStatuses.includes(orderStatus)) {
       return res.status(400).json({
@@ -360,7 +387,6 @@ const bulkUpdateOrderStatus = async (req, res) => {
       });
     }
 
-    // 2. Validate dates
     if (!from || !to) {
       return res.status(400).json({
         success: false,
@@ -387,15 +413,11 @@ const bulkUpdateOrderStatus = async (req, res) => {
       });
     }
 
-    // 3. Update ONLY orders that are:
-    //    - within the date range
-    //    - NOT pending payment (webhook flow untouched)
-    //    - NOT already cancelled
     const result = await Order.updateMany(
       {
         createdAt: { $gte: fromDate, $lte: toDate },
         paymentStatus: { $ne: 'pending' },
-        orderStatus: { $nin: ['cancelled', 'pending'] },  // ✅ skip cancelled AND pending
+        orderStatus: { $nin: ['cancelled', 'pending'] },
       },
       { $set: { orderStatus } }
     );
@@ -442,12 +464,11 @@ const previewBulkUpdateOrderStatus = async (req, res) => {
     const matchFilter = {
       createdAt: { $gte: fromDate, $lte: toDate },
       paymentStatus: { $ne: 'pending' },
-      orderStatus: { $nin: ['cancelled', 'pending'] },  // ✅ skip cancelled AND pending
+      orderStatus: { $nin: ['cancelled', 'pending'] },
     };
 
     const affectedCount = await Order.countDocuments(matchFilter);
 
-    // Also show how many were skipped
     const totalInRange = await Order.countDocuments({
       createdAt: { $gte: fromDate, $lte: toDate },
     });

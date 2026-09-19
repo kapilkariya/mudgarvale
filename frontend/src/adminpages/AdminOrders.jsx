@@ -11,7 +11,6 @@ const SPECIAL_PRODUCT_NAMES = [
   'Traditional Mudgar Model: 13',
   'Indian Hanuman Gada Model: 13',
   'Angad Gada',
-  // Add more special product names here as needed
 ];
 
 // Free gift code → label mapping (0 = none)
@@ -21,6 +20,9 @@ const FREE_GIFT_LABELS = {
   2: 'Free Sena Board',
 };
 const getFreeGiftLabel = (code) => FREE_GIFT_LABELS[code] || null;
+
+// ✅ Categories for the Add Product dropdown
+const PRODUCT_CATEGORIES = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks', 'decor'];
 
 const emptyForm = (order) => ({
   customer: {
@@ -39,19 +41,10 @@ const emptyForm = (order) => ({
   items: (order.items || []).map((item) => ({ ...item, selectedWeight: item.selectedWeight || '', quantity: item.quantity || 1, price: item.price || 0 })),
   subtotal: String(order.totalAmount - (order.deliveryCharge || 0)),
   totalAmount: String(order.totalAmount || 0),
+  markPartialPaid: false,
 });
 
 const inactivePaymentStatuses = ['cancelled_by_user', 'expired', 'failed'];
-
-const paymentStatusDetails = {
-  pending: { label: 'Pending', color: 'text-yellow-600' },
-  paid: { label: 'Confirmed', color: 'text-green-600' },
-  partial_paid: { label: 'Advance Paid', color: 'text-blue-600' },
-  failed: { label: 'Failed', color: 'text-red-600' },
-  cancelled_by_user: { label: 'Cancelled', color: 'text-red-600' },
-  expired: { label: 'Expired', color: 'text-gray-600' },
-  refunded: { label: 'Refunded', color: 'text-purple-600' },
-};
 
 const filterOrdersByStatus = (orders, filter) => {
   if (filter === 'active') return orders.filter((order) => !inactivePaymentStatuses.includes(order.paymentStatus) && order.paymentStatus !== 'pending');
@@ -63,12 +56,6 @@ const filterOrdersByStatus = (orders, filter) => {
   if (filter === 'delivered' || filter === 'cancelled') return orders.filter((order) => order.orderStatus === filter);
   if (filter === 'all') return orders.filter((order) => order.paymentStatus !== 'pending');
   return orders;
-};
-
-// Helper function to check if order contains special products by name
-const hasSpecialProducts = (order) => {
-  if (!order.items || !order.items.length) return false;
-  return order.items.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
 };
 
 const AdminOrders = () => {
@@ -87,19 +74,19 @@ const AdminOrders = () => {
   const [formError, setFormError] = useState('');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
-  // Pagination States
+  // ✅ Products for the Add Product panel in Edit modal
+  const [products, setProducts] = useState([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
   const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [allOrdersLoaded, setAllOrdersLoaded] = useState(false);
 
-  // Date Range States
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
   const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
 
-  // Bulk status update states
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkPreviewCount, setBulkPreviewCount] = useState(null);
@@ -124,66 +111,52 @@ const AdminOrders = () => {
 
   const loadOrders = async (page = 1, append = false) => {
     try {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      if (append) setLoadingMore(true); else setLoading(true);
       setError('');
-
       const response = await adminAPI.getOrdersPaginated(page, 20);
       if (response.success) {
-        if (append) {
-          setOrders(prev => [...prev, ...response.data]);
-        } else {
-          setOrders(response.data);
-        }
+        if (append) setOrders(prev => [...prev, ...response.data]);
+        else setOrders(response.data);
         setCurrentPage(response.page);
         setHasMoreOrders(response.hasMore);
         setTotalOrdersCount(response.total);
         setAllOrdersLoaded(!response.hasMore);
       }
-    } catch (err) {
-      setError(err.message || 'Failed to fetch orders');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
+    } catch (err) { setError(err.message || 'Failed to fetch orders'); }
+    finally { setLoading(false); setLoadingMore(false); }
   };
 
-  // Fetch ALL orders for export (including cancelled)
   const fetchAllOrdersForExport = async () => {
     try {
       setLoadingExport(true);
       setError('');
       const response = await adminAPI.getAllOrders();
-      if (response.success) {
-        return response.data.filter(order => order.paymentStatus !== 'pending');
-      }
+      if (response.success) return response.data.filter(order => order.paymentStatus !== 'pending');
       return [];
-    } catch (err) {
-      setError(err.message || 'Failed to fetch orders for export');
-      return [];
-    } finally {
-      setLoadingExport(false);
-    }
+    } catch (err) { setError(err.message || 'Failed to fetch orders for export'); return []; }
+    finally { setLoadingExport(false); }
   };
 
   const loadMoreOrders = () => {
-    if (hasMoreOrders && !loadingMore && !isDateFilterActive) {
-      loadOrders(currentPage + 1, true);
-    }
+    if (hasMoreOrders && !loadingMore && !isDateFilterActive) loadOrders(currentPage + 1, true);
   };
 
   useEffect(() => {
     loadOrders(1, false);
+    // ✅ Preload products once for the Add Product panel
+    (async () => {
+      try {
+        const res = await adminAPI.getAllProducts();
+        if (res.success) setProducts(res.data || []);
+      } catch (err) {
+        console.error('Failed to load products for admin orders:', err);
+      }
+    })();
   }, []);
 
-  // Auto-filter when dates change
   useEffect(() => {
-    if (dateFrom && dateTo) {
-      filterOrdersByDate();
-    } else if (!dateFrom && !dateTo) {
+    if (dateFrom && dateTo) filterOrdersByDate();
+    else if (!dateFrom && !dateTo) {
       setIsDateFilterActive(false);
       setDateFilteredOrders([]);
       setFilteredDateOrders([]);
@@ -192,62 +165,37 @@ const AdminOrders = () => {
 
   const filterOrdersByDate = async () => {
     if (!dateFrom || !dateTo) {
-      setIsDateFilterActive(false);
-      setDateFilteredOrders([]);
-      setFilteredDateOrders([]);
-      return;
+      setIsDateFilterActive(false); setDateFilteredOrders([]); setFilteredDateOrders([]); return;
     }
-
     const fromDate = new Date(dateFrom);
     const toDate = new Date(dateTo);
     toDate.setHours(23, 59, 59, 999);
     fromDate.setHours(0, 0, 0, 0);
-
     const allOrders = await fetchAllOrdersForExport();
-
     const filtered = allOrders.filter(order => {
       const orderDate = new Date(order.createdAt);
       const orderDateOnly = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
       const fromDateOnly = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
       const toDateOnly = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-
       return orderDateOnly >= fromDateOnly && orderDateOnly <= toDateOnly;
     });
-
-    setDateFilteredOrders(filtered);
-    setFilteredDateOrders(filtered);
-    setIsDateFilterActive(true);
-
-    if (filtered.length > 0) {
-      setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
-    } else {
-      setSuccess(`No orders found between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
-    }
+    setDateFilteredOrders(filtered); setFilteredDateOrders(filtered); setIsDateFilterActive(true);
+    if (filtered.length > 0) setSuccess(`Found ${filtered.length} orders between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
+    else setSuccess(`No orders found between ${new Date(dateFrom).toLocaleDateString('en-IN')} and ${new Date(dateTo).toLocaleDateString('en-IN')}`);
   };
 
   const clearDateFilter = () => {
-    setDateFrom('');
-    setDateTo('');
-    setIsDateFilterActive(false);
-    setDateFilteredOrders([]);
-    setFilteredDateOrders([]);
-    setSuccess('');
+    setDateFrom(''); setDateTo(''); setIsDateFilterActive(false);
+    setDateFilteredOrders([]); setFilteredDateOrders([]); setSuccess('');
   };
 
   const refreshOrders = async () => {
-    setExpandedOrder(null);
-    setSuccess('');
-
-    if (isDateFilterActive) {
-      await filterOrdersByDate();
-    } else {
-      await loadOrders(1, false);
-    }
+    setExpandedOrder(null); setSuccess('');
+    if (isDateFilterActive) await filterOrdersByDate();
+    else await loadOrders(1, false);
   };
 
-  // Get the orders to display (filtered by date if active, else paginated orders)
   const displayOrders = isDateFilterActive ? filteredDateOrders : orders;
-
   const filteredOrders = useMemo(() => filterOrdersByStatus(displayOrders, activeFilter), [activeFilter, displayOrders]);
 
   const updateOrderInList = (updated) => {
@@ -265,94 +213,44 @@ const AdminOrders = () => {
     finally { setUpdatingId(null); }
   };
 
-  // Preview how many orders will be affected by bulk update
   const previewBulkUpdate = async () => {
-    if (!dateFrom || !dateTo) {
-      setBulkPreviewCount(null);
-      setBulkSkippedCount(0);
-      return;
-    }
+    if (!dateFrom || !dateTo) { setBulkPreviewCount(null); setBulkSkippedCount(0); return; }
     try {
       const response = await adminAPI.previewBulkUpdateOrderStatus(dateFrom, dateTo);
       if (response.success) {
         setBulkPreviewCount(response.data.affectedCount);
         setBulkSkippedCount(response.data.skippedCount);
       }
-    } catch (err) {
-      // silent fail on preview
-      setBulkPreviewCount(null);
-      setBulkSkippedCount(0);
-    }
+    } catch (err) { setBulkPreviewCount(null); setBulkSkippedCount(0); }
   };
 
-  // Auto-preview whenever the date filter becomes active
   useEffect(() => {
-    if (isDateFilterActive) {
-      previewBulkUpdate();
-    } else {
-      setBulkPreviewCount(null);
-      setBulkSkippedCount(0);
-      setBulkStatus('');
-    }
+    if (isDateFilterActive) previewBulkUpdate();
+    else { setBulkPreviewCount(null); setBulkSkippedCount(0); setBulkStatus(''); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDateFilterActive, dateFrom, dateTo]);
 
-  // Apply bulk status update
   const handleBulkStatusUpdate = async () => {
-    if (!dateFrom || !dateTo) {
-      setError('Please select both From and To dates.');
-      return;
-    }
-    if (!bulkStatus) {
-      setError('Please choose a status to apply.');
-      return;
-    }
-
+    if (!dateFrom || !dateTo) { setError('Please select both From and To dates.'); return; }
+    if (!bulkStatus) { setError('Please choose a status to apply.'); return; }
     const statusLabel = statusOptions.find((o) => o.value === bulkStatus)?.label || bulkStatus;
     const fromLabel = new Date(dateFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     const toLabel = new Date(dateTo).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-
     const confirmed = window.confirm(
-      `⚠️ BULK STATUS UPDATE\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `You are about to change the status of multiple orders.\n\n` +
-      `📅 Date Range:  ${fromLabel}  →  ${toLabel}\n` +
-      `🔄 New Status:  ${statusLabel}\n` +
-      `📦 Orders Affected:  ${bulkPreviewCount ?? '?'}\n` +
-      (bulkSkippedCount > 0 ? `⏭️  Orders Skipped:  ${bulkSkippedCount}\n` : '') +
-      `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `⚠️  This action cannot be undone.\n\n` +
-      `✅ Eligible orders will be updated.\n` +
-      `🚫 Pending-payment orders will NOT be changed.\n` +
-      `🚫 Cancelled orders will NOT be changed.\n\n` +
-      `Do you want to proceed?`
+      `⚠️ BULK STATUS UPDATE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nYou are about to change the status of multiple orders.\n\n📅 Date Range:  ${fromLabel}  →  ${toLabel}\n🔄 New Status:  ${statusLabel}\n📦 Orders Affected:  ${bulkPreviewCount ?? '?'}\n${bulkSkippedCount > 0 ? `⏭️  Orders Skipped:  ${bulkSkippedCount}\n` : ''}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚠️  This action cannot be undone.\n\n✅ Eligible orders will be updated.\n🚫 Pending-payment orders will NOT be changed.\n🚫 Cancelled orders will NOT be changed.\n\nDo you want to proceed?`
     );
     if (!confirmed) return;
-
     try {
-      setBulkUpdating(true);
-      setError('');
-      setSuccess('');
-
-      const response = await adminAPI.bulkUpdateOrderStatus({
-        from: dateFrom,
-        to: dateTo,
-        orderStatus: bulkStatus,
-      });
-
+      setBulkUpdating(true); setError(''); setSuccess('');
+      const response = await adminAPI.bulkUpdateOrderStatus({ from: dateFrom, to: dateTo, orderStatus: bulkStatus });
       if (response.success) {
         setSuccess(response.message || 'Bulk status updated');
         setBulkStatus('');
         await refreshOrders();
         await previewBulkUpdate();
-      } else {
-        throw new Error(response.message || 'Bulk update failed');
-      }
-    } catch (err) {
-      setError(err.message || 'Bulk update failed');
-    } finally {
-      setBulkUpdating(false);
-    }
+      } else throw new Error(response.message || 'Bulk update failed');
+    } catch (err) { setError(err.message || 'Bulk update failed'); }
+    finally { setBulkUpdating(false); }
   };
 
   const openEdit = (order) => {
@@ -366,6 +264,32 @@ const AdminOrders = () => {
     ? { ...current, [field]: value }
     : { ...current, [group]: { ...current[group], [field]: value } });
   const updateItem = (index, field, value) => setForm((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item) }));
+
+  // ✅ Add a new product (from the Add Product panel) into form.items
+  const addProductToForm = (newItem) => {
+    setForm((current) => {
+      if (!current) return current;
+      const newItems = [...current.items, newItem];
+      const newTotal = Number(current.totalAmount || 0) + (newItem.price * newItem.quantity);
+      return {
+        ...current,
+        items: newItems,
+        totalAmount: String(newTotal),
+        markPartialPaid: true,   // ✅ will flag backend to set paymentStatus = partial_paid
+      };
+    });
+  };
+
+  // ✅ Remove an item from form.items (useful when admin added wrong product)
+  const removeItemFromForm = (index) => {
+    setForm((current) => {
+      if (!current) return current;
+      const removed = current.items[index];
+      const newItems = current.items.filter((_, i) => i !== index);
+      const newTotal = Math.max(0, Number(current.totalAmount || 0) - (removed.price * removed.quantity));
+      return { ...current, items: newItems, totalAmount: String(newTotal), markPartialPaid: true };
+    });
+  };
 
   const submitEdit = async (event) => {
     event.preventDefault();
@@ -384,11 +308,8 @@ const AdminOrders = () => {
         subtotal,
         totalAmount,
         items: form.items.map((item) => ({ ...item, selectedWeight: String(item.selectedWeight), quantity: Number(item.quantity), price: Number(item.price) })),
-        // Add phone2 to the update payload
-        customer: {
-          ...form.customer,
-          phone2: form.customer.phone2 || '',
-        },
+        customer: { ...form.customer, phone2: form.customer.phone2 || '' },
+        markPartialPaid: !!form.markPartialPaid,
       });
       if (response.success) {
         updateOrderInList(response.data);
@@ -404,49 +325,41 @@ const AdminOrders = () => {
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  // Prepare data for export
   const prepareExportData = (ordersToExport) => {
     return ordersToExport.map((order) => {
       const itemsList = order.items?.map(item =>
         `${item.name}${item.category !== 'senaboard'
           ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
           : ''} × ${item.quantity}`).join('; ') || '';
-
       const totalWeight = order.items?.reduce((sum, item) => {
         let itemWeight = 0;
-        if (item.category === 'senaboard') {
-          itemWeight = 2 * item.quantity;
-        } else {
-          itemWeight = parseFloat(item.selectedWeight) * item.quantity;
-        }
+        if (item.category === 'senaboard') itemWeight = 2 * item.quantity;
+        else itemWeight = parseFloat(item.selectedWeight) * item.quantity;
         return sum + itemWeight;
       }, 0) || 0;
+      // ✅ Use backend-computed values
+      const amountPaid = Number(order.paidAmount || 0);
+      const amountPending = Number(order.remainingAmount || 0);
 
-      let amountPaid = 0;
-      let amountPending = 0;
       let paymentStatusDisplay = '';
-
-      if (order.paymentMethod === 'cod') {
-        const deliveryCharge = order.deliveryCharge || 0;
-        amountPaid = deliveryCharge;
-        amountPending = (order.totalAmount || 0) - deliveryCharge;
+      if (amountPending === 0 && amountPaid > 0) {
+        paymentStatusDisplay = 'Fully Paid';
+      } else if (amountPaid > 0 && amountPending > 0) {
         paymentStatusDisplay = 'Partially Paid';
       } else {
-        amountPaid = order.totalAmount || 0;
-        amountPending = 'Paid';
-        paymentStatusDisplay = 'Fully Paid';
+        paymentStatusDisplay = 'Unpaid';
       }
+
+      // Show "Paid" instead of 0 when an online order is fully paid
+      const amountPendingDisplay =
+        order.paymentMethod === 'online' && amountPending === 0
+          ? 'Paid'
+          : amountPending;
 
       const buildingFlat = order.address?.buildingFlatNo || '';
       const addressLine = order.address?.address || '';
-      const fullAddress = buildingFlat && addressLine
-        ? `${buildingFlat}, ${addressLine}`
-        : buildingFlat || addressLine;
-
-      const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name))
-        .map(item => `⭐⭐⭐ `)
-        .join('; ') || '';
-
+      const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
+      const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
       return {
         'Order Number': order.orderNumber || '',
         'Customer Name': order.user?.name || order.address?.name || '',
@@ -461,7 +374,7 @@ const AdminOrders = () => {
         'Total Weight (kg)': totalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
         'Amount Paid': amountPaid,
-        'Amount Pending': amountPending,
+        'Amount Pending': amountPendingDisplay,
         'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
         'Payment Status': paymentStatusDisplay,
         'Order Status': order.orderStatus || '',
@@ -472,66 +385,33 @@ const AdminOrders = () => {
     });
   };
 
-  // Export to Excel
   const exportToExcel = async () => {
     try {
       let ordersToExport;
-
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
-      }
-
-      if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
-        return;
-      }
-
+      if (isDateFilterActive) ordersToExport = filteredDateOrders;
+      else ordersToExport = await fetchAllOrdersForExport();
+      if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
       const rows = prepareExportData(ordersToExport);
       const workbook = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
-
-      const colWidths = [
-        { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
-        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
-        { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
-        { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 },
-      ];
-      ws['!cols'] = colWidths;
-
+      ws['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 }];
       XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
       const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
       XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
       setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
       setShowDownloadMenu(false);
-    } catch (err) {
-      setError(err.message || 'Failed to export to Excel');
-    }
+    } catch (err) { setError(err.message || 'Failed to export to Excel'); }
   };
 
-  // Export to CSV
   const exportToCSV = async () => {
     try {
       let ordersToExport;
-
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
-      }
-
-      if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
-        return;
-      }
-
+      if (isDateFilterActive) ordersToExport = filteredDateOrders;
+      else ordersToExport = await fetchAllOrdersForExport();
+      if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
       const rows = prepareExportData(ordersToExport);
       const headers = Object.keys(rows[0]);
-      const csvRows = [];
-
-      csvRows.push(headers.join(','));
-
+      const csvRows = [headers.join(',')];
       for (const row of rows) {
         const values = headers.map(header => {
           let val = row[header] || '';
@@ -540,7 +420,6 @@ const AdminOrders = () => {
         });
         csvRows.push(values.join(','));
       }
-
       const csvString = '\uFEFF' + csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -551,69 +430,40 @@ const AdminOrders = () => {
       URL.revokeObjectURL(link.href);
       setSuccess(`Exported ${ordersToExport.length} orders to CSV`);
       setShowDownloadMenu(false);
-    } catch (err) {
-      setError(err.message || 'Failed to export to CSV');
-    }
+    } catch (err) { setError(err.message || 'Failed to export to CSV'); }
   };
 
-  // Export to PDF
   const exportToPDF = async () => {
     try {
       let ordersToExport;
-
-      if (isDateFilterActive) {
-        ordersToExport = filteredDateOrders;
-      } else {
-        ordersToExport = await fetchAllOrdersForExport();
-      }
-
-      if (!ordersToExport || !ordersToExport.length) {
-        setError('No orders to export');
-        return;
-      }
-
+      if (isDateFilterActive) ordersToExport = filteredDateOrders;
+      else ordersToExport = await fetchAllOrdersForExport();
+      if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
       const doc = new jsPDF('landscape', 'mm', 'a4');
       const rows = prepareExportData(ordersToExport);
-
       const tableHeaders = Object.keys(rows[0]);
       const tableRows = rows.map(row => tableHeaders.map(header => row[header] || ''));
-
-      doc.setFontSize(16);
-      doc.text('Orders Report', 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
+      doc.setFontSize(16); doc.text('Orders Report', 14, 15);
+      doc.setFontSize(10); doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 14, 22);
       doc.text(`Total Orders: ${ordersToExport.length}`, 14, 28);
-      if (isDateFilterActive) {
-        doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
-      }
-
+      if (isDateFilterActive) doc.text(`Date Range: ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`, 14, 34);
       autoTable(doc, {
-        head: [tableHeaders],
-        body: tableRows,
+        head: [tableHeaders], body: tableRows,
         startY: isDateFilterActive ? 40 : 35,
         theme: 'grid',
         styles: { fontSize: 6, cellPadding: 1.5 },
         headStyles: { fillColor: [92, 58, 33], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold' },
-        columnStyles: {
-          0: { cellWidth: 18 },
-          1: { cellWidth: 22 },
-          2: { cellWidth: 28 },
-          7: { cellWidth: 38 },
-          19: { cellWidth: 45 },
-        },
+        columnStyles: { 0: { cellWidth: 18 }, 1: { cellWidth: 22 }, 2: { cellWidth: 28 }, 7: { cellWidth: 38 }, 19: { cellWidth: 45 } },
         didDrawPage: function (data) {
           doc.setFontSize(8);
           doc.text('MudgarVale - Orders Report', 14, data.settings.margin.bottom + 10);
         }
       });
-
       const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
       doc.save(`Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`);
       setSuccess(`Exported ${ordersToExport.length} orders to PDF`);
       setShowDownloadMenu(false);
-    } catch (err) {
-      setError(err.message || 'Failed to export to PDF');
-    }
+    } catch (err) { setError(err.message || 'Failed to export to PDF'); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C3A21]" /></div>;
@@ -622,55 +472,21 @@ const AdminOrders = () => {
     <div className="h-20" />
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-gray-900">Orders</h1><p className="text-gray-600 text-sm mt-1">Manage customer orders and update their status</p></div>
-
       <div className="flex items-center gap-2">
-        <button
-          onClick={refreshOrders}
-          disabled={loading || loadingExport}
-          className="px-4 py-2 rounded-lg transition font-medium text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-        >
-          Refresh
-        </button>
-
-        {/* Download Dropdown */}
+        <button onClick={refreshOrders} disabled={loading || loadingExport} className="px-4 py-2 rounded-lg transition font-medium text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50">Refresh</button>
         <div className="relative">
-          <button
-            onClick={() => {
-              setShowDownloadMenu(!showDownloadMenu);
-            }}
-            disabled={loadingExport}
-            className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport
-              ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-gray-400 text-white cursor-not-allowed'
-              }`}
-          >
-            <span>⬇ Download</span>
-            <span className="text-xs">▾</span>
+          <button onClick={() => setShowDownloadMenu(!showDownloadMenu)} disabled={loadingExport}
+            className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-400 text-white cursor-not-allowed'}`}>
+            <span>⬇ Download</span><span className="text-xs">▾</span>
             {loadingExport && <span className="ml-2">Loading...</span>}
             {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
             {!isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">(All)</span>}
           </button>
-
           {showDownloadMenu && !loadingExport && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-              <button
-                onClick={exportToExcel}
-                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
-              >
-                <span className="text-lg mr-2">📊</span> Excel (.xlsx)
-              </button>
-              <button
-                onClick={exportToCSV}
-                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"
-              >
-                <span className="text-lg mr-2">📄</span> CSV (.csv)
-              </button>
-              <button
-                onClick={exportToPDF}
-                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"
-              >
-                <span className="text-lg mr-2">📕</span> PDF (.pdf)
-              </button>
+              <button onClick={exportToExcel} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"><span className="text-lg mr-2">📊</span> Excel (.xlsx)</button>
+              <button onClick={exportToCSV} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"><span className="text-lg mr-2">📄</span> CSV (.csv)</button>
+              <button onClick={exportToPDF} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"><span className="text-lg mr-2">📕</span> PDF (.pdf)</button>
             </div>
           )}
         </div>
@@ -682,83 +498,32 @@ const AdminOrders = () => {
       <div className="flex flex-wrap items-end gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-          />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none"
-          />
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none" />
         </div>
-        {(dateFrom || dateTo) && (
-          <button
-            onClick={clearDateFilter}
-            className="px-4 py-2 text-red-600 hover:text-red-800 transition font-medium"
-          >
-            ✕ Clear Dates
-          </button>
-        )}
-
-        {/* Bulk status update UI */}
+        {(dateFrom || dateTo) && (<button onClick={clearDateFilter} className="px-4 py-2 text-red-600 hover:text-red-800 transition font-medium">✕ Clear Dates</button>)}
         {isDateFilterActive && (
           <div className="flex items-end gap-2 ml-auto border-l border-gray-200 pl-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bulk change status
-              </label>
-              <select
-                value={bulkStatus}
-                onChange={(e) => setBulkStatus(e.target.value)}
-                disabled={bulkUpdating}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white disabled:opacity-50"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bulk change status</label>
+              <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} disabled={bulkUpdating} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white disabled:opacity-50">
                 <option value="">— Choose status —</option>
-                {statusOptions
-                  .filter((opt) => opt.value !== 'pending')   // ✅ Exclude 'pending'
-                  .map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
+                {statusOptions.filter((opt) => opt.value !== 'pending').map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
               </select>
               {bulkPreviewCount !== null && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Will affect <span className="font-semibold text-[#5C3A21]">{bulkPreviewCount}</span> order(s)
-                  {bulkSkippedCount > 0 && (
-                    <> · <span className="text-orange-600">{bulkSkippedCount} skipped</span></>
-                  )}
+                <p className="text-xs text-gray-500 mt-1">Will affect <span className="font-semibold text-[#5C3A21]">{bulkPreviewCount}</span> order(s)
+                  {bulkSkippedCount > 0 && (<> · <span className="text-orange-600">{bulkSkippedCount} skipped</span></>)}
                 </p>
               )}
             </div>
-            <button
-              onClick={handleBulkStatusUpdate}
-              disabled={bulkUpdating || !bulkStatus || bulkPreviewCount === 0}
-              className="px-4 py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 font-medium"
-            >
-              {bulkUpdating ? 'Updating…' : 'Apply to all'}
-            </button>
+            <button onClick={handleBulkStatusUpdate} disabled={bulkUpdating || !bulkStatus || bulkPreviewCount === 0} className="px-4 py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50 font-medium">{bulkUpdating ? 'Updating…' : 'Apply to all'}</button>
           </div>
         )}
-
-        {isDateFilterActive && (
-          <span className="text-sm text-gray-600 ml-2">
-            Showing <span className="font-bold text-[#5C3A21]">{filteredDateOrders.length}</span> orders
-            {dateFrom && dateTo && ` from ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`}
-          </span>
-        )}
-        {!isDateFilterActive && totalOrdersCount > 0 && (
-          <span className="text-sm text-gray-600 ml-2">
-            Showing <span className="font-bold text-[#5C3A21]">{filteredOrders.length}</span> matching orders from <span className="font-bold">{orders.length}</span> loaded
-          </span>
-        )}
+        {isDateFilterActive && (<span className="text-sm text-gray-600 ml-2">Showing <span className="font-bold text-[#5C3A21]">{filteredDateOrders.length}</span> orders{dateFrom && dateTo && ` from ${new Date(dateFrom).toLocaleDateString('en-IN')} to ${new Date(dateTo).toLocaleDateString('en-IN')}`}</span>)}
+        {!isDateFilterActive && totalOrdersCount > 0 && (<span className="text-sm text-gray-600 ml-2">Showing <span className="font-bold text-[#5C3A21]">{filteredOrders.length}</span> matching orders from <span className="font-bold">{orders.length}</span> loaded</span>)}
       </div>
     </div>
 
@@ -769,15 +534,8 @@ const AdminOrders = () => {
       <div className="flex gap-2 min-w-max">
         {filterOptions.map((filter) => {
           const count = filterOrdersByStatus(displayOrders, filter.value).length;
-
           return (
-            <button
-              key={filter.value}
-              onClick={() => setActiveFilter(filter.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter.value ? 'bg-[#5C3A21] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              {filter.label} ({count})
-            </button>
+            <button key={filter.value} onClick={() => setActiveFilter(filter.value)} className={`px-4 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter.value ? 'bg-[#5C3A21] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{filter.label} ({count})</button>
           );
         })}
       </div>
@@ -790,27 +548,26 @@ const AdminOrders = () => {
       </div>}
     </div>
 
-    {/* Load More Button */}
     {!isDateFilterActive && hasMoreOrders && (
       <div className="mt-6 text-center">
-        <button
-          onClick={loadMoreOrders}
-          disabled={loadingMore}
-          className="px-6 py-3 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50"
-        >
-          {loadingMore ? 'Loading...' : 'Load More Orders'}
-        </button>
+        <button onClick={loadMoreOrders} disabled={loadingMore} className="px-6 py-3 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4a2e1a] transition disabled:opacity-50">{loadingMore ? 'Loading...' : 'Load More Orders'}</button>
       </div>
     )}
 
-    {/* All loaded message */}
-    {!isDateFilterActive && allOrdersLoaded && orders.length > 0 && (
-      <p className="mt-6 text-center text-sm text-gray-500">
-        All {totalOrdersCount} orders loaded
-      </p>
-    )}
+    {!isDateFilterActive && allOrdersLoaded && orders.length > 0 && (<p className="mt-6 text-center text-sm text-gray-500">All {totalOrdersCount} orders loaded</p>)}
 
-    {editingOrder && form && <EditOrderModal form={form} onClose={() => { if (!updatingId) { setEditingOrder(null); setForm(null); } }} onSubmit={submitEdit} updateField={updateField} updateItem={updateItem} error={formError} saving={updatingId === editingOrder._id} />}
+    {editingOrder && form && <EditOrderModal
+      form={form}
+      products={products}
+      onClose={() => { if (!updatingId) { setEditingOrder(null); setForm(null); } }}
+      onSubmit={submitEdit}
+      updateField={updateField}
+      updateItem={updateItem}
+      addProductToForm={addProductToForm}
+      removeItemFromForm={removeItemFromForm}
+      error={formError}
+      saving={updatingId === editingOrder._id}
+    />}
   </div>;
 };
 
@@ -825,25 +582,24 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
     return order.items.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
   };
 
-  let amountPaid = 0;
-  let amountPending = 0;
-  let paymentMethodLabel = '';
+  // ✅ Use backend-computed values — no local guessing
+  const amountPaid = Number(order.paidAmount || 0);
+  const amountPending = Number(order.remainingAmount || 0);
+
+  const isCod = order.paymentMethod === 'cod';
+  const paymentMethodLabel = isCod ? '💰 Cash on Delivery' : '💳 Online Payment';
+
   let paymentStatusLabel = '';
   let paymentStatusColor = '';
-
-  if (order.paymentMethod === 'cod') {
-    const deliveryCharge = order.deliveryCharge || 0;
-    amountPaid = deliveryCharge;
-    amountPending = (order.totalAmount || 0) - deliveryCharge;
-    paymentMethodLabel = '💰 Cash on Delivery';
-    paymentStatusLabel = 'Advance Received - Balance Pending';
-    paymentStatusColor = 'text-blue-600';
-  } else {
-    paymentMethodLabel = '💳 Online Payment';
-    amountPaid = order.totalAmount || 0;
-    amountPending = 0;
+  if (amountPending === 0 && amountPaid > 0) {
     paymentStatusLabel = 'Fully Paid';
     paymentStatusColor = 'text-green-600';
+  } else if (amountPaid > 0 && amountPending > 0) {
+    paymentStatusLabel = 'Partially Paid';
+    paymentStatusColor = 'text-blue-600';
+  } else {
+    paymentStatusLabel = 'Unpaid';
+    paymentStatusColor = 'text-orange-600';
   }
 
   return <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -852,14 +608,8 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-[#5C3A21] text-sm">#{order.orderNumber}</span>
-            {hasSpecialProducts(order) && (
-              <span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>
-            )}
-            {getFreeGiftLabel(order.freeGift) && (
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">
-                🎁 {getFreeGiftLabel(order.freeGift)}
-              </span>
-            )}
+            {hasSpecialProducts(order) && (<span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>)}
+            {getFreeGiftLabel(order.freeGift) && (<span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">🎁 {getFreeGiftLabel(order.freeGift)}</span>)}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${status.color}`}>{status.label}</span>
@@ -880,9 +630,7 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
       <section className="text-sm space-y-1">
         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Customer & Shipping</h4>
         <p><span className="text-gray-600">Phone:</span> {order.address?.phone}</p>
-        {order.address?.phone2 && (
-          <p><span className="text-gray-600">Alt Phone:</span> {order.address?.phone2}</p>
-        )}
+        {order.address?.phone2 && (<p><span className="text-gray-600">Alt Phone:</span> {order.address?.phone2}</p>)}
         <p><span className="text-gray-600">Address:</span> {[order.address?.buildingFlatNo, order.address?.address, order.address?.city, order.address?.state, order.address?.pincode].filter(Boolean).join(', ')}</p>
       </section>
       <section>
@@ -890,112 +638,167 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
         {order.items?.map((item) => <div key={item._id || item.productId} className="bg-white rounded-lg p-2 text-sm mb-2">
           <div className="flex items-center gap-2">
             <p className="font-medium">{item.name}</p>
-            {SPECIAL_PRODUCT_NAMES.includes(item.name) && (
-              <span className="text-red-500 text-xs font-bold">★★★</span>
-            )}
+            {SPECIAL_PRODUCT_NAMES.includes(item.name) && (<span className="text-red-500 text-xs font-bold">★★★</span>)}
           </div>
-          <p className="text-gray-600 text-xs">
-            {item.selectedWeight} {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each
-          </p>
+          <p className="text-gray-600 text-xs">{item.selectedWeight} {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each</p>
         </div>)}
-
         {getFreeGiftLabel(order.freeGift) && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm">
-            <span className="font-medium text-green-800">
-              🎁 {getFreeGiftLabel(order.freeGift)}
-            </span>
+            <span className="font-medium text-green-800">🎁 {getFreeGiftLabel(order.freeGift)}</span>
           </div>
         )}
       </section>
-
       <section className="text-sm border-t pt-2">
-        <p className="flex justify-between">
-          <span className="text-gray-600">Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
-        </p>
-        <p className="flex justify-between">
-          <span className="text-gray-600">Delivery Charge</span>
-          <span>{formatPrice(deliveryCharge)}</span>
-        </p>
-        <p className="flex justify-between font-bold text-base border-t pt-1 mt-1">
-          <span className="text-gray-600">Total</span>
-          <span>{formatPrice(order.totalAmount)}</span>
-        </p>
+        <p className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>{formatPrice(subtotal)}</span></p>
+        <p className="flex justify-between"><span className="text-gray-600">Delivery Charge</span><span>{formatPrice(deliveryCharge)}</span></p>
+        <p className="flex justify-between font-bold text-base border-t pt-1 mt-1"><span className="text-gray-600">Total</span><span>{formatPrice(order.totalAmount)}</span></p>
       </section>
-
       <section className="border-t pt-2">
         <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Payment Details</h4>
         <div className="bg-white rounded-lg p-3 space-y-1 text-sm">
-          <p className="flex justify-between">
-            <span className="text-gray-600">Payment Method</span>
-            <span className="font-medium">{paymentMethodLabel}</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-gray-600">Payment Status</span>
-            <span className={`font-medium ${paymentStatusColor}`}>{paymentStatusLabel}</span>
-          </p>
-          {amountPaid > 0 && (
-            <p className="flex justify-between">
-              <span className="text-gray-600">Amount Paid</span>
-              <span className="font-medium text-green-600">{formatPrice(amountPaid)}</span>
-            </p>
+          <p className="flex justify-between"><span className="text-gray-600">Payment Method</span><span className="font-medium">{paymentMethodLabel}</span></p>
+          <p className="flex justify-between"><span className="text-gray-600">Payment Status</span><span className={`font-medium ${paymentStatusColor}`}>{paymentStatusLabel}</span></p>
+          {amountPaid > 0 && (<p className="flex justify-between"><span className="text-gray-600">Amount Paid</span><span className="font-medium text-green-600">{formatPrice(amountPaid)}</span></p>)}
+          {amountPending > 0 && (<p className="flex justify-between"><span className="text-gray-600">Amount Pending</span><span className="font-medium text-orange-600">{formatPrice(amountPending)}</span></p>)}
+          {isCod && amountPending > 0 && (
+            <p className="text-xs text-blue-600 mt-1">ℹ️ Advance {formatPrice(amountPaid)} received, balance {formatPrice(amountPending)} pending</p>
           )}
-          {amountPending > 0 && (
-            <p className="flex justify-between">
-              <span className="text-gray-600">Amount Pending</span>
-              <span className="font-medium text-orange-600">{formatPrice(amountPending)}</span>
-            </p>
-          )}
-          {order.paymentMethod === 'cod' && (
-            <p className="text-xs text-blue-600 mt-1">ℹ️ Advance payment of {formatPrice(deliveryCharge)} received, balance {formatPrice(amountPending)} pending</p>
-          )}
-          {order.paymentMethod === 'online' && (
+          {!isCod && amountPending === 0 && (
             <p className="text-xs text-green-600 mt-1">✅ Fully paid online</p>
           )}
         </div>
       </section>
-
       <div className="flex gap-2">
         <button onClick={(event) => { event.stopPropagation(); openEdit(); }} className="px-3 py-2 text-sm bg-[#5C3A21] text-white rounded-lg">Edit order</button>
-        <select
-          value={order.orderStatus}
-          onClick={(event) => event.stopPropagation()}
-          onChange={(event) => onStatusChange(order._id, event.target.value)}
-          disabled={updating || order.orderStatus === 'pending'}
-          title={order.orderStatus === 'pending' ? 'Pending orders are managed by the payment system' : ''}
-          className="flex-1 text-sm border rounded-lg px-3 py-2 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-        >
-          {order.orderStatus === 'pending' && (
-            <option value="pending" disabled>Pending (auto-managed)</option>
-          )}
-          {statusOptions
-            .filter((option) => option.value !== 'pending')
-            .map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
+        <select value={order.orderStatus} onClick={(event) => event.stopPropagation()} onChange={(event) => onStatusChange(order._id, event.target.value)} disabled={updating || order.orderStatus === 'pending'} title={order.orderStatus === 'pending' ? 'Pending orders are managed by the payment system' : ''} className="flex-1 text-sm border rounded-lg px-3 py-2 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed">
+          {order.orderStatus === 'pending' && (<option value="pending" disabled>Pending (auto-managed)</option>)}
+          {statusOptions.filter((option) => option.value !== 'pending').map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
         </select>
       </div>
     </div>}
   </div>;
 };
 
-const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, error, saving }) => <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto p-4">
+// ✅ Add Product panel inside Edit modal
+const AddProductPanel = ({ products, onAdd }) => {
+  const [category, setCategory] = useState('');
+  const [productId, setProductId] = useState('');
+  const [weight, setWeight] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [open, setOpen] = useState(false);
+
+  const filtered = products.filter((p) => p.category === category);
+  const selected = filtered.find((p) => p._id === productId);
+  const weights = Array.isArray(selected?.weights) ? selected.weights : [];
+
+  const unitPrice = (() => {
+    if (!selected) return 0;
+    if (weights.length > 0 && weight) {
+      const map = selected.pricePerWeight || {};
+      const val = map[weight];
+      return Number(val) || 0;
+    }
+    return Number(selected.price) || 0;
+  })();
+
+  const reset = () => {
+    setCategory(''); setProductId(''); setWeight(''); setQuantity(1); setOpen(false);
+  };
+
+  const handleAdd = () => {
+    if (!selected) return;
+    if (weights.length > 0 && !weight) return;
+    if (!Number.isInteger(quantity) || quantity < 1) return;
+
+    const item = {
+      productId: selected._id,
+      name: selected.name,
+      image: selected.image,
+      category: selected.category,
+      selectedWeight: weights.length > 0 ? String(weight) : '',
+      price: unitPrice,
+      quantity: Number(quantity),
+    };
+    onAdd(item);
+    reset();
+  };
+
+  if (!open) {
+    return (
+      <div className="mb-3">
+        <button type="button" onClick={() => setOpen(true)} className="px-3 py-2 text-sm bg-white border-2 border-dashed border-[#5C3A21] text-[#5C3A21] rounded-lg hover:bg-[#fdf6ec]">
+          ➕ Add Product
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-2 border-[#5C3A21] rounded-lg p-3 mb-3 bg-white">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-sm">Add a product</h4>
+        <button type="button" onClick={reset} className="text-gray-500 text-xs">✕ Cancel</button>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+        <label className="block text-sm text-gray-700">
+          Category
+          <select value={category} onChange={(e) => { setCategory(e.target.value); setProductId(''); setWeight(''); }} className="mt-1 block w-full border rounded-lg px-3 py-2 bg-white">
+            <option value="">— Choose category —</option>
+            {PRODUCT_CATEGORIES.map((c) => (<option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>))}
+          </select>
+        </label>
+        <label className="block text-sm text-gray-700">
+          Product
+          <select value={productId} onChange={(e) => { setProductId(e.target.value); setWeight(''); }} disabled={!category} className="mt-1 block w-full border rounded-lg px-3 py-2 bg-white disabled:bg-gray-100">
+            <option value="">{category ? '— Choose product —' : 'Pick a category first'}</option>
+            {filtered.map((p) => (<option key={p._id} value={p._id}>{p.name}</option>))}
+          </select>
+        </label>
+        {weights.length > 0 && (
+          <label className="block text-sm text-gray-700">
+            {selected?.category === 'sticks' || selected?.category === 'decor' ? 'Size / Length' : 'Weight'}
+            <select value={weight} onChange={(e) => setWeight(e.target.value)} className="mt-1 block w-full border rounded-lg px-3 py-2 bg-white">
+              <option value="">— Choose —</option>
+              {weights.map((w) => (<option key={w} value={w}>{w} {selected?.category === 'sticks' || selected?.category === 'decor' ? 'in' : 'kg'}</option>))}
+            </select>
+          </label>
+        )}
+        <label className="block text-sm text-gray-700">
+          Quantity
+          <input type="number" min="1" step="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className="mt-1 block w-full border rounded-lg px-3 py-2" />
+        </label>
+      </div>
+      {selected && (
+        <p className="text-xs text-gray-600 mb-3">
+          Unit price: <span className="font-semibold">Rs. {unitPrice.toLocaleString('en-IN')}</span>
+          {quantity > 0 && <> · Subtotal: <span className="font-semibold">Rs. {(unitPrice * quantity).toLocaleString('en-IN')}</span></>}
+        </p>
+      )}
+      <button type="button" onClick={handleAdd} disabled={!selected || (weights.length > 0 && !weight)} className="px-4 py-2 text-sm bg-[#5C3A21] text-white rounded-lg disabled:opacity-50">
+        Add to order
+      </button>
+    </div>
+  );
+};
+
+const EditOrderModal = ({ form, products, onClose, onSubmit, updateField, updateItem, addProductToForm, removeItemFromForm, error, saving }) => <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto p-4">
   <form onSubmit={onSubmit} className="my-6 mx-auto max-w-3xl bg-white rounded-xl shadow-xl p-5">
     <div className="flex justify-between gap-4 mb-5">
       <h2 className="text-xl font-bold">Edit order</h2>
       <button type="button" onClick={onClose} disabled={saving} className="text-gray-500">Close</button>
     </div>
     {error && <div className="mb-4 p-3 bg-red-100 text-red-800 rounded text-sm">{error}</div>}
+
     <h3 className="font-semibold mb-2">Customer information</h3>
     <div className="grid sm:grid-cols-3 gap-3 mb-5">
       <Field label="Customer name" value={form.customer.name} onChange={(value) => updateField('customer', 'name', value)} required />
       <Field label="Email (fixed)" type="email" value={form.customer.email} readOnly />
       <Field label="Phone number" value={form.customer.phone} onChange={(value) => updateField('customer', 'phone', value)} required />
     </div>
-    {/* Single Alternate Phone field */}
     <div className="grid sm:grid-cols-3 gap-3 mb-5">
       <Field label="Alternate Phone" value={form.customer.phone2} onChange={(value) => updateField('customer', 'phone2', value)} placeholder="Optional" />
     </div>
+
     <h3 className="font-semibold mb-2">Shipping address</h3>
     <div className="grid sm:grid-cols-2 gap-3 mb-5">
       <Field label="Building / Flat" value={form.address.buildingFlatNo} onChange={(value) => updateField('address', 'buildingFlatNo', value)} />
@@ -1004,10 +807,22 @@ const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, erro
       <Field label="State" value={form.address.state} onChange={(value) => updateField('address', 'state', value)} required />
       <Field label="Pincode" value={form.address.pincode} onChange={(value) => updateField('address', 'pincode', value)} required />
     </div>
+
     <h3 className="font-semibold mb-2">Products</h3>
+    <AddProductPanel products={products} onAdd={addProductToForm} />
+
+    {form.markPartialPaid && (
+      <p className="mb-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+        ℹ️ Payment status will be set to <strong>Partially Paid</strong> on save (because a product was added).
+      </p>
+    )}
+
     <div className="space-y-3 mb-5">
       {form.items.map((item, index) => <div key={item._id || item.productId || index} className="border rounded-lg p-3">
-        <p className="font-medium mb-2">{item.name}</p>
+        <div className="flex justify-between items-center mb-2">
+          <p className="font-medium">{item.name}</p>
+          <button type="button" onClick={() => removeItemFromForm(index)} className="text-xs text-red-600 hover:text-red-800">Remove</button>
+        </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label="Weight (kg)" type="number" min="0" step="any" value={item.selectedWeight} onChange={(value) => updateItem(index, 'selectedWeight', value)} required />
           <Field label="Quantity" type="number" min="1" step="1" value={item.quantity} onChange={(value) => updateItem(index, 'quantity', value)} required />
@@ -1015,6 +830,7 @@ const EditOrderModal = ({ form, onClose, onSubmit, updateField, updateItem, erro
         </div>
       </div>)}
     </div>
+
     <h3 className="font-semibold mb-2">Order totals</h3>
     <div className="grid sm:grid-cols-2 gap-3 mb-5">
       <Field label="Subtotal" type="number" min="0" step="any" value={form.subtotal} onChange={(value) => updateField('totals', 'subtotal', value)} required />
