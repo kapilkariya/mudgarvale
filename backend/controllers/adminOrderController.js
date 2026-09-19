@@ -253,7 +253,7 @@ const updateOrder = async (req, res) => {
     }
 
     const numericSubtotal = Number(subtotal);
-    let numericTotal = Number(totalAmount);
+    const numericTotal = Number(totalAmount);
     if (!Number.isFinite(numericSubtotal) || numericSubtotal < 0 || !Number.isFinite(numericTotal) || numericTotal < numericSubtotal) {
       return res.status(400).json({ success: false, message: 'Subtotal and total price must be valid, with total not below subtotal' });
     }
@@ -266,20 +266,6 @@ const updateOrder = async (req, res) => {
     const user = await User.findById(order.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'Customer not found' });
-    }
-
-    // ✅ Delivery charge rule:
-    // If the order contains any gada or samtola AND current delivery charge is 200,
-    // upgrade it to 400, add +200 to total amount, and force payment method to COD.
-    const currentDeliveryCharge = Number(order.deliveryCharge) || 0;
-    const hasGadaOrSamtola = normalizedItems.some(
-      (item) => item.category === 'gada' || item.category === 'samtola'
-    );
-    const shouldUpgradeDelivery = hasGadaOrSamtola && currentDeliveryCharge === 200;
-    const newDeliveryCharge = shouldUpgradeDelivery ? 400 : currentDeliveryCharge;
-
-    if (shouldUpgradeDelivery) {
-      numericTotal += 200;
     }
 
     user.name = customer.name.trim();
@@ -297,12 +283,7 @@ const updateOrder = async (req, res) => {
       pincode: address.pincode.trim(),
     };
     order.totalAmount = numericTotal;
-    order.deliveryCharge = newDeliveryCharge;
-
-    // ✅ Force payment method to COD when the delivery upgrade kicks in
-    if (shouldUpgradeDelivery) {
-      order.paymentMethod = 'cod';
-    }
+    order.deliveryCharge = numericTotal - numericSubtotal;
 
     // ✅ If admin added new products to the order, flip payment status to partial_paid
     if (markPartialPaid === true) {
@@ -316,9 +297,7 @@ const updateOrder = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: shouldUpgradeDelivery
-        ? 'Order updated. Delivery charge upgraded to ₹400 (gada/samtola added). Payment method set to COD.'
-        : 'Order updated successfully',
+      message: 'Order updated successfully',
       data: order,
     });
   } catch (error) {

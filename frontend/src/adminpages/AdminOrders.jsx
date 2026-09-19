@@ -41,6 +41,7 @@ const emptyForm = (order) => ({
   items: (order.items || []).map((item) => ({ ...item, selectedWeight: item.selectedWeight || '', quantity: item.quantity || 1, price: item.price || 0 })),
   subtotal: String(order.totalAmount - (order.deliveryCharge || 0)),
   totalAmount: String(order.totalAmount || 0),
+  deliveryCharge: String(order.deliveryCharge || 0),
   markPartialPaid: false,
 });
 
@@ -266,33 +267,51 @@ const AdminOrders = () => {
   const updateItem = (index, field, value) => setForm((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item) }));
 
   // ✅ Add a new product (from the Add Product panel) into form.items
-  const addProductToForm = (newItem) => {
+   const addProductToForm = (newItem) => {
     setForm((current) => {
       if (!current) return current;
       const newItems = [...current.items, newItem];
-      const newTotal = Number(current.totalAmount || 0) + (newItem.price * newItem.quantity);
+      const newSubtotal = newItems.reduce(
+        (sum, it) => sum + (Number(it.price) * Number(it.quantity)),
+        0
+      );
+      const newTotal = newSubtotal + Number(current.deliveryCharge || 0);
       return {
         ...current,
         items: newItems,
+        subtotal: String(newSubtotal),
         totalAmount: String(newTotal),
-        markPartialPaid: true,   // ✅ will flag backend to set paymentStatus = partial_paid
+        markPartialPaid: true,
       };
     });
   };
 
   // ✅ Remove an item from form.items (useful when admin added wrong product)
-  const removeItemFromForm = (index) => {
+    const removeItemFromForm = (index) => {
     setForm((current) => {
       if (!current) return current;
-      const removed = current.items[index];
       const newItems = current.items.filter((_, i) => i !== index);
-      const newTotal = Math.max(0, Number(current.totalAmount || 0) - (removed.price * removed.quantity));
-      return { ...current, items: newItems, totalAmount: String(newTotal), markPartialPaid: true };
+      const newSubtotal = newItems.reduce(
+        (sum, it) => sum + (Number(it.price) * Number(it.quantity)),
+        0
+      );
+      const newTotal = newSubtotal + Number(current.deliveryCharge || 0);
+      return {
+        ...current,
+        items: newItems,
+        subtotal: String(newSubtotal),
+        totalAmount: String(newTotal),
+        markPartialPaid: true,
+      };
     });
   };
 
-  const submitEdit = async (event) => {
+    const submitEdit = async (event) => {
     event.preventDefault();
+    if (!form.items.length) {
+      setFormError('An order must have at least one product.');
+      return;
+    }
     const subtotal = Number(form.subtotal);
     const totalAmount = Number(form.totalAmount);
     const itemsValid = form.items.every((item) => Number(item.selectedWeight) >= 0 && Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0 && Number(item.price) >= 0);
@@ -819,9 +838,16 @@ const EditOrderModal = ({ form, products, onClose, onSubmit, updateField, update
 
     <div className="space-y-3 mb-5">
       {form.items.map((item, index) => <div key={item._id || item.productId || index} className="border rounded-lg p-3">
-        <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center mb-2">
           <p className="font-medium">{item.name}</p>
-          <button type="button" onClick={() => removeItemFromForm(index)} className="text-xs text-red-600 hover:text-red-800">Remove</button>
+          <button
+            type="button"
+            onClick={() => removeItemFromForm(index)}
+            disabled={form.items.length <= 1}
+            className="text-xs text-red-600 hover:text-red-800 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Remove
+          </button>
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label="Weight (kg)" type="number" min="0" step="any" value={item.selectedWeight} onChange={(value) => updateItem(index, 'selectedWeight', value)} required />
