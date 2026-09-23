@@ -75,6 +75,30 @@ const AdminOrders = () => {
   const [formError, setFormError] = useState('');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
+
+  // Export status filter — all checked by default (except cancelled)
+  const [exportStatuses, setExportStatuses] = useState({
+    confirmed: true,
+    processing: true,
+    shipped: true,
+    delivered: true,
+    cancelled: false,
+  });
+
+  const toggleExportStatus = (key) =>
+    setExportStatuses((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const selectedExportStatuses = Object.entries(exportStatuses)
+    .filter(([, checked]) => checked)
+    .map(([key]) => key);
+
+  const noExportStatusSelected = selectedExportStatuses.length === 0;
+  // Filter orders by the selected export statuses
+  const filterForExport = (ordersToFilter) =>
+    ordersToFilter.filter((order) =>
+      selectedExportStatuses.includes(order.orderStatus)
+    );
+
   // ✅ Products for the Add Product panel in Edit modal
   const [products, setProducts] = useState([]);
 
@@ -267,7 +291,7 @@ const AdminOrders = () => {
   const updateItem = (index, field, value) => setForm((current) => ({ ...current, items: current.items.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item) }));
 
   // ✅ Add a new product (from the Add Product panel) into form.items
-   const addProductToForm = (newItem) => {
+  const addProductToForm = (newItem) => {
     setForm((current) => {
       if (!current) return current;
       const newItems = [...current.items, newItem];
@@ -287,7 +311,7 @@ const AdminOrders = () => {
   };
 
   // ✅ Remove an item from form.items (useful when admin added wrong product)
-    const removeItemFromForm = (index) => {
+  const removeItemFromForm = (index) => {
     setForm((current) => {
       if (!current) return current;
       const newItems = current.items.filter((_, i) => i !== index);
@@ -306,7 +330,7 @@ const AdminOrders = () => {
     });
   };
 
-    const submitEdit = async (event) => {
+  const submitEdit = async (event) => {
     event.preventDefault();
     if (!form.items.length) {
       setFormError('An order must have at least one product.');
@@ -345,6 +369,7 @@ const AdminOrders = () => {
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   const prepareExportData = (ordersToExport) => {
+
     return ordersToExport.map((order) => {
       const itemsList = order.items?.map(item =>
         `${item.name}${item.category !== 'senaboard'
@@ -409,17 +434,51 @@ const AdminOrders = () => {
       let ordersToExport;
       if (isDateFilterActive) ordersToExport = filteredDateOrders;
       else ordersToExport = await fetchAllOrdersForExport();
-      if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
+
+      if (!ordersToExport || !ordersToExport.length) {
+        setError("No orders to export");
+        return;
+      }
+
+      ordersToExport = filterForExport(ordersToExport);
+      if (!ordersToExport.length) {
+        setError("No orders match the selected statuses");
+        return;
+      }
+
       const rows = prepareExportData(ordersToExport);
       const workbook = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 }];
-      XLSX.utils.book_append_sheet(workbook, ws, 'Orders');
-      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : '';
-      XLSX.writeFile(workbook, `Orders_Export${dateSuffix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      ws["!cols"] = [
+        { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 15 },
+        { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
+        { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
+        { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 },
+      ];
+      XLSX.utils.book_append_sheet(workbook, ws, "Orders");
+
+      // Manual Blob download (more reliable than XLSX.writeFile)
+      const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateSuffix = isDateFilterActive ? `_${dateFrom}_to_${dateTo}` : "";
+      link.href = url;
+      link.download = `Orders_Export${dateSuffix}_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
       setSuccess(`Exported ${ordersToExport.length} orders to Excel`);
       setShowDownloadMenu(false);
-    } catch (err) { setError(err.message || 'Failed to export to Excel'); }
+    } catch (err) {
+      setError(err.message || "Failed to export to Excel");
+    }
   };
 
   const exportToCSV = async () => {
@@ -428,6 +487,13 @@ const AdminOrders = () => {
       if (isDateFilterActive) ordersToExport = filteredDateOrders;
       else ordersToExport = await fetchAllOrdersForExport();
       if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
+
+      ordersToExport = filterForExport(ordersToExport);
+      if (!ordersToExport.length) {
+        setError('No orders match the selected statuses');
+        return;
+      }
+
       const rows = prepareExportData(ordersToExport);
       const headers = Object.keys(rows[0]);
       const csvRows = [headers.join(',')];
@@ -458,6 +524,13 @@ const AdminOrders = () => {
       if (isDateFilterActive) ordersToExport = filteredDateOrders;
       else ordersToExport = await fetchAllOrdersForExport();
       if (!ordersToExport || !ordersToExport.length) { setError('No orders to export'); return; }
+
+      ordersToExport = filterForExport(ordersToExport);
+      if (!ordersToExport.length) {
+        setError('No orders match the selected statuses');
+        return;
+      }
+
       const doc = new jsPDF('landscape', 'mm', 'a4');
       const rows = prepareExportData(ordersToExport);
       const tableHeaders = Object.keys(rows[0]);
@@ -494,18 +567,80 @@ const AdminOrders = () => {
       <div className="flex items-center gap-2">
         <button onClick={refreshOrders} disabled={loading || loadingExport} className="px-4 py-2 rounded-lg transition font-medium text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50">Refresh</button>
         <div className="relative">
-          <button onClick={() => setShowDownloadMenu(!showDownloadMenu)} disabled={loadingExport}
-            className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-400 text-white cursor-not-allowed'}`}>
-            <span>⬇ Download</span><span className="text-xs">▾</span>
+          <button
+            onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+            disabled={loadingExport}
+            className={`px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2 ${!loadingExport
+              ? "bg-green-600 text-white hover:bg-green-700"
+              : "bg-gray-400 text-white cursor-not-allowed"
+              }`}
+          >
+            <span>⬇ Download</span>
+            <span className="text-xs">▾</span>
             {loadingExport && <span className="ml-2">Loading...</span>}
-            {isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({filteredDateOrders.length})</span>}
-            {!isDateFilterActive && <span className="bg-white/20 px-2 py-0.5 rounded text-xs">(All)</span>}
+            {isDateFilterActive && (
+              <span className="bg-white/20 px-2 py-0.5 rounded text-xs">
+                ({filteredDateOrders.length})
+              </span>
+            )}
+            {!isDateFilterActive && (
+              <span className="bg-white/20 px-2 py-0.5 rounded text-xs">(All)</span>
+            )}
           </button>
+
           {showDownloadMenu && !loadingExport && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-              <button onClick={exportToExcel} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"><span className="text-lg mr-2">📊</span> Excel (.xlsx)</button>
-              <button onClick={exportToCSV} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100"><span className="text-lg mr-2">📄</span> CSV (.csv)</button>
-              <button onClick={exportToPDF} className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm"><span className="text-lg mr-2">📕</span> PDF (.pdf)</button>
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              {/* Status filter checkboxes */}
+              <div className="p-3 border-b border-gray-100">
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                  Include statuses
+                </p>
+                <div className="space-y-2">
+                  {["confirmed", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+                    <label
+                      key={status}
+                      className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={exportStatuses[status]}
+                        onChange={() => toggleExportStatus(status)}
+                        className="accent-[#5C3A21]"
+                      />
+                      <span className="capitalize">{status}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {noExportStatusSelected && (
+                  <p className="text-xs text-red-600 mt-2">
+                    Select at least one status
+                  </p>
+                )}
+              </div>
+
+              {/* Format buttons */}
+              <button
+                onClick={exportToExcel}
+                disabled={noExportStatusSelected}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="text-lg mr-2">📊</span> Excel (.xlsx)
+              </button>
+              <button
+                onClick={exportToCSV}
+                disabled={noExportStatusSelected}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm border-b border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="text-lg mr-2">📄</span> CSV (.csv)
+              </button>
+              <button
+                onClick={exportToPDF}
+                disabled={noExportStatusSelected}
+                className="block w-full text-left px-4 py-3 hover:bg-gray-100 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="text-lg mr-2">📕</span> PDF (.pdf)
+              </button>
             </div>
           )}
         </div>
@@ -838,7 +973,7 @@ const EditOrderModal = ({ form, products, onClose, onSubmit, updateField, update
 
     <div className="space-y-3 mb-5">
       {form.items.map((item, index) => <div key={item._id || item.productId || index} className="border rounded-lg p-3">
-                <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-2">
           <p className="font-medium">{item.name}</p>
           <button
             type="button"
