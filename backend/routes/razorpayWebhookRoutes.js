@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const CheckoutSession = require('../models/CheckoutSession');
 const { sendOrderConfirmationEmail } = require('../utils/email');
 
@@ -59,17 +60,19 @@ const saveCapturedPayment = async (payment) => {
     razorpayPaymentId: payment.id,
   });
 
-  // ✅ Send the order confirmation email (once per order)
+  // ✅ Send the order confirmation email (once per order) — account email only
   if (order.confirmationEmailSentAt) {
     console.log(`[webhook] Confirmation email already sent for ${order.orderNumber}, skipping`);
   } else {
     try {
-      const confirmationEmail = order.address?.email;
-      if (!confirmationEmail) throw new Error('No recipient email on order');
+      const user = await User.findById(order.userId).select('email name');
+      const confirmationEmail = user?.email;
+
+      if (!confirmationEmail) throw new Error('No account email on user');
 
       const emailResult = await sendOrderConfirmationEmail(
         confirmationEmail,
-        order.address?.name || 'Customer',
+        user?.name || 'Customer',
         order.orderNumber
       );
 

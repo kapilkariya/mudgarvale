@@ -260,7 +260,7 @@ const verifyPayment = async (req, res) => {
     // Prefer the verified account email over checkout input. Delivery failures
     // are deliberately non-blocking for order completion.
     try {
-      const confirmationEmail = req.user.email || order.address?.email;
+      const confirmationEmail = req.user.email;
       if (!confirmationEmail) {
         throw new Error('No recipient email is available for this order');
       }
