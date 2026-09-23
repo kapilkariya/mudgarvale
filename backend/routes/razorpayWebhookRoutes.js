@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const Order = require('../models/Order');
 const CheckoutSession = require('../models/CheckoutSession');
+const { sendOrderConfirmationEmail } = require('../utils/email');
 
 const router = express.Router();
 
@@ -57,6 +58,29 @@ const saveCapturedPayment = async (payment) => {
     orderNumber: order.orderNumber,
     razorpayPaymentId: payment.id,
   });
+
+  // ✅ Send the order confirmation email (once per order)
+  if (order.confirmationEmailSentAt) {
+    console.log(`[webhook] Confirmation email already sent for ${order.orderNumber}, skipping`);
+  } else {
+    try {
+      const confirmationEmail = order.address?.email;
+      if (!confirmationEmail) throw new Error('No recipient email on order');
+
+      const emailResult = await sendOrderConfirmationEmail(
+        confirmationEmail,
+        order.address?.name || 'Customer',
+        order.orderNumber
+      );
+
+      order.confirmationEmailSentAt = new Date();
+      await order.save();
+
+      console.log(`[webhook] Confirmation email sent for ${order.orderNumber} to ${confirmationEmail} (message: ${emailResult.messageId})`);
+    } catch (emailError) {
+      console.error(`[webhook] Confirmation email FAILED for ${order.orderNumber}:`, emailError);
+    }
+  }
 
   // ✅ Order confirmed — remove this user's CheckoutSession.
   // Non-blocking: a cleanup failure must never break order confirmation.
