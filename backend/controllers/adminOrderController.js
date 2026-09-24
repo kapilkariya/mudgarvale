@@ -106,11 +106,13 @@ const getOrdersPaginated = async (req, res) => {
 // @desc    Get orders by date range (Keep as is)
 // @route   GET /api/admin/orders/date-range
 // @access  Private (Admin)
+// @desc    Get orders by date range
+// @route   GET /api/admin/orders/date-range
+// @access  Private (Admin)
 const getOrdersByDateRange = async (req, res) => {
   try {
     const { from, to } = req.query;
 
-    // Validate dates
     if (!from || !to) {
       return res.status(400).json({
         success: false,
@@ -118,18 +120,31 @@ const getOrdersByDateRange = async (req, res) => {
       });
     }
 
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
+    // ---- IST-anchored date parsing ----
+    // Input is "YYYY-MM-DD" from an <input type="date">.
+    // We want the range to cover IST 00:00:00 → IST 23:59:59.999 of those days,
+    // regardless of the server's timezone.
+    const IST_OFFSET_MS = 330 * 60 * 1000; // +5:30
 
-    // Set to end of day for 'to' date
-    toDate.setHours(23, 59, 59, 999);
+    const parseYmd = (ymd) => {
+      const parts = String(ymd).split('-').map(Number);
+      if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+      const [y, m, d] = parts;
+      return { y, m, d };
+    };
 
-    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    const fromParts = parseYmd(from);
+    const toParts = parseYmd(to);
+
+    if (!fromParts || !toParts) {
       return res.status(400).json({
         success: false,
         message: 'Invalid date format. Use YYYY-MM-DD',
       });
     }
+
+    const fromDate = new Date(Date.UTC(fromParts.y, fromParts.m - 1, fromParts.d, 0, 0, 0, 0) - IST_OFFSET_MS);
+    const toDate = new Date(Date.UTC(toParts.y, toParts.m - 1, toParts.d, 23, 59, 59, 999) - IST_OFFSET_MS);
 
     if (fromDate > toDate) {
       return res.status(400).json({
@@ -138,38 +153,43 @@ const getOrdersByDateRange = async (req, res) => {
       });
     }
 
-    // Fetch orders within date range (excluding cancelled)
+    // Fetch orders within range (excluding cancelled)
     const orders = await Order.find({
       createdAt: { $gte: fromDate, $lte: toDate },
-      orderStatus: { $ne: 'cancelled' }
+      orderStatus: { $ne: 'cancelled' },
     })
       .populate('userId', 'name email phone')
       .sort({ createdAt: -1 })
       .lean();
 
-    // Calculate metrics
+    // ---- Metrics (match frontend key names exactly) ----
     let totalSales = 0;
-    let onlineAmount = 0;
-    let codAmount = 0;
-    let totalOrders = orders.length;
+    let onlineRevenue = 0;
+    let codRevenue = 0;
+    let deliveryCharges = 0;
     let onlineOrders = 0;
     let codOrders = 0;
 
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const amount = order.totalAmount || 0;
+      const dc = order.deliveryCharge || 0;
       totalSales += amount;
 
       if (order.paymentMethod === 'online') {
-        onlineAmount += amount;
+        // Full amount is online revenue
+        onlineRevenue += amount;
         onlineOrders += 1;
       } else if (order.paymentMethod === 'cod') {
-        codAmount += amount;
+        // Online revenue gets the COD delivery charge (collected upfront)
+        onlineRevenue += dc;
+        deliveryCharges += dc;
+        // COD revenue excludes the delivery charge
+        codRevenue += (amount - dc);
         codOrders += 1;
       }
     });
 
-    // Format orders for response
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order) => ({
       _id: order._id,
       orderNumber: order.orderNumber,
       user: order.userId,
@@ -190,17 +210,18 @@ const getOrdersByDateRange = async (req, res) => {
       success: true,
       data: {
         summary: {
-          totalOrders,
+          totalOrders: orders.length,
           totalSales,
-          onlineAmount,
-          codAmount,
+          onlineRevenue,
+          codRevenue,
+          deliveryCharges,
           onlineOrders,
           codOrders,
         },
         orders: formattedOrders,
         dateRange: {
-          from: fromDate,
-          to: toDate,
+          from,   // echo raw "YYYY-MM-DD" strings
+          to,
         },
       },
     });
