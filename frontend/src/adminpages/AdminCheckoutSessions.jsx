@@ -7,12 +7,12 @@ const formatPrice = (n) =>
 const formatDate = (d) =>
   d
     ? new Date(d).toLocaleString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : '—';
 
 const PAGE_SIZE = 15;
@@ -35,6 +35,12 @@ const AdminCheckoutSessions = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [isDateFilterActive, setIsDateFilterActive] = useState(false);
+
+  // Place-order modal
+  const [modalSession, setModalSession] = useState(null);
+  const [paymentType, setPaymentType] = useState('cod');
+  const [placing, setPlacing] = useState(false);
+  const [modalError, setModalError] = useState('');
 
   const buildUrl = (page, from, to) => {
     const params = new URLSearchParams();
@@ -77,7 +83,6 @@ const AdminCheckoutSessions = () => {
     }
   };
 
-  // Auto-apply filter only when BOTH dates are picked
   useEffect(() => {
     if (dateFrom && dateTo) {
       setIsDateFilterActive(true);
@@ -107,6 +112,61 @@ const AdminCheckoutSessions = () => {
   const clearDateFilter = () => {
     setDateFrom('');
     setDateTo('');
+  };
+
+  // ---- Session totals helpers ----
+  const sessionSubtotal = (session) =>
+    (session?.items || []).reduce(
+      (sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 0),
+      0
+    );
+
+  const sessionTotal = (session) => {
+    const stored = Number(session?.totalAmount);
+    if (Number.isFinite(stored) && stored > 0) return stored;
+    return sessionSubtotal(session);
+  };
+
+  const sessionDelivery = (session) =>
+    Math.max(sessionTotal(session) - sessionSubtotal(session), 0);
+
+  // ---- Place Order modal helpers ----
+  const openModal = (session) => {
+    setModalSession(session);
+    setPaymentType('cod');
+    setModalError('');
+  };
+
+  const closeModal = () => {
+    if (placing) return;
+    setModalSession(null);
+    setModalError('');
+  };
+
+  const submitPlaceOrder = async () => {
+    if (!modalSession) return;
+    setModalError('');
+
+    try {
+      setPlacing(true);
+      const res = await fetchWithAuth(
+        `${API_URL}/admin/checkout-sessions/${modalSession._id}/place-order`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ paymentType }),
+        }
+      );
+
+      if (!res.success) throw new Error(res.message || 'Failed to place order');
+
+      setSessions((prev) => prev.filter((s) => s._id !== modalSession._id));
+      setTotal((t) => Math.max(0, t - 1));
+      closeModal();
+    } catch (err) {
+      setModalError(err.message || 'Failed to place order');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   const filtered = sessions.filter((s) => {
@@ -159,7 +219,7 @@ const AdminCheckoutSessions = () => {
         </div>
       </div>
 
-      {/* Date range filter (updatedAt) */}
+      {/* Date range filter */}
       <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="flex flex-wrap items-end gap-4">
           <div>
@@ -368,6 +428,18 @@ const AdminCheckoutSessions = () => {
                         {formatPrice(s.totalAmount)}
                       </span>
                     </section>
+
+                    <section className="flex justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openModal(s);
+                        }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-[#5C3A21] text-white hover:bg-[#4a2e1a]"
+                      >
+                        ✅ Place Order
+                      </button>
+                    </section>
                   </div>
                 )}
               </div>
@@ -376,7 +448,6 @@ const AdminCheckoutSessions = () => {
         </div>
       )}
 
-      {/* Load More (hidden while a search is active) */}
       {hasMore && !search && (
         <div className="mt-6 text-center">
           <button
@@ -399,6 +470,120 @@ const AdminCheckoutSessions = () => {
         <p className="mt-6 text-center text-xs text-gray-400">
           Search applies to loaded sessions only. Load more to search further.
         </p>
+      )}
+
+      {/* ===== Place Order Modal ===== */}
+      {modalSession && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-5">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Place Order</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {modalSession.address?.name || modalSession.user?.name || 'Customer'}
+            </p>
+
+            {/* Payment type */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment Type
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('cod')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+                    paymentType === 'cod'
+                      ? 'bg-[#5C3A21] text-white border-[#5C3A21]'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  COD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentType('paid')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+                    paymentType === 'paid'
+                      ? 'bg-[#5C3A21] text-white border-[#5C3A21]'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Fully Paid
+                </button>
+              </div>
+            </div>
+
+            {/* Live summary — delivery auto-computed */}
+            <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1 mb-4">
+              <p className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">
+                  {formatPrice(sessionSubtotal(modalSession))}
+                </span>
+              </p>
+              <p className="flex justify-between">
+                <span className="text-gray-600">Delivery Charge</span>
+                <span className="font-medium">
+                  {formatPrice(sessionDelivery(modalSession))}
+                </span>
+              </p>
+              <p className="flex justify-between border-t pt-1">
+                <span className="font-semibold text-gray-700">Total</span>
+                <span className="font-bold text-[#5C3A21]">
+                  {formatPrice(sessionTotal(modalSession))}
+                </span>
+              </p>
+              {paymentType === 'cod' && (
+                <>
+                  <p className="flex justify-between border-t pt-1">
+                    <span className="text-gray-600">Paid Now (delivery)</span>
+                    <span className="font-medium text-green-600">
+                      {formatPrice(sessionDelivery(modalSession))}
+                    </span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-gray-600">Pending</span>
+                    <span className="font-medium text-amber-600">
+                      {formatPrice(sessionSubtotal(modalSession))}
+                    </span>
+                  </p>
+                </>
+              )}
+              {paymentType === 'paid' && (
+                <p className="flex justify-between border-t pt-1">
+                  <span className="text-gray-600">Paid Now</span>
+                  <span className="font-medium text-green-600">
+                    {formatPrice(sessionTotal(modalSession))}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {modalError && (
+              <div className="mb-4 text-sm rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200">
+                {modalError}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={placing}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitPlaceOrder}
+                disabled={placing}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#5C3A21] text-white hover:bg-[#4a2e1a] disabled:opacity-50"
+              >
+                {placing ? 'Placing…' : 'Confirm Order'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
