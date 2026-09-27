@@ -193,7 +193,7 @@ const verifyLogin = async (req, res) => {
     const isBypassOTP = otp === '111111' || otp === 'what is sent';
 
     let otpRecord;
-    if (isBypassOTP) {
+    if (false) {
       // For bypass, find any recent login OTP for this email
       otpRecord = await OTP.findOne({
         email,
