@@ -21,6 +21,12 @@ const FREE_GIFT_LABELS = {
 };
 const getFreeGiftLabel = (code) => FREE_GIFT_LABELS[code] || null;
 
+// Helper: does this order contain any product in the "decor" category?
+const hasDecorItems = (order) => {
+  if (!order.items || !order.items.length) return false;
+  return order.items.some((item) => item.category === 'decor');
+};
+
 // ✅ Categories for the Add Product dropdown
 const PRODUCT_CATEGORIES = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks', 'decor'];
 
@@ -404,6 +410,9 @@ const AdminOrders = () => {
       const addressLine = order.address?.address || '';
       const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
       const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
+      const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
+🌙
+ `).join('; ') || '';
       return {
         'Order Number': order.orderNumber || '',
         'Customer Name': order.user?.name || order.address?.name || '',
@@ -424,6 +433,7 @@ const AdminOrders = () => {
         'Order Status': order.orderStatus || '',
         'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
         'Special Items': specialItems,
+        'Decor Items': decorItems,
         'Free Gift': getFreeGiftLabel(order.freeGift) || '',
       };
     });
@@ -454,6 +464,7 @@ const AdminOrders = () => {
         { wch: 15 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
         { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
         { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 35 }, { wch: 20 },
+        { wch: 20 },
       ];
       XLSX.utils.book_append_sheet(workbook, ws, "Orders");
 
@@ -763,6 +774,9 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
           <div className="flex items-center gap-2">
             <span className="font-semibold text-[#5C3A21] text-sm">#{order.orderNumber}</span>
             {hasSpecialProducts(order) && (<span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>)}
+            {hasDecorItems(order) && (<span className="text-indigo-500 text-lg" title="Contains decor items">🌙🌙
+🌙
+</span>)}
             {getFreeGiftLabel(order.freeGift) && (<span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">🎁 {getFreeGiftLabel(order.freeGift)}</span>)}
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -793,6 +807,9 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
           <div className="flex items-center gap-2">
             <p className="font-medium">{item.name}</p>
             {SPECIAL_PRODUCT_NAMES.includes(item.name) && (<span className="text-red-500 text-xs font-bold">★★★</span>)}
+            {item.category === 'decor' && (<span className="text-indigo-500 text-xs font-bold">🌙🌙
+🌙
+</span>)}
           </div>
           <p className="text-gray-600 text-xs">{item.selectedWeight} {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each</p>
         </div>)}
