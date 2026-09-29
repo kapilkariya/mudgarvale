@@ -376,68 +376,77 @@ const AdminOrders = () => {
 
   const prepareExportData = (ordersToExport) => {
 
-    return ordersToExport.map((order) => {
-      const itemsList = order.items?.map(item =>
-        `${item.name}${item.category !== 'senaboard'
-          ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
-          : ''} × ${item.quantity}`).join('; ') || '';
-      const totalWeight = order.items?.reduce((sum, item) => {
-        let itemWeight = 0;
-        if (item.category === 'senaboard') itemWeight = 2 * item.quantity;
-        else itemWeight = parseFloat(item.selectedWeight) * item.quantity;
-        return sum + itemWeight;
-      }, 0) || 0;
-      // ✅ Use backend-computed values
-      const amountPaid = Number(order.paidAmount || 0);
-      const amountPending = Number(order.remainingAmount || 0);
+  return ordersToExport.map((order) => {
+    const freeGiftLabel = getFreeGiftLabel(order.freeGift);
 
-      let paymentStatusDisplay = '';
-      if (amountPending === 0 && amountPaid > 0) {
-        paymentStatusDisplay = 'Fully Paid';
-      } else if (amountPaid > 0 && amountPending > 0) {
-        paymentStatusDisplay = 'Partially Paid';
-      } else {
-        paymentStatusDisplay = 'Unpaid';
-      }
+    const productItems = order.items?.map(item =>
+      `${item.name}${item.category !== 'senaboard'
+        ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
+        : ''} × ${item.quantity}`).join('; ') || '';
 
-      // Show "Paid" instead of 0 when an online order is fully paid
-      const amountPendingDisplay =
-        order.paymentMethod === 'online' && amountPending === 0
-          ? 'Paid'
-          : amountPending;
+    const itemsList = freeGiftLabel
+      ? `${productItems}${productItems ? '; ' : ''}${freeGiftLabel} (free)`
+      : productItems;
 
-      const buildingFlat = order.address?.buildingFlatNo || '';
-      const addressLine = order.address?.address || '';
-      const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
-      const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
-      const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
+    const totalWeight = order.items?.reduce((sum, item) => {
+      let itemWeight = 0;
+      if (item.category === 'senaboard') itemWeight = 2 * item.quantity;
+      else itemWeight = parseFloat(item.selectedWeight) * item.quantity;
+      return sum + itemWeight;
+    }, 0) || 0;
+
+    // ✅ Use backend-computed values
+    const amountPaid = Number(order.paidAmount || 0);
+    const amountPending = Number(order.remainingAmount || 0);
+
+    let paymentStatusDisplay = '';
+    if (amountPending === 0 && amountPaid > 0) {
+      paymentStatusDisplay = 'Fully Paid';
+    } else if (amountPaid > 0 && amountPending > 0) {
+      paymentStatusDisplay = 'Partially Paid';
+    } else {
+      paymentStatusDisplay = 'Unpaid';
+    }
+
+    // Show "Paid" instead of 0 when an online order is fully paid
+    const amountPendingDisplay =
+      order.paymentMethod === 'online' && amountPending === 0
+        ? 'Paid'
+        : amountPending;
+
+    const buildingFlat = order.address?.buildingFlatNo || '';
+    const addressLine = order.address?.address || '';
+    const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
+    const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
+    const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
 🌙
  `).join('; ') || '';
-      return {
-        'Order Number': order.orderNumber || '',
-        'Customer Name': order.user?.name || order.address?.name || '',
-        'Customer Email': order.user?.email || order.address?.email || '',
-        'Address': fullAddress,
-        'City': order.address?.city || '',
-        'State': order.address?.state || '',
-        'Pincode': order.address?.pincode || '',
-        'Items': itemsList,
-        'Phone': order.address?.phone || '',
-        'Phone 2': order.address?.phone2 || '',
-        'Total Weight (kg)': totalWeight.toFixed(2),
-        'Total Amount': order.totalAmount || 0,
-        'Amount Paid': amountPaid,
-        'Amount Pending': amountPendingDisplay,
-        'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
-        'Payment Status': paymentStatusDisplay,
-        'Order Status': order.orderStatus || '',
-        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
-        'Special Items': specialItems,
-        'Decor Items': decorItems,
-        'Free Gift': getFreeGiftLabel(order.freeGift) || '',
-      };
-    });
-  };
+
+    return {
+      'Order Number': order.orderNumber || '',
+      'Customer Name': order.user?.name || order.address?.name || '',
+      'Customer Email': order.user?.email || order.address?.email || '',
+      'Address': fullAddress,
+      'City': order.address?.city || '',
+      'State': order.address?.state || '',
+      'Pincode': order.address?.pincode || '',
+      'Items': itemsList,
+      'Phone': order.address?.phone || '',
+      'Phone 2': order.address?.phone2 || '',
+      'Total Weight (kg)': totalWeight.toFixed(2),
+      'Total Amount': order.totalAmount || 0,
+      'Amount Paid': amountPaid,
+      'Amount Pending': amountPendingDisplay,
+      'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
+      'Payment Status': paymentStatusDisplay,
+      'Order Status': order.orderStatus || '',
+      'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
+      'Special Items': specialItems,
+      'Decor Items': decorItems,
+      'Free Gift': getFreeGiftLabel(order.freeGift) || '',
+    };
+  });
+};
 
   const exportToExcel = async () => {
     try {
@@ -775,8 +784,8 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
             <span className="font-semibold text-[#5C3A21] text-sm">#{order.orderNumber}</span>
             {hasSpecialProducts(order) && (<span className="text-red-500 text-lg" title="Contains special products">⭐⭐⭐</span>)}
             {hasDecorItems(order) && (<span className="text-indigo-500 text-lg" title="Contains decor items">🌙🌙
-🌙
-</span>)}
+              🌙
+            </span>)}
             {getFreeGiftLabel(order.freeGift) && (<span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium">🎁 {getFreeGiftLabel(order.freeGift)}</span>)}
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -808,8 +817,8 @@ const OrderCard = ({ order, expanded, toggle, openEdit, status, statusOptions, u
             <p className="font-medium">{item.name}</p>
             {SPECIAL_PRODUCT_NAMES.includes(item.name) && (<span className="text-red-500 text-xs font-bold">★★★</span>)}
             {item.category === 'decor' && (<span className="text-indigo-500 text-xs font-bold">🌙🌙
-🌙
-</span>)}
+              🌙
+            </span>)}
           </div>
           <p className="text-gray-600 text-xs">{item.selectedWeight} {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'} × {item.quantity} · {formatPrice(item.price)} each</p>
         </div>)}
