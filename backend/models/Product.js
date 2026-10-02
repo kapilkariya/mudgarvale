@@ -25,7 +25,6 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Product image is required'],
     },
-    // ✅ Array of additional images (any length, optional)
     images: {
       type: [String],
       default: [],
@@ -40,6 +39,14 @@ const productSchema = new mongoose.Schema(
       type: Map,
       of: Number,
       required: [true, 'Price per weight is required'],
+    },
+    // ✅ Optional: length per weight. Not required.
+    // Example: { "5kg": "12in", "7kg": "14in" }
+    lengthPerWeight: {
+      type: Map,
+      of: String,
+      required: false,
+      default: {},
     },
     isActive: {
       type: Boolean,
@@ -58,12 +65,10 @@ const productSchema = new mongoose.Schema(
 );
 
 // ✅ Bulletproof virtual — handles Map, plain object, or malformed data
-// Never throws, so a bad product can't crash the whole listing endpoint.
 productSchema.virtual('minPrice').get(function () {
   try {
     if (!this.pricePerWeight) return 0;
 
-    // Mongoose Map has .values(), plain objects don't
     const rawValues =
       typeof this.pricePerWeight.values === 'function'
         ? Array.from(this.pricePerWeight.values())
@@ -75,7 +80,6 @@ productSchema.virtual('minPrice').get(function () {
 
     return nums.length > 0 ? Math.min(...nums) : 0;
   } catch (err) {
-    // Log once so you know which product is bad, but don't crash
     console.warn(
       `[Product] minPrice virtual failed for product ${this._id}:`,
       err.message
@@ -84,7 +88,6 @@ productSchema.virtual('minPrice').get(function () {
   }
 });
 
-// ✅ Bulletproof priceDisplay — same reasoning
 productSchema.virtual('priceDisplay').get(function () {
   try {
     const minPrice = this.minPrice;

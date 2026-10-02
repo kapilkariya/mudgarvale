@@ -103,6 +103,14 @@ const ProductDetails = () => {
     return priceMap[selectedWeight] || 0;
   };
 
+  // ✅ Length for the currently selected weight (if defined)
+  const getSelectedLength = () => {
+    if (!product || !selectedWeight) return null;
+    const map = product.lengthPerWeight || {};
+    const val = map[selectedWeight];
+    return val ? String(val) : null;
+  };
+
   const getTotalPrice = () => getPrice() * quantity;
 
   const formatPrice = (price) => `Rs. ${price.toLocaleString('en-IN')}`;
@@ -221,8 +229,8 @@ const ProductDetails = () => {
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`w-2.5 h-2.5 rounded-full transition ${currentImageIndex === index
-                          ? 'bg-[#5C3A21] w-6'
-                          : 'bg-white/60 hover:bg-white/80'
+                        ? 'bg-[#5C3A21] w-6'
+                        : 'bg-white/60 hover:bg-white/80'
                         }`}
                       aria-label={`Go to image ${index + 1}`}
                     />
@@ -288,21 +296,29 @@ const ProductDetails = () => {
                   Select {product.category === 'sticks' || product.category === 'decor' ? 'Length' : 'Weight'} *
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {product.weights.map((weight) => (
-                    <button
-                      key={weight}
-                      onClick={() => setSelectedWeight(weight)}
-                      className={`px-4 py-2 rounded-lg border-2 transition ${selectedWeight === weight
+                  {product.weights.map((weight) => {
+                    const length = product.lengthPerWeight?.[weight];
+                    return (
+                      <button
+                        key={weight}
+                        onClick={() => setSelectedWeight(weight)}
+                        className={`px-4 py-2 rounded-lg border-2 transition ${selectedWeight === weight
                           ? 'border-[#5C3A21] bg-[#5C3A21] text-white'
                           : 'border-gray-300 text-gray-700 hover:border-[#5C3A21]'
-                        }`}
-                    >
-                      {weight} {product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}
-                      <span className="block text-xs opacity-80">
-                        {formatPrice(product.pricePerWeight[weight] || 0)}
-                      </span>
-                    </button>
-                  ))}
+                          }`}
+                      >
+                        {weight} {product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}
+                        {length && (
+                          <span className="block text-xs font-semibold opacity-90">
+                            {length} ft
+                          </span>
+                        )}
+                        <span className="block text-xs opacity-80">
+                          {formatPrice(product.pricePerWeight[weight] || 0)}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

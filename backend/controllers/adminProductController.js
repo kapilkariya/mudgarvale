@@ -104,29 +104,54 @@ const deleteProduct = async (req, res) => {
 // @desc    One-off dev rename: Indian Hanuman Gada Model: 10 → Indian Ram Gada Model: 10
 // @route   POST /api/admin/dev/rename-product
 // @access  Private (Admin)
+// @desc    Dev: add default lengthPerWeight to all mudgar products
+// @route   POST /api/admin/dev/rename-product
+// @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const result = await Product.updateOne(
-      { name: 'Indian Hanuman Gada Model: 10' },
-      { $set: { name: 'Indian Ram Gada Model: 10' } }
+    const lengthPerWeight = {
+      '2': '1.5',
+      '3': '2',
+      '4': '2',
+      '5': '2',
+      '6': '2.5',
+      '7': '2.5',
+      '8': '2.5',
+      '9': '2.5',
+      '10': '2.5',
+      '11': '2.5',
+      '12': '2.5',
+      '13': '2.5',
+      '14': '2.5',
+      '15': '2.5',
+      '16': '2.5',
+      '17': '2.5',
+      '18': '2.5',
+      '19': '2.5',
+      '20': '2.5',
+    };
+
+    const result = await Product.updateMany(
+      { category: 'mudgar' },
+      { $set: { lengthPerWeight } }
     );
 
     if (result.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Product "Indian Hanuman Gada Model: 10" not found',
+        message: 'No products found with category "mudgar"',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Renamed (${result.modifiedCount} updated)`,
+      message: `Updated ${result.modifiedCount} mudgar product(s) with lengths`,
     });
   } catch (error) {
-    console.error('Dev rename error:', error);
+    console.error('Dev update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to rename product',
+      message: 'Failed to update products',
       error: error.message,
     });
   }
