@@ -3,9 +3,88 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { orderAPI, configAPI, addressAPI, checkoutSessionAPI } from '../config/api';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
+import { Country } from 'country-state-city';
 
 // ✅ Products that require a minimum order quantity of 2
 const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
+
+// ✅ Searchable country dropdown
+const CountrySelect = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const ref = React.useRef(null);
+
+  const allCountries = Country.getAllCountries();
+
+  const filtered = query.trim()
+    ? allCountries.filter((c) =>
+        c.name.toLowerCase().includes(query.toLowerCase())
+      )
+    : allCountries;
+
+  React.useEffect(() => {
+    const onClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const selected = allCountries.find((c) => c.name === value);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full text-left px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white flex items-center justify-between"
+      >
+        <span>
+          {selected ? `${selected.flag} ${selected.name}` : 'Select country'}
+        </span>
+        <span className="text-gray-400">▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-hidden">
+          <div className="p-2 border-b border-gray-100">
+            <input
+              type="text"
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#5C3A21]"
+            />
+          </div>
+          <div className="overflow-y-auto max-h-56">
+            {filtered.length === 0 ? (
+              <p className="text-sm text-gray-500 px-4 py-3">No country found</p>
+            ) : (
+              filtered.map((c) => (
+                <button
+                  key={c.isoCode}
+                  type="button"
+                  onClick={() => {
+                    onChange(c.name);
+                    setOpen(false);
+                    setQuery('');
+                  }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[#fdf6ec] flex items-center gap-2 ${
+                    c.name === value ? 'bg-[#fdf6ec] font-medium' : ''
+                  }`}
+                >
+                  <span>{c.flag}</span>
+                  <span>{c.name}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Checkout = () => {
   useEffect(() => {
@@ -38,6 +117,7 @@ const Checkout = () => {
     state: '',
     pincode: '',
     email: '',
+    country: 'India',
   });
 
   const [paymentMethod, setPaymentMethod] = useState('online');
@@ -54,6 +134,24 @@ const Checkout = () => {
   // ✅ Address must be saved before paying
   const hasSavedAddress =
     (!useNewAddress && !!selectedAddressId) || addressSaved;
+
+  // ✅ The effective country of the order (from saved address or new form)
+  const effectiveCountry = (() => {
+    if (!useNewAddress && selectedAddressId) {
+      const saved = savedAddresses.find((a) => a._id === selectedAddressId);
+      if (saved?.country) return saved.country;
+    }
+    return formData.country;
+  })();
+
+  const isInternational = !!(effectiveCountry && effectiveCountry !== 'India');
+
+  // ✅ Total cart weight in kg (used for international shipping)
+  const cartTotalWeight = cart.reduce((sum, item) => {
+  if (item.category === 'senaboard') return sum + 1 * item.quantity;
+  const w = parseFloat(item.selectedWeight);
+  return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
+}, 0);
 
   // Fetch config and saved addresses from backend
   useEffect(() => {
@@ -96,13 +194,25 @@ const Checkout = () => {
     fetchData();
   }, []);
 
+  // ✅ Force online payment for international orders
+  useEffect(() => {
+    if (isInternational) {
+      setPaymentMethod('online');
+    }
+  }, [isInternational]);
+
   const formatPrice = (price) => {
     return `Rs. ${price.toLocaleString('en-IN')}`;
   };
 
   const subtotal = getCartTotal();
   const isEligibleForFreeGift = subtotal >= 3000;
-  const deliveryCharge = calculateDeliveryCharge(cart);
+
+  // ✅ Delivery charge: international ₹1000/kg, domestic unchanged
+  const deliveryCharge = isInternational
+    ? Math.round(cartTotalWeight * 1000)
+    : calculateDeliveryCharge(cart);
+
   const codAdvance = paymentMethod === 'cod' ? deliveryCharge : 0;
   const total = subtotal + deliveryCharge;
   const amountToPayNow = paymentMethod === 'cod' ? codAdvance : total;
@@ -164,6 +274,7 @@ const Checkout = () => {
           city: selectedAddress.city,
           state: selectedAddress.state,
           pincode: selectedAddress.pincode,
+          country: selectedAddress.country || 'India',
         };
       }
     }
@@ -199,6 +310,7 @@ const Checkout = () => {
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
+        country: formData.country,
         isDefault: true,
       });
 
@@ -480,6 +592,7 @@ const Checkout = () => {
                             )}
                             <p className="text-sm text-gray-600 mt-1">
                               {addr.address}, {addr.city}, {addr.state} - {addr.pincode}
+                              {addr.country && `, ${addr.country}`}
                             </p>
                           </div>
                           {addr.isDefault && (
@@ -600,6 +713,18 @@ const Checkout = () => {
                       />
                     </div>
 
+                    {/* ✅ Country field */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">Country *</label>
+                      <CountrySelect
+                        value={formData.country}
+                        onChange={(country) => {
+                          setFormData({ ...formData, country });
+                          if (addressSaved) setAddressSaved(false);
+                        }}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">City *</label>
@@ -687,20 +812,28 @@ const Checkout = () => {
                       </div>
                     </label>
 
-                    <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-[#5C3A21] transition">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={paymentMethod === 'cod'}
-                        onChange={() => setPaymentMethod('cod')}
-                        className="mr-3 w-4 h-4 text-[#5C3A21]"
-                      />
-                      <div>
-                        <span className="font-semibold">Cash on Delivery</span>
-                        <p className="text-sm text-gray-500">Pay {formatPrice(deliveryCharge)} now, rest on delivery</p>
-                      </div>
-                    </label>
+                    {!isInternational && (
+                      <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-[#5C3A21] transition">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="cod"
+                          checked={paymentMethod === 'cod'}
+                          onChange={() => setPaymentMethod('cod')}
+                          className="mr-3 w-4 h-4 text-[#5C3A21]"
+                        />
+                        <div>
+                          <span className="font-semibold">Cash on Delivery</span>
+                          <p className="text-sm text-gray-500">Pay {formatPrice(deliveryCharge)} now, rest on delivery</p>
+                        </div>
+                      </label>
+                    )}
+
+                    {isInternational && (
+                      <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                        ℹ️ COD is not available for international orders. Please pay online.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -826,7 +959,14 @@ const Checkout = () => {
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Delivery Charge</span>
+                  <span>
+                    Delivery Charge
+                    {isInternational && (
+                      <span className="block text-xs text-gray-500">
+                        {cartTotalWeight.toFixed(2)} kg × ₹1000/kg (international)
+                      </span>
+                    )}
+                  </span>
                   <span>{formatPrice(deliveryCharge)}</span>
                 </div>
                 {paymentMethod === 'cod' && (

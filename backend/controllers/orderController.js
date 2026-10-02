@@ -33,6 +33,29 @@ const addCategoriesToItems = async (items = []) => {
   });
 };
 
+// ✅ Compute international delivery charge (₹1000/kg) or fall back to domestic
+const computeDeliveryCharge = (orderItems, address) => {
+  const isInternational = !!(address?.country && address.country !== 'India');
+
+  if (!isInternational) {
+    return {
+      isInternational: false,
+      deliveryCharge: calculateDeliveryCharge(orderItems),
+    };
+  }
+
+  const cartTotalWeight = orderItems.reduce((sum, item) => {
+  if (item.category === 'senaboard') return sum + 1 * item.quantity;
+  const w = parseFloat(item.selectedWeight);
+  return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
+}, 0);
+
+return {
+  isInternational: true,
+  deliveryCharge: Math.round(cartTotalWeight * 1000),
+};
+};
+
 // @desc    Create Razorpay order (not DB order)
 // @route   POST /api/orders
 // @access  Private
@@ -42,8 +65,16 @@ const createOrder = async (req, res) => {
     const userId = req.user.id;
 
     const orderItems = await addCategoriesToItems(items);
-    const deliveryCharge = calculateDeliveryCharge(orderItems);
+    const { isInternational, deliveryCharge } = computeDeliveryCharge(orderItems, address);
     const subtotal = calculateSubtotal(orderItems);
+
+    // ✅ Block COD for international orders
+    if (isInternational && paymentMethod === 'cod') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cash on Delivery is not available for international orders.',
+      });
+    }
 
     // Server-side validation: only allow freeGift 1 or 2 if subtotal >= 3000.
     // Anything invalid is forced to 0.
@@ -63,6 +94,7 @@ const createOrder = async (req, res) => {
       codAdvance,
       freeGift,
       validatedFreeGift,
+      isInternational,
     });
 
     const finalTotal = subtotal + deliveryCharge;
@@ -183,7 +215,7 @@ const verifyPayment = async (req, res) => {
     const { items, paymentMethod, address, freeGift } = orderData;
     const userId = req.user.id;
     const orderItems = await addCategoriesToItems(items);
-    const deliveryCharge = calculateDeliveryCharge(orderItems);
+    const { isInternational, deliveryCharge } = computeDeliveryCharge(orderItems, address);
     const subtotal = calculateSubtotal(orderItems);
     const totalAmount = subtotal + deliveryCharge;
 
@@ -255,6 +287,7 @@ const verifyPayment = async (req, res) => {
       orderNumber: order.orderNumber,
       paymentStatus,
       paidAmount,
+      isInternational,
     });
 
     // Prefer the verified account email over checkout input. Delivery failures
@@ -380,6 +413,7 @@ const getMyOrders = async (req, res) => {
         city: order.address?.city || '',
         state: order.address?.state || '',
         pincode: order.address?.pincode || '',
+        country: order.address?.country || 'India',
       },
     }));
 

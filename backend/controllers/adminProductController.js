@@ -104,6 +104,9 @@ const deleteProduct = async (req, res) => {
 // @desc    One-off dev rename: Indian Hanuman Gada Model: 10 → Indian Ram Gada Model: 10
 // @route   POST /api/admin/dev/rename-product
 // @access  Private (Admin)
+// @desc    Dev: add default lengthPerWeight to gada products missing it
+// @route   POST /api/admin/dev/rename-product
+// @access  Private (Admin)
 // @desc    Dev: add default lengthPerWeight to all mudgar products
 // @route   POST /api/admin/dev/rename-product
 // @access  Private (Admin)
@@ -114,7 +117,7 @@ const devRenameProduct = async (req, res) => {
       '3': '2',
       '4': '2',
       '5': '2',
-      '6': '2.5',
+      '6': '2',
       '7': '2.5',
       '8': '2.5',
       '9': '2.5',
