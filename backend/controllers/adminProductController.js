@@ -101,8 +101,40 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// @desc    One-off dev rename: Indian Hanuman Gada Model: 10 → Indian Ram Gada Model: 10
+// @route   POST /api/admin/dev/rename-product
+// @access  Private (Admin)
+const devRenameProduct = async (req, res) => {
+  try {
+    const result = await Product.updateOne(
+      { name: 'Indian Hanuman Gada Model: 10' },
+      { $set: { name: 'Indian Ram Gada Model: 10' } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product "Indian Hanuman Gada Model: 10" not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Renamed (${result.modifiedCount} updated)`,
+    });
+  } catch (error) {
+    console.error('Dev rename error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to rename product',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
   updateProduct,
   deleteProduct,
+  devRenameProduct,
 };

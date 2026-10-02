@@ -61,6 +61,8 @@ const AdminDashboard = () => {
   const [dateTo, setDateTo] = useState('');
   const [dateRangeData, setDateRangeData] = useState(null);
   const [loadingDateRange, setLoadingDateRange] = useState(false);
+  const [devBusy, setDevBusy] = useState(false);
+  const [devMsg, setDevMsg] = useState('');
 
   useEffect(() => {
     fetchStats();
@@ -398,6 +400,33 @@ const AdminDashboard = () => {
   return (
     <div className="px-4 pb-8">
       <div className='h-20'></div>
+      {/* Developer-only button */}
+      {/* <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-red-200">
+        <h2 className="text-lg font-bold text-red-700 mb-3">🛠 Developer Tools</h2>
+        <button
+          onClick={async () => {
+            if (!window.confirm('Run the product rename script?')) return;
+            setDevBusy(true);
+            setDevMsg('');
+            try {
+              const res = await fetchWithAuth(`${API_URL}/admin/dev/rename-product`, {
+                method: 'POST',
+              });
+              if (!res.success) throw new Error(res.message || 'Failed');
+              setDevMsg(`✅ ${res.message}`);
+            } catch (err) {
+              setDevMsg(`❌ ${err.message || 'Failed'}`);
+            } finally {
+              setDevBusy(false);
+            }
+          }}
+          disabled={devBusy}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+        >
+          {devBusy ? 'Working…' : 'Run Rename Script'}
+        </button>
+        {devMsg && <p className="mt-3 text-sm text-gray-700">{devMsg}</p>}
+      </div> */}
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
       <p className="text-gray-600 mb-8">Welcome to your admin panel</p>
 

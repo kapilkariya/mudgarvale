@@ -4,6 +4,7 @@ const {
   getAllProducts,
   updateProduct,
   deleteProduct,
+  devRenameProduct,
 } = require('../controllers/adminProductController');
 const {
   getAllOrders,
@@ -30,6 +31,7 @@ router.use(adminOnly);
 router.get('/products', getAllProducts);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
+router.post('/dev/rename-product', devRenameProduct);
 
 // Order management routes
 router.get('/orders', getAllOrders);

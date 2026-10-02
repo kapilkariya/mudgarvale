@@ -10,6 +10,7 @@ const SPECIAL_PRODUCT_NAMES = [
   'Special Traditional Mudgar : 1',
   'Traditional Mudgar Model: 13',
   'Indian Hanuman Gada Model: 13',
+  'Indian Ram Gada Model: 10',
   'Angad Gada',
 ];
 
