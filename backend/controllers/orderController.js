@@ -45,15 +45,16 @@ const computeDeliveryCharge = (orderItems, address) => {
   }
 
   const cartTotalWeight = orderItems.reduce((sum, item) => {
-  if (item.category === 'senaboard') return sum + 1 * item.quantity;
-  const w = parseFloat(item.selectedWeight);
-  return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
-}, 0);
+    if (item.category === 'decor') return sum + 4 * item.quantity;
+    if (item.category === 'sticks') return sum + 2 * item.quantity;
+    const w = parseFloat(item.selectedWeight);
+    return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
+  }, 0);
 
-return {
-  isInternational: true,
-  deliveryCharge: Math.round(cartTotalWeight * 1000),
-};
+  return {
+    isInternational: true,
+    deliveryCharge: Math.round(cartTotalWeight * 1000),
+  };
 };
 
 // @desc    Create Razorpay order (not DB order)
