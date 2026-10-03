@@ -18,8 +18,8 @@ const CountrySelect = ({ value, onChange }) => {
 
   const filtered = query.trim()
     ? allCountries.filter((c) =>
-        c.name.toLowerCase().includes(query.toLowerCase())
-      )
+      c.name.toLowerCase().includes(query.toLowerCase())
+    )
     : allCountries;
 
   React.useEffect(() => {
@@ -70,9 +70,8 @@ const CountrySelect = ({ value, onChange }) => {
                     setOpen(false);
                     setQuery('');
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[#fdf6ec] flex items-center gap-2 ${
-                    c.name === value ? 'bg-[#fdf6ec] font-medium' : ''
-                  }`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[#fdf6ec] flex items-center gap-2 ${c.name === value ? 'bg-[#fdf6ec] font-medium' : ''
+                    }`}
                 >
                   <span>{c.flag}</span>
                   <span>{c.name}</span>
@@ -148,10 +147,12 @@ const Checkout = () => {
 
   // ✅ Total cart weight in kg (used for international shipping)
   const cartTotalWeight = cart.reduce((sum, item) => {
-  if (item.category === 'senaboard') return sum + 1 * item.quantity;
-  const w = parseFloat(item.selectedWeight);
-  return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
-}, 0);
+    if (item.category === 'senaboard') return sum + 2 * item.quantity;
+    if (item.category === 'sticks') return sum + 2 * item.quantity;
+    if (item.category === 'decor') return sum + 4 * item.quantity;
+    const w = parseFloat(item.selectedWeight);
+    return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
+  }, 0);
 
   // Fetch config and saved addresses from backend
   useEffect(() => {
