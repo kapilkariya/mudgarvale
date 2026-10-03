@@ -112,43 +112,39 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const lengthPerWeight = {
-      '2': '1.5',
-      '3': '2',
-      '4': '2',
-      '5': '2',
-      '6': '2',
-      '7': '2.5',
-      '8': '2.5',
-      '9': '2.5',
-      '10': '2.5',
-      '11': '2.5',
-      '12': '2.5',
-      '13': '2.5',
-      '14': '2.5',
-      '15': '2.5',
-      '16': '2.5',
-      '17': '2.5',
-      '18': '2.5',
-      '19': '2.5',
-      '20': '2.5',
-    };
+    // Sample any sticks product to read its weights
+    const sample = await Product.findOne({ category: 'sticks', isActive: true })
+      .select('weights')
+      .lean();
+
+    if (!sample || !sample.weights || sample.weights.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No sticks product with weights found',
+      });
+    }
+
+    // Build lengthPerWeight: 2 for every weight
+    const lengthPerWeight = {};
+    for (const w of sample.weights) {
+      lengthPerWeight[String(w)] = '2';
+    }
 
     const result = await Product.updateMany(
-      { category: 'mudgar' },
+      { category: 'sticks' },
       { $set: { lengthPerWeight } }
     );
 
     if (result.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No products found with category "mudgar"',
+        message: 'No products found with category "sticks"',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Updated ${result.modifiedCount} mudgar product(s) with lengths`,
+      message: `Updated ${result.modifiedCount} sticks product(s) with lengths`,
     });
   } catch (error) {
     console.error('Dev update error:', error);
@@ -159,6 +155,8 @@ const devRenameProduct = async (req, res) => {
     });
   }
 };
+
+
 
 module.exports = {
   getAllProducts,

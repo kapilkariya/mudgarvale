@@ -310,7 +310,7 @@ const ProductDetails = () => {
                         {weight} {product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}
                         {length && (
                           <span className="block text-xs font-semibold opacity-90">
-                            {length} ft
+                            {length} {product.category === 'sticks' || product.category === 'decor' ? 'kg' : 'ft'}
                           </span>
                         )}
                         <span className="block text-xs opacity-80">
