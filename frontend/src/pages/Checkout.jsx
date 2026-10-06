@@ -207,7 +207,6 @@ const Checkout = () => {
   };
 
   const subtotal = getCartTotal();
-  const isEligibleForFreeGift = subtotal >= 3000;
 
   // ✅ Delivery charge: international ₹1000/kg, domestic unchanged
   const deliveryCharge = isInternational
@@ -381,7 +380,7 @@ const Checkout = () => {
         totalAmount: total,
         paymentMethod: paymentMethod,
         address: address,
-        freeGift: isEligibleForFreeGift ? freeGift : 0,
+        freeGift: 0,
       };
 
       const response = await orderAPI.create(orderData);
@@ -838,58 +837,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Free Gift */}
-                {isEligibleForFreeGift && (
-                  <div className="pt-4">
-                    <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-400">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xl">🎁</span>
-                        <h3 className="font-bold text-green-800">
-                          Congratulations! You're eligible for a FREE gift
-                        </h3>
-                      </div>
-                      <p className="text-sm text-green-700 mb-3">
-                        Choose any <strong>one</strong> of the following:
-                      </p>
-                      <div className="space-y-2">
-                        <label
-                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 1
-                            ? 'border-green-600 bg-white'
-                            : 'border-gray-200 bg-white hover:border-green-400'
-                            }`}
-                        >
-                          <input
-                            type="radio"
-                            name="freeGift"
-                            value={1}
-                            checked={freeGift === 1}
-                            onChange={() => setFreeGift(1)}
-                            className="mr-3 w-4 h-4 text-green-600"
-                          />
-                          <span className="font-medium text-gray-800">1 KG Gada (Free)</span>
-                        </label>
-
-                        <label
-                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 2
-                            ? 'border-green-600 bg-white'
-                            : 'border-gray-200 bg-white hover:border-green-400'
-                            }`}
-                        >
-                          <input
-                            type="radio"
-                            name="freeGift"
-                            value={2}
-                            checked={freeGift === 2}
-                            onChange={() => setFreeGift(2)}
-                            className="mr-3 w-4 h-4 text-green-600"
-                          />
-                          <span className="font-medium text-gray-800">Sena Board (Free)</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* ✅ Address-save hint above the pay button */}
                 {!hasSavedAddress && (
                   <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800">
@@ -940,18 +887,6 @@ const Checkout = () => {
                     </div>
                   );
                 })}
-
-                {isEligibleForFreeGift && freeGift !== 0 && (
-                  <div className="flex justify-between text-sm">
-                    <div>
-                      <span className="font-medium">
-                        🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}
-                      </span>
-                      <span className="text-gray-500"> (Free Gift)</span>
-                    </div>
-                    <span>FREE</span>
-                  </div>
-                )}
               </div>
 
               <div className="border-t pt-4 space-y-2">
