@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/google-shopping-feed.xml", async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true }).lean();
+    const products = await Product.find({ isActive: true, category: { $ne: 'decor' } }).lean();
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">

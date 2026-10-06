@@ -14,7 +14,7 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'decor', 'sticks'];
+  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
 
   // Category metadata configuration
   const categoryMeta = {
@@ -151,11 +151,14 @@ const Products = () => {
     sticks: 6,
   };
 
-  const sortedProducts = [...products].sort((a, b) => {
-    const orderA = categoryOrder[a.category] || 999;
-    const orderB = categoryOrder[b.category] || 999;
-    return orderA - orderB;
-  });
+  // ✅ Hide decor products from the grid
+  const sortedProducts = [...products]
+    .filter((p) => p.category !== 'decor')
+    .sort((a, b) => {
+      const orderA = categoryOrder[a.category] || 999;
+      const orderB = categoryOrder[b.category] || 999;
+      return orderA - orderB;
+    });
 
   // Get display title
   const getDisplayTitle = () => {
@@ -196,7 +199,7 @@ const Products = () => {
             {getDisplayTitle()}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${products.length} products`}
+            {loading ? 'Loading...' : `${sortedProducts.length} products`}
           </p>
         </div>
 
@@ -253,7 +256,7 @@ const Products = () => {
         {/* Products Grid */}
         {!loading && !error && (
           <>
-            {products.length === 0 ? (
+            {sortedProducts.length === 0 ? (
               <div className="text-center py-12 sm:py-16 md:py-20">
                 <p className="text-gray-500 text-base sm:text-lg">No products found</p>
                 {selectedCategory !== 'all' && (
