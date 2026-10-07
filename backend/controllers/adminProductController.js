@@ -112,39 +112,36 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    // Sample any sticks product to read its weights
-    const sample = await Product.findOne({ category: 'sticks', isActive: true })
-      .select('weights')
-      .lean();
+    const EXCLUDED_NAMES = [
+      'Indian Bheem Gada Model: 13',
+      'Indian Hanuman Gada Model: 2',
+      'Angad Gada',
+    ];
 
-    if (!sample || !sample.weights || sample.weights.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No sticks product with weights found',
-      });
-    }
-
-    // Build lengthPerWeight: 2 for every weight
-    const lengthPerWeight = {};
-    for (const w of sample.weights) {
-      lengthPerWeight[String(w)] = '2';
+    // Build a pricePerWeight map for weights 2..20, all at 400
+    const pricePerWeight = {};
+    for (let i = 2; i <= 20; i++) {
+      pricePerWeight[String(i)] = i*500;
     }
 
     const result = await Product.updateMany(
-      { category: 'sticks' },
-      { $set: { lengthPerWeight } }
+      {
+        category: 'gada',
+        name: { $nin: EXCLUDED_NAMES },
+      },
+      { $set: { pricePerWeight } }
     );
 
     if (result.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No products found with category "sticks"',
+        message: 'No gada products found to update',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Updated ${result.modifiedCount} sticks product(s) with lengths`,
+      message: `Updated ${result.modifiedCount} gada product(s) to ₹400/kg`,
     });
   } catch (error) {
     console.error('Dev update error:', error);

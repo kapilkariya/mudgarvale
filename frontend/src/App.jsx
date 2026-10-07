@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
@@ -33,7 +33,131 @@ import Cancellation from "./pages/Cancellation";
 import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
-
+// ---------- Promo popup ----------
+const PromoPopup = () => {
+  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const t1 = setTimeout(() => setOpen(true), 200);
+    const t2 = setTimeout(() => setVisible(true), 250);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+  const close = () => {
+    setVisible(false);
+    setTimeout(() => setOpen(false), 200);
+  };
+  const shopNow = () => {
+    setVisible(false);
+    setOpen(false);
+    navigate("/products");
+  };
+  if (!open) return null;
+  return (
+    <div
+      onClick={close}
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: visible ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+        zIndex: 2000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "12px",
+        transition: "background-color 200ms ease",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative",
+          width: "92vw",
+          maxWidth: "1100px",
+          maxHeight: "92vh",
+          transform: visible ? "scale(1) translateY(0)" : "scale(0.85) translateY(20px)",
+          opacity: visible ? 1 : 0,
+          transition: "transform 300ms cubic-bezier(0.34,1.56,0.64,1), opacity 250ms ease",
+          overflow: "hidden",
+          borderRadius: "18px",
+          boxShadow: "0 25px 70px rgba(0,0,0,0.55)",
+        }}
+      >
+        <picture>
+          <source media="(max-width: 600px)" srcSet="/offer.png" />
+          <img
+            src="/offer2.png"
+            alt="Ganesh Chaturthi Special Offer"
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+              maxHeight: "92vh",
+              objectFit: "contain",
+            }}
+          />
+        </picture>
+        {/* Close Button */}
+        <button
+          onClick={close}
+          aria-label="Close offer"
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            width: "42px",
+            height: "42px",
+            borderRadius: "50%",
+            border: "2px solid rgba(255,255,255,0.9)",
+            background: "rgba(70,25,10,0.85)",
+            color: "#fff",
+            fontSize: "24px",
+            fontWeight: "700",
+            lineHeight: 1,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
+            zIndex: 2,
+          }}
+        >
+          ×
+        </button>
+        {/* Real Shop Now Button */}
+        <button
+          onClick={shopNow}
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: "5.5%",
+            transform: "translateX(-50%)",
+            width: "42%",
+            minWidth: "180px",
+            padding: "12px 20px",
+            border: "2px solid #d9a441",
+            borderRadius: "30px",
+            background: "linear-gradient(135deg,#5c210d,#8b3d16)",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "700",
+            letterSpacing: "0.5px",
+            cursor: "pointer",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
+            zIndex: 2,
+          }}
+        >
+          🛒 Shop Now
+        </button>
+      </div>
+    </div>
+  );
+};
 // Create a wrapper component for page tracking
 const AppRoutes = () => {
   const location = useLocation();
@@ -114,7 +238,7 @@ const AppRoutes = () => {
       <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
-}
+};
 function App() {
   return (
     <AuthProvider>
@@ -124,6 +248,7 @@ function App() {
           <Navbar />
           <AppRoutes />
           <MudgarFooter />
+          <PromoPopup />
         </Router>
       </CartProvider>
       {/* WhatsApp Floating Button */}
