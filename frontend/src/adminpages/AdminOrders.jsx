@@ -376,20 +376,20 @@ const AdminOrders = () => {
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   const prepareExportData = (ordersToExport) => {
+  const rows = [];
 
-    return ordersToExport.map((order) => {
-      const freeGiftLabel = getFreeGiftLabel(order.freeGift);
+  ordersToExport.forEach((order) => {
+    const freeGiftLabel = getFreeGiftLabel(order.freeGift);
 
-      const productItems = order.items?.map(item =>
+    // ---------- Common helpers ----------
+    const buildItemsList = (items) =>
+      items?.map(item =>
         `${item.name}${item.category !== 'senaboard'
           ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
           : ''} × ${item.quantity}`).join('; ') || '';
 
-      const itemsList = freeGiftLabel
-        ? `${productItems}${productItems ? '; ' : ''}${freeGiftLabel} (free)`
-        : productItems;
-
-      const itemsWeight = order.items?.reduce((sum, item) => {
+    const computeItemsWeight = (items) =>
+      items?.reduce((sum, item) => {
         if (item.category === 'senaboard') return sum + 2 * item.quantity;
         if (item.category === 'sticks') return sum + 2 * item.quantity;
         if (item.category === 'decor') return sum + 4 * item.quantity;
@@ -397,63 +397,102 @@ const AdminOrders = () => {
         return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
       }, 0) || 0;
 
-      // Free gift adds weight: 1 KG Gada → +1kg, Sena Board → +2kg
-      const freeGiftWeight = order.freeGift === 1 ? 1 : order.freeGift === 2 ? 2 : 0;
+    const computeItemsSubtotal = (items) =>
+      items?.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0) || 0;
 
-      const totalWeight = itemsWeight + freeGiftWeight;
+    const freeGiftWeight = order.freeGift === 1 ? 1 : order.freeGift === 2 ? 2 : 0;
 
-      // ✅ Use backend-computed values
-      const amountPaid = Number(order.paidAmount || 0);
-      const amountPending = Number(order.remainingAmount || 0);
+    // ---------- Common order-level values ----------
+    const amountPaid = Number(order.paidAmount || 0);
+    const amountPending = Number(order.remainingAmount || 0);
 
-      let paymentStatusDisplay = '';
-      if (amountPending === 0 && amountPaid > 0) {
-        paymentStatusDisplay = 'Fully Paid';
-      } else if (amountPaid > 0 && amountPending > 0) {
-        paymentStatusDisplay = 'Partially Paid';
-      } else {
-        paymentStatusDisplay = 'Unpaid';
-      }
+    let paymentStatusDisplay = '';
+    if (amountPending === 0 && amountPaid > 0) paymentStatusDisplay = 'Fully Paid';
+    else if (amountPaid > 0 && amountPending > 0) paymentStatusDisplay = 'Partially Paid';
+    else paymentStatusDisplay = 'Unpaid';
 
-      // Show "Paid" instead of 0 when an online order is fully paid
-      const amountPendingDisplay =
-        order.paymentMethod === 'online' && amountPending === 0
-          ? 'Paid'
-          : amountPending;
+    const amountPendingDisplay =
+      order.paymentMethod === 'online' && amountPending === 0 ? 'Paid' : amountPending;
 
-      const buildingFlat = order.address?.buildingFlatNo || '';
-      const addressLine = order.address?.address || '';
-      const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
-      const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
-      const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
+    const buildingFlat = order.address?.buildingFlatNo || '';
+    const addressLine = order.address?.address || '';
+    const fullAddress = buildingFlat && addressLine ? `${buildingFlat}, ${addressLine}` : buildingFlat || addressLine;
+
+    const specialItems = order.items?.filter(item => SPECIAL_PRODUCT_NAMES.includes(item.name)).map(() => `⭐⭐⭐ `).join('; ') || '';
+    const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
 🌙
  `).join('; ') || '';
 
-      return {
-        'Order Number': order.orderNumber || '',
-        'Customer Name': order.user?.name || order.address?.name || '',
-        'Customer Email': order.user?.email || order.address?.email || '',
-        'Address': fullAddress,
-        'City': order.address?.city || '',
-        'State': order.address?.state || '',
-        'Pincode': order.address?.pincode || '',
-        'Items': itemsList,
-        'Phone': order.address?.phone || '',
-        'Phone 2': order.address?.phone2 || '',
-        'Total Weight (kg)': totalWeight.toFixed(2),
+    const baseRow = {
+      'Row Type': 'Full Order',
+      'Order Number': order.orderNumber || '',
+      'Customer Name': order.user?.name || order.address?.name || '',
+      'Customer Email': order.user?.email || order.address?.email || '',
+      'Address': fullAddress,
+      'City': order.address?.city || '',
+      'State': order.address?.state || '',
+      'Pincode': order.address?.pincode || '',
+      'Items': '',
+      'Phone': order.address?.phone || '',
+      'Phone 2': order.address?.phone2 || '',
+      'Total Weight (kg)': '',
+      'Total Amount': '',
+      'Amount Paid': amountPaid,
+      'Amount Pending': amountPendingDisplay,
+      'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
+      'Payment Status': paymentStatusDisplay,
+      'Order Status': order.orderStatus || '',
+      'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
+      'Special Items': specialItems,
+      'Decor Items': decorItems,
+      'Free Gift': getFreeGiftLabel(order.freeGift) || '',
+    };
+
+    // ---------- Split items ----------
+    const allItems = order.items || [];
+    const sticksItems = allItems.filter(item => item.category === 'sticks');
+    const nonSticksItems = allItems.filter(item => item.category !== 'sticks');
+
+    const hasSticks = sticksItems.length > 0;
+    const hasNonSticks = nonSticksItems.length > 0;
+
+    // ---------- Row 1: full order (only if there are non-sticks items) ----------
+    if (hasNonSticks) {
+      const fullProductItems = buildItemsList(allItems);
+      const fullItemsList = freeGiftLabel
+        ? `${fullProductItems}${fullProductItems ? '; ' : ''}${freeGiftLabel} (free)`
+        : fullProductItems;
+
+      const fullItemsWeight = computeItemsWeight(allItems);
+      const fullTotalWeight = fullItemsWeight + freeGiftWeight;
+
+      rows.push({
+        ...baseRow,
+        'Row Type': 'Full Order',
+        'Items': fullItemsList,
+        'Total Weight (kg)': fullTotalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
-        'Amount Paid': amountPaid,
-        'Amount Pending': amountPendingDisplay,
-        'Payment Method': order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery',
-        'Payment Status': paymentStatusDisplay,
-        'Order Status': order.orderStatus || '',
-        'Created Date': order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '',
-        'Special Items': specialItems,
-        'Decor Items': decorItems,
-        'Free Gift': getFreeGiftLabel(order.freeGift) || '',
-      };
-    });
-  };
+      });
+    }
+
+    // ---------- Row 2: sticks only (only if sticks exist) ----------
+    if (hasSticks) {
+      const sticksList = buildItemsList(sticksItems);
+      const sticksWeight = computeItemsWeight(sticksItems); // 2 kg per stick
+      const sticksSubtotal = computeItemsSubtotal(sticksItems);
+
+      rows.push({
+        ...baseRow,
+        'Row Type': hasNonSticks ? 'Sticks Only' : 'Sticks Only', // same label either way
+        'Items': sticksList,
+        'Total Weight (kg)': sticksWeight.toFixed(2),
+        'Total Amount': sticksSubtotal,
+      });
+    }
+  });
+
+  return rows;
+};
 
   const exportToExcel = async () => {
     try {
