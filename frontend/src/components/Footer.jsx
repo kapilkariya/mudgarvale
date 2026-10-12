@@ -152,10 +152,23 @@ export default function MudgarFooter() {
         {/* Contact Us */}
         <div>
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2e1503", margin: "0 0 18px 0" }}>Contact Us</h3>
-          <p style={{ fontSize: "14px", color: "#4a2800", lineHeight: "1.6", marginBottom: "14px" }}>
-            39 krishna nagar ,<br />near shanti nagar udhana,<br /> Surat
-            +91 7016243133,
+          <p style={{ fontSize: "14px", color: "#4a2800", lineHeight: "1.6", marginBottom: "10px" }}>
+            39 krishna nagar ,<br />
+            near shanti nagar udhana,<br />
+            Surat - 395012<br />
+            +91 7016243133
           </p>
+          <a
+            href="https://www.google.com/maps/place/21%C2%B009'59.5%22N+72%C2%B052'02.3%22E/@21.166515,72.864725,17z/data=!3m1!4b1!4m4!3m3!8m2!3d21.166515!4d72.8672999?hl=en&entry=ttu&g_ep=EgoyMDI2MTAwNy4wIKXMDSoASAFQAw%3D%3D"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#4a2800", textDecoration: "underline", marginBottom: "14px" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+            </svg>
+            <span>View on Google Maps</span>
+          </a>
           <a href="mailto:mudgarvale@gmail.com" style={{ display: "block", fontSize: "14px", color: "#4a2800", textDecoration: "underline", marginBottom: "20px" }}>mudgarvale@gmail.com</a>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
