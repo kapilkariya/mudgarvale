@@ -20,35 +20,44 @@ const {
   getCheckoutSessions,
   placeOrderFromSession,
 } = require('../controllers/adminCheckoutSessionController');
+const {
+  getCoupons,
+  createCoupon,
+  deleteCoupon,
+  toggleCouponListed,
+} = require('../controllers/couponController');
 
 const router = express.Router();
 
-// All routes are protected and require admin access
 router.use(protect);
 router.use(adminOnly);
 
-// Product management routes
+// Product management
 router.get('/products', getAllProducts);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 router.post('/dev/rename-product', devRenameProduct);
 
-// Order management routes
+// Order management
 router.get('/orders', getAllOrders);
 router.get('/orders/paginated', getOrdersPaginated);
 router.get('/orders/date-range', getOrdersByDateRange);
 router.get('/orders/stats', getOrderStats);
 
-// ⚠️ Bulk routes MUST come BEFORE '/orders/:id' routes
 router.patch('/orders/bulk-status', bulkUpdateOrderStatus);
 router.get('/orders/bulk-status/preview', previewBulkUpdateOrderStatus);
 
-// Single-order routes (with :id param) — must come LAST
 router.put('/orders/:id', updateOrder);
 router.patch('/orders/:id/status', updateOrderStatus);
 
-// ✅ Checkout sessions (admin view + place-order action)
+// Checkout sessions
 router.get('/checkout-sessions', getCheckoutSessions);
 router.post('/checkout-sessions/:id/place-order', placeOrderFromSession);
+
+// Coupon management
+router.get('/coupons', getCoupons);
+router.post('/coupons', createCoupon);
+router.delete('/coupons/:id', deleteCoupon);
+router.patch('/coupons/:id/list', toggleCouponListed);
 
 module.exports = router;

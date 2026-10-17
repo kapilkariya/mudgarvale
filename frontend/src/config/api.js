@@ -13,7 +13,6 @@ export const fetchWithAuth = async (url, options = {}) => {
     },
   };
 
-  // Merge options carefully to handle FormData (which shouldn't have Content-Type set)
   const mergedOptions = {
     ...defaultOptions,
     ...options,
@@ -23,7 +22,6 @@ export const fetchWithAuth = async (url, options = {}) => {
     },
   };
 
-  // Remove Content-Type if body is FormData (browser will set it with boundary)
   if (options.body instanceof FormData) {
     delete mergedOptions.headers['Content-Type'];
   }
@@ -109,6 +107,15 @@ export const orderAPI = {
   getMyOrders: () => fetchWithAuth(`${API_URL}/orders/my-orders`),
 
   getOrderById: (id) => fetchWithAuth(`${API_URL}/orders/${id}`),
+
+  // ✅ Coupon validation (checkout page)
+  validateCoupon: (data) => fetchWithAuth(`${API_URL}/orders/validate-coupon`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // ✅ Listed coupons for checkout chips
+  getListedCoupons: () => fetchWithAuth(`${API_URL}/orders/listed-coupons`),
 };
 
 // Address API calls
@@ -174,13 +181,13 @@ export const adminAPI = {
   }),
   deleteProduct: (id) => fetchWithAuth(`${API_URL}/admin/products/${id}`, { method: 'DELETE' }),
   
-  // Orders - Original (fetches all orders)
+  // Orders - Original
   getAllOrders: (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return fetchWithAuth(`${API_URL}/admin/orders${queryString ? `?${queryString}` : ''}`);
   },
   
-  // NEW - Paginated orders (for admin orders page - fetches 20 at a time)
+  // Paginated orders
   getOrdersPaginated: (page = 1, limit = 20) => {
     return fetchWithAuth(`${API_URL}/admin/orders/paginated?page=${page}&limit=${limit}`);
   },
@@ -201,15 +208,21 @@ export const adminAPI = {
     body: JSON.stringify({ orderStatus: status }),
   }),
 
-  // ✅ NEW - Bulk update order status for a date range
-  // Skips orders with paymentStatus 'pending' and orders already 'cancelled'
   bulkUpdateOrderStatus: (data) => fetchWithAuth(`${API_URL}/admin/orders/bulk-status`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
 
-  // ✅ NEW - Preview how many orders would be affected by bulk update
   previewBulkUpdateOrderStatus: (from, to) => {
     return fetchWithAuth(`${API_URL}/admin/orders/bulk-status/preview?from=${from}&to=${to}`);
   },
-};
+
+  // ✅ Coupons
+  getCoupons: () => fetchWithAuth(`${API_URL}/admin/coupons`),
+  createCoupon: (data) => fetchWithAuth(`${API_URL}/admin/coupons`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  deleteCoupon: (id) => fetchWithAuth(`${API_URL}/admin/coupons/${id}`, { method: 'DELETE' }),
+  toggleCouponListed: (id) => fetchWithAuth(`${API_URL}/admin/coupons/${id}/list`, { method: 'PATCH' }),
+};  

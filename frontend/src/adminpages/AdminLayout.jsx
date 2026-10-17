@@ -21,6 +21,7 @@ const AdminLayout = () => {
     { path: '/admin', label: 'Dashboard', icon: '📊' },
     { path: '/admin/products', label: 'Products', icon: '📦' },
     { path: '/admin/orders', label: 'Orders', icon: '🛒' },
+    { path: '/admin/coupons', label: 'Coupons', icon: '🎟️' },
     { path: '/admin/checkout-sessions', label: 'Checkout Sessions', icon: '🧾' },
     { path: '/', label: 'Back to Store', icon: '🏠' },
   ];
@@ -34,14 +35,12 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 lg:grid lg:grid-cols-[256px_1fr]">
-      
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 bg-[#5C3A21] text-white w-64 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:row-span-2 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-<div className='h-20'></div>
+        <div className='h-20'></div>
         <nav className="flex-1 h-[65vh]">
           {navItems.map((item) => (
             <Link
@@ -72,7 +71,6 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -80,9 +78,7 @@ const AdminLayout = () => {
         />
       )}
 
-      {/* Main content */}
       <main className="min-h-screen overflow-auto">
-        {/* Mobile header */}
         <header className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-30">
           <button
             onClick={() => setIsSidebarOpen(true)}
@@ -96,14 +92,12 @@ const AdminLayout = () => {
           <div className="w-10" />
         </header>
 
-        {/* Desktop header */}
         <div className="hidden lg:block bg-white shadow-sm px-8 py-4 sticky top-0 z-20">
           <h1 className="text-xl font-semibold text-gray-800">
             {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
           </h1>
         </div>
 
-        {/* Page content */}
         <div className="p-6 lg:p-8">
           <Outlet />
         </div>
@@ -112,4 +106,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default AdminLayout;   

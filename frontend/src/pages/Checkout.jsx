@@ -5,10 +5,8 @@ import { orderAPI, configAPI, addressAPI, checkoutSessionAPI } from '../config/a
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 import { Country } from 'country-state-city';
 
-// ✅ Products that require a minimum order quantity of 2
 const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
 
-// ✅ Searchable country dropdown
 const CountrySelect = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -17,9 +15,7 @@ const CountrySelect = ({ value, onChange }) => {
   const allCountries = Country.getAllCountries();
 
   const filtered = query.trim()
-    ? allCountries.filter((c) =>
-      c.name.toLowerCase().includes(query.toLowerCase())
-    )
+    ? allCountries.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
     : allCountries;
 
   React.useEffect(() => {
@@ -39,9 +35,7 @@ const CountrySelect = ({ value, onChange }) => {
         onClick={() => setOpen((v) => !v)}
         className="w-full text-left px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none bg-white flex items-center justify-between"
       >
-        <span>
-          {selected ? `${selected.flag} ${selected.name}` : 'Select country'}
-        </span>
+        <span>{selected ? `${selected.flag} ${selected.name}` : 'Select country'}</span>
         <span className="text-gray-400">▾</span>
       </button>
 
@@ -70,8 +64,9 @@ const CountrySelect = ({ value, onChange }) => {
                     setOpen(false);
                     setQuery('');
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[#fdf6ec] flex items-center gap-2 ${c.name === value ? 'bg-[#fdf6ec] font-medium' : ''
-                    }`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-[#fdf6ec] flex items-center gap-2 ${
+                    c.name === value ? 'bg-[#fdf6ec] font-medium' : ''
+                  }`}
                 >
                   <span>{c.flag}</span>
                   <span>{c.name}</span>
@@ -94,14 +89,12 @@ const Checkout = () => {
 
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [configLoading, setConfigLoading] = useState(true);
-  const [freeGift, setFreeGift] = useState(0); // 0 = none, 1 = 1 KG Gada, 2 = Sena Board
+  const [freeGift, setFreeGift] = useState(0);
 
-  // Saved addresses from backend
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [useNewAddress, setUseNewAddress] = useState(false);
 
-  // Address save state
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressSaved, setAddressSaved] = useState(false);
   const [addressError, setAddressError] = useState('');
@@ -123,18 +116,19 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ✅ Minimum quantity helpers
-  const getMinQty = (item) => {
-    return MIN_QTY_PRODUCTS.includes(item.name) ? 2 : 1;
-  };
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [listedCoupons, setListedCoupons] = useState([]);
+
+  const getMinQty = (item) => (MIN_QTY_PRODUCTS.includes(item.name) ? 2 : 1);
   const hasMinQtyViolation = cart.some((item) => item.quantity < getMinQty(item));
   const violatedItems = cart.filter((item) => item.quantity < getMinQty(item));
 
-  // ✅ Address must be saved before paying
-  const hasSavedAddress =
-    (!useNewAddress && !!selectedAddressId) || addressSaved;
+  const hasSavedAddress = (!useNewAddress && !!selectedAddressId) || addressSaved;
 
-  // ✅ The effective country of the order (from saved address or new form)
   const effectiveCountry = (() => {
     if (!useNewAddress && selectedAddressId) {
       const saved = savedAddresses.find((a) => a._id === selectedAddressId);
@@ -145,7 +139,6 @@ const Checkout = () => {
 
   const isInternational = !!(effectiveCountry && effectiveCountry !== 'India');
 
-  // ✅ Total cart weight in kg (used for international shipping)
   const cartTotalWeight = cart.reduce((sum, item) => {
     if (item.category === 'senaboard') return sum + 2 * item.quantity;
     if (item.category === 'sticks') return sum + 2 * item.quantity;
@@ -154,7 +147,7 @@ const Checkout = () => {
     return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
   }, 0);
 
-  // Fetch config and saved addresses from backend
+  // Fetch config + addresses
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -169,22 +162,14 @@ const Checkout = () => {
 
         if (addressesResponse.success) {
           setSavedAddresses(addressesResponse.data);
-          const defaultAddr = addressesResponse.data.find(a => a.isDefault);
-          if (defaultAddr) {
-            setSelectedAddressId(defaultAddr._id);
-          } else if (addressesResponse.data.length > 0) {
-            setSelectedAddressId(addressesResponse.data[0]._id);
-          } else {
-            setUseNewAddress(true);
-          }
+          const defaultAddr = addressesResponse.data.find((a) => a.isDefault);
+          if (defaultAddr) setSelectedAddressId(defaultAddr._id);
+          else if (addressesResponse.data.length > 0) setSelectedAddressId(addressesResponse.data[0]._id);
+          else setUseNewAddress(true);
 
-          // ✅ Auto-sync CheckoutSession when a saved address already exists
           const effectiveAddr =
-            addressesResponse.data.find(a => a.isDefault) ||
-            addressesResponse.data[0];
-          if (effectiveAddr) {
-            syncCheckoutSession(effectiveAddr);
-          }
+            addressesResponse.data.find((a) => a.isDefault) || addressesResponse.data[0];
+          if (effectiveAddr) syncCheckoutSession(effectiveAddr);
         }
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -195,38 +180,80 @@ const Checkout = () => {
     fetchData();
   }, []);
 
-  // ✅ Force online payment for international orders
+  // Fetch listed coupons
   useEffect(() => {
-    if (isInternational) {
+    (async () => {
+      try {
+        const res = await orderAPI.getListedCoupons();
+        setListedCoupons(res?.data || []);
+      } catch (err) {
+        console.error('Failed to load listed coupons', err);
+      }
+    })();
+  }, []);
+
+  // Force online for international or coupon
+  useEffect(() => {
+    if (isInternational || appliedCoupon) {
       setPaymentMethod('online');
     }
-  }, [isInternational]);
+  }, [isInternational, appliedCoupon]);
 
-  const formatPrice = (price) => {
-    return `Rs. ${price.toLocaleString('en-IN')}`;
-  };
+  const formatPrice = (price) => `Rs. ${price.toLocaleString('en-IN')}`;
 
   const subtotal = getCartTotal();
   const isEligibleForFreeGift = subtotal >= 3000;
 
-  // ✅ Delivery charge: international ₹1000/kg, domestic unchanged
   const deliveryCharge = isInternational
     ? Math.round(cartTotalWeight * 1000)
     : calculateDeliveryCharge(cart);
 
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
+
   const codAdvance = paymentMethod === 'cod' ? deliveryCharge : 0;
-  const total = subtotal + deliveryCharge;
+  const total = discountedSubtotal + deliveryCharge;
   const amountToPayNow = paymentMethod === 'cod' ? codAdvance : total;
 
-  // ✅ Mirror current address + cart into CheckoutSession (fire-and-forget)
+  const applyCouponByCode = async (codeToApply) => {
+    setCouponError('');
+    const code = String(codeToApply || '').trim().toUpperCase();
+    if (!code) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+    try {
+      setCouponLoading(true);
+      const res = await orderAPI.validateCoupon({ code, subtotal });
+      if (res?.data) {
+        setAppliedCoupon({
+          code: res.data.code,
+          type: res.data.type,
+          value: res.data.value,
+          discountAmount: res.data.discountAmount,
+        });
+        setCouponInput('');
+      }
+    } catch (err) {
+      setCouponError(err?.message || 'Invalid coupon');
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const applyCoupon = () => applyCouponByCode(couponInput);
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError('');
+  };
+
   const syncCheckoutSession = (addressObj) => {
     if (!addressObj) return;
     checkoutSessionAPI
-      .save({
-        address: addressObj,
-        items: cart,
-        totalAmount: total,
-      })
+      .save({ address: addressObj, items: cart, totalAmount: total })
       .catch((err) => console.error('CheckoutSession sync failed:', err));
   };
 
@@ -237,9 +264,7 @@ const Checkout = () => {
   };
 
   const validateForm = () => {
-    if (!useNewAddress && selectedAddressId) {
-      return null;
-    }
+    if (!useNewAddress && selectedAddressId) return null;
     if (!formData.name.trim()) return 'Please enter your name';
     if (!formData.phone.trim()) return 'Please enter your phone number';
     if (!formData.address.trim()) return 'Please enter your address';
@@ -263,7 +288,7 @@ const Checkout = () => {
 
   const getOrderAddress = () => {
     if (!useNewAddress && selectedAddressId) {
-      const selectedAddress = savedAddresses.find(a => a._id === selectedAddressId);
+      const selectedAddress = savedAddresses.find((a) => a._id === selectedAddressId);
       if (selectedAddress) {
         return {
           name: selectedAddress.name,
@@ -296,9 +321,7 @@ const Checkout = () => {
       setSavingAddress(true);
 
       if (savedAddresses.length > 0) {
-        await Promise.all(
-          savedAddresses.map((addr) => addressAPI.delete(addr._id))
-        );
+        await Promise.all(savedAddresses.map((addr) => addressAPI.delete(addr._id)));
       }
 
       await addressAPI.add({
@@ -331,14 +354,10 @@ const Checkout = () => {
       setAddressSaved(true);
       setAddressError('');
 
-      // ✅ Mirror the freshly saved address + cart into CheckoutSession
       try {
         const latest = await addressAPI.getAll();
-        const effectiveAddr =
-          latest?.data?.find(a => a.isDefault) || latest?.data?.[0];
-        if (effectiveAddr) {
-          syncCheckoutSession(effectiveAddr);
-        }
+        const effectiveAddr = latest?.data?.find((a) => a.isDefault) || latest?.data?.[0];
+        if (effectiveAddr) syncCheckoutSession(effectiveAddr);
       } catch (err) {
         console.error('Post-save session sync failed:', err);
       }
@@ -354,13 +373,10 @@ const Checkout = () => {
     e.preventDefault();
     setError('');
 
-    // ✅ Block if address not saved yet
     if (!hasSavedAddress) {
       setError('Please save your address before proceeding to payment.');
       return;
     }
-
-    // ✅ Block submit if any item violates its minimum quantity
     if (hasMinQtyViolation) {
       setError('Some items do not meet the minimum quantity. Please go back to the cart and fix them.');
       return;
@@ -379,9 +395,10 @@ const Checkout = () => {
       const orderData = {
         items: cart,
         totalAmount: total,
-        paymentMethod: paymentMethod,
-        address: address,
+        paymentMethod,
+        address,
         freeGift: isEligibleForFreeGift ? freeGift : 0,
+        couponCode: appliedCoupon?.code || '',
       };
 
       const response = await orderAPI.create(orderData);
@@ -397,10 +414,7 @@ const Checkout = () => {
         let pendingOrderRemoved = false;
 
         const removePendingOrder = async () => {
-          if (paymentCompleted || pendingOrderRemoved) {
-            return;
-          }
-
+          if (paymentCompleted || pendingOrderRemoved) return;
           pendingOrderRemoved = true;
           try {
             await orderAPI.cancelPending({ razorpayOrderId: razorpayOrder.id });
@@ -426,7 +440,6 @@ const Checkout = () => {
                 razorpay_signature: response.razorpay_signature,
                 orderData: savedOrderData,
               });
-
               if (verifyResponse.success) {
                 clearCart();
                 navigate('/thankyou', { state: { success: true } });
@@ -437,13 +450,8 @@ const Checkout = () => {
               setError('Payment verification failed. Please contact support.');
             }
           },
-          prefill: {
-            name: formData.name,
-            contact: formData.phone,
-          },
-          theme: {
-            color: '#5C3A21',
-          },
+          prefill: { name: formData.name, contact: formData.phone },
+          theme: { color: '#5C3A21' },
         };
 
         const razorpay = new window.Razorpay(options);
@@ -455,22 +463,17 @@ const Checkout = () => {
           } catch (removeError) {
             console.error('Failed to remove pending order after payment failure:', removeError);
           }
-
           setError('Payment failed. Please try again.');
           setLoading(false);
         });
 
         razorpay.on('modal.close', async function () {
-          if (paymentCompleted) {
-            return;
-          }
-
+          if (paymentCompleted) return;
           try {
             await removePendingOrder();
           } catch (removeError) {
             console.error('Failed to remove pending order:', removeError);
           }
-
           setError('Payment cancelled.');
           setLoading(false);
         });
@@ -491,7 +494,6 @@ const Checkout = () => {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
-
     return () => {
       document.body.removeChild(script);
     };
@@ -531,7 +533,6 @@ const Checkout = () => {
           Checkout
         </h1>
 
-        {/* ✅ Minimum quantity violation banner */}
         {hasMinQtyViolation && (
           <div className="mb-6 p-4 bg-red-50 border-2 border-red-400 text-red-800 rounded-lg">
             <p className="font-semibold mb-1">⚠️ Minimum quantity not met</p>
@@ -542,20 +543,13 @@ const Checkout = () => {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => navigate('/cart')}
-              className="mt-2 text-sm underline hover:no-underline font-medium"
-            >
+            <button onClick={() => navigate('/cart')} className="mt-2 text-sm underline hover:no-underline font-medium">
               Go to cart to fix
             </button>
           </div>
         )}
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg">{error}</div>}
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Address Form */}
@@ -576,30 +570,25 @@ const Checkout = () => {
                           setSelectedAddressId(addr._id);
                           setUseNewAddress(false);
                         }}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition ${selectedAddressId === addr._id && !useNewAddress
-                          ? 'border-[#5C3A21] bg-[#fdf6ec]'
-                          : 'border-gray-200 hover:border-[#D4A373]'
-                          }`}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                          selectedAddressId === addr._id && !useNewAddress
+                            ? 'border-[#5C3A21] bg-[#fdf6ec]'
+                            : 'border-gray-200 hover:border-[#D4A373]'
+                        }`}
                       >
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-semibold text-gray-800">{addr.name}</p>
                             <p className="text-sm text-gray-600">{addr.phone}</p>
-                            {addr.phone2 && (
-                              <p className="text-sm text-gray-600">Alt: {addr.phone2}</p>
-                            )}
-                            {addr.buildingFlatNo && (
-                              <p className="text-sm text-gray-600 mt-1">{addr.buildingFlatNo}</p>
-                            )}
+                            {addr.phone2 && <p className="text-sm text-gray-600">Alt: {addr.phone2}</p>}
+                            {addr.buildingFlatNo && <p className="text-sm text-gray-600 mt-1">{addr.buildingFlatNo}</p>}
                             <p className="text-sm text-gray-600 mt-1">
                               {addr.address}, {addr.city}, {addr.state} - {addr.pincode}
                               {addr.country && `, ${addr.country}`}
                             </p>
                           </div>
                           {addr.isDefault && (
-                            <span className="text-xs bg-[#5C3A21] text-white px-2 py-1 rounded">
-                              Default
-                            </span>
+                            <span className="text-xs bg-[#5C3A21] text-white px-2 py-1 rounded">Default</span>
                           )}
                         </div>
                       </div>
@@ -610,10 +599,9 @@ const Checkout = () => {
                         setUseNewAddress(true);
                         setSelectedAddressId(null);
                       }}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${useNewAddress
-                        ? 'border-[#5C3A21] bg-[#fdf6ec]'
-                        : 'border-gray-200 hover:border-[#D4A373]'
-                        }`}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition ${
+                        useNewAddress ? 'border-[#5C3A21] bg-[#fdf6ec]' : 'border-gray-200 hover:border-[#D4A373]'
+                      }`}
                     >
                       <p className="font-medium text-gray-800">+ Use New Address</p>
                     </div>
@@ -661,10 +649,11 @@ const Checkout = () => {
                         }}
                         required
                         maxLength="10"
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
-                          ? 'border-red-500'
-                          : 'border-gray-300'
-                          }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none ${
+                          formData.phone && formData.phone.length !== 10 && formData.phone.length > 0
+                            ? 'border-red-500'
+                            : 'border-gray-300'
+                        }`}
                         placeholder="Enter 10-digit phone number"
                       />
                       {formData.phone && formData.phone.length !== 10 && formData.phone.length > 0 && (
@@ -714,7 +703,6 @@ const Checkout = () => {
                       />
                     </div>
 
-                    {/* ✅ Country field */}
                     <div>
                       <label className="block text-gray-700 font-medium mb-2">Country *</label>
                       <CountrySelect
@@ -771,20 +759,15 @@ const Checkout = () => {
                         type="button"
                         onClick={handleSaveAddress}
                         disabled={savingAddress || addressSaved}
-                        className={`w-full py-3 rounded-lg font-semibold transition border-2 ${addressSaved
-                          ? 'bg-green-50 border-green-500 text-green-700 cursor-default'
-                          : 'bg-white border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] disabled:opacity-50'
-                          }`}
+                        className={`w-full py-3 rounded-lg font-semibold transition border-2 ${
+                          addressSaved
+                            ? 'bg-green-50 border-green-500 text-green-700 cursor-default'
+                            : 'bg-white border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] disabled:opacity-50'
+                        }`}
                       >
-                        {savingAddress
-                          ? 'Saving…'
-                          : addressSaved
-                            ? '✓ Address Saved'
-                            : 'Save this address'}
+                        {savingAddress ? 'Saving…' : addressSaved ? '✓ Address Saved' : 'Save this address'}
                       </button>
-                      {addressError && (
-                        <p className="text-red-500 text-sm mt-2">{addressError}</p>
-                      )}
+                      {addressError && <p className="text-red-500 text-sm mt-2">{addressError}</p>}
                       {!addressSaved && (
                         <p className="text-xs text-gray-500 mt-2 text-center">
                           You must save this address before proceeding to payment.
@@ -813,7 +796,7 @@ const Checkout = () => {
                       </div>
                     </label>
 
-                    {!isInternational && (
+                    {!isInternational && !appliedCoupon && (
                       <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-[#5C3A21] transition">
                         <input
                           type="radio"
@@ -835,6 +818,12 @@ const Checkout = () => {
                         ℹ️ COD is not available for international orders. Please pay online.
                       </p>
                     )}
+
+                    {appliedCoupon && !isInternational && (
+                      <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                        ℹ️ Cash on Delivery is not available with a coupon. Please pay online.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -844,19 +833,16 @@ const Checkout = () => {
                     <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-400">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-xl">🎁</span>
-                        <h3 className="font-bold text-green-800">
-                          Congratulations! You're eligible for a FREE gift
-                        </h3>
+                        <h3 className="font-bold text-green-800">Congratulations! You're eligible for a FREE gift</h3>
                       </div>
                       <p className="text-sm text-green-700 mb-3">
                         Choose any <strong>one</strong> of the following:
                       </p>
                       <div className="space-y-2">
                         <label
-                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 1
-                            ? 'border-green-600 bg-white'
-                            : 'border-gray-200 bg-white hover:border-green-400'
-                            }`}
+                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${
+                            freeGift === 1 ? 'border-green-600 bg-white' : 'border-gray-200 bg-white hover:border-green-400'
+                          }`}
                         >
                           <input
                             type="radio"
@@ -870,10 +856,9 @@ const Checkout = () => {
                         </label>
 
                         <label
-                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${freeGift === 2
-                            ? 'border-green-600 bg-white'
-                            : 'border-gray-200 bg-white hover:border-green-400'
-                            }`}
+                          className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${
+                            freeGift === 2 ? 'border-green-600 bg-white' : 'border-gray-200 bg-white hover:border-green-400'
+                          }`}
                         >
                           <input
                             type="radio"
@@ -890,7 +875,6 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {/* ✅ Address-save hint above the pay button */}
                 {!hasSavedAddress && (
                   <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800">
                     ⚠️ Please save your address first to enable payment.
@@ -905,10 +889,10 @@ const Checkout = () => {
                   {!hasSavedAddress
                     ? 'Save address to continue'
                     : hasMinQtyViolation
-                      ? 'Fix quantities to continue'
-                      : loading
-                        ? 'Processing...'
-                        : `Pay ${formatPrice(amountToPayNow)}`}
+                    ? 'Fix quantities to continue'
+                    : loading
+                    ? 'Processing...'
+                    : `Pay ${formatPrice(amountToPayNow)}`}
                 </button>
               </form>
             </div>
@@ -925,13 +909,12 @@ const Checkout = () => {
                 {cart.map((item, index) => {
                   const belowMin = item.quantity < getMinQty(item);
                   return (
-                    <div
-                      key={index}
-                      className={`flex justify-between text-sm ${belowMin ? 'text-red-600' : ''}`}
-                    >
+                    <div key={index} className={`flex justify-between text-sm ${belowMin ? 'text-red-600' : ''}`}>
                       <div>
                         <span className="font-medium">{item.name}</span>
-                        <span className="text-gray-500"> ({item.selectedWeight} × {item.quantity})</span>
+                        <span className="text-gray-500">
+                          {' '}({item.selectedWeight} × {item.quantity})
+                        </span>
                         {belowMin && (
                           <span className="block text-xs text-red-600">Min {getMinQty(item)} required</span>
                         )}
@@ -944,9 +927,7 @@ const Checkout = () => {
                 {isEligibleForFreeGift && freeGift !== 0 && (
                   <div className="flex justify-between text-sm">
                     <div>
-                      <span className="font-medium">
-                        🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}
-                      </span>
+                      <span className="font-medium">🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}</span>
                       <span className="text-gray-500"> (Free Gift)</span>
                     </div>
                     <span>FREE</span>
@@ -954,11 +935,93 @@ const Checkout = () => {
                 )}
               </div>
 
+              {/* Coupon block (single copy) */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">Have a coupon?</label>
+
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-300 rounded-lg px-3 py-2">
+                    <div className="text-sm">
+                      <span className="font-mono font-semibold text-green-800">{appliedCoupon.code}</span>
+                      <span className="text-green-700 ml-2">
+                        {appliedCoupon.type === 'percent'
+                          ? `(${appliedCoupon.value}% off)`
+                          : `(₹${appliedCoupon.value} off)`}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-xs font-medium text-red-600 hover:text-red-700 underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          applyCoupon();
+                        }
+                      }}
+                      placeholder="Enter code"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none uppercase font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-[#5C3A21] text-white hover:bg-[#4a2e1a] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {couponLoading ? 'Applying…' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Listed coupons — chips */}
+                {!appliedCoupon && listedCoupons.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">Available offers:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {listedCoupons.map((c) => (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => applyCouponByCode(c.code)}
+                          disabled={couponLoading}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full border border-dashed border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] transition disabled:opacity-50"
+                        >
+                          🎟️ {c.code}
+                          <span className="text-[10px] opacity-75">
+                            {c.type === 'percent' ? `${c.value}% off` : `₹${c.value} off`}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
+              </div>
+
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>- {formatPrice(discountAmount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-gray-600">
                   <span>
                     Delivery Charge
@@ -970,12 +1033,14 @@ const Checkout = () => {
                   </span>
                   <span>{formatPrice(deliveryCharge)}</span>
                 </div>
+
                 {paymentMethod === 'cod' && (
                   <div className="flex justify-between text-orange-600">
                     <span>COD Advance (to pay now)</span>
                     <span>{formatPrice(codAdvance)}</span>
                   </div>
                 )}
+
                 <div className="border-t pt-2">
                   <div className="flex justify-between text-lg font-bold text-[#5C3A21]">
                     <span>Total Amount</span>
@@ -986,8 +1051,12 @@ const Checkout = () => {
 
               {paymentMethod === 'cod' && (
                 <div className="mt-4 p-3 bg-orange-50 rounded-lg text-sm text-orange-800">
-                  <p>You'll pay <strong>{formatPrice(codAdvance)}</strong> now as advance.</p>
-                  <p>Remaining <strong>{formatPrice(total - codAdvance)}</strong> to be paid on delivery.</p>
+                  <p>
+                    You'll pay <strong>{formatPrice(codAdvance)}</strong> now as advance.
+                  </p>
+                  <p>
+                    Remaining <strong>{formatPrice(total - codAdvance)}</strong> to be paid on delivery.
+                  </p>
                 </div>
               )}
             </div>

@@ -84,6 +84,23 @@ const orderSchema = new mongoose.Schema(
       unique: true,
     },
     items: [orderItemSchema],
+
+    // ✅ Coupon / discount fields
+    subtotal: {
+      type: Number,
+      default: 0,
+    },
+    couponCode: {
+      type: String,
+      default: '',
+      uppercase: true,
+      trim: true,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
+
     totalAmount: {
       type: Number,
       required: true,
@@ -161,8 +178,8 @@ orderSchema.pre('save', async function (next) {
     const timestamp = date.getTime().toString().slice(-6);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     this.orderNumber = `${prefix}${timestamp}${random}`;
-  }
+  } 
   next();
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('Order', orderSchema);  

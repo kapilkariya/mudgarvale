@@ -3,11 +3,12 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Coupon = require('../models/Coupon');
 const CheckoutSession = require('../models/CheckoutSession');
 const { calculateDeliveryCharge, calculateSubtotal } = require('../utils/deliveryCharge');
 const { sendOrderConfirmationEmail } = require('../utils/email');
+const { computeDiscount } = require('./couponController');
 
-// Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -33,15 +34,11 @@ const addCategoriesToItems = async (items = []) => {
   });
 };
 
-// ✅ Compute international delivery charge (₹1000/kg) or fall back to domestic
 const computeDeliveryCharge = (orderItems, address) => {
   const isInternational = !!(address?.country && address.country !== 'India');
 
   if (!isInternational) {
-    return {
-      isInternational: false,
-      deliveryCharge: calculateDeliveryCharge(orderItems),
-    };
+    return { isInternational: false, deliveryCharge: calculateDeliveryCharge(orderItems) };
   }
 
   const cartTotalWeight = orderItems.reduce((sum, item) => {
@@ -51,89 +48,83 @@ const computeDeliveryCharge = (orderItems, address) => {
     return sum + (Number.isFinite(w) ? w : 0) * item.quantity;
   }, 0);
 
-  return {
-    isInternational: true,
-    deliveryCharge: Math.round(cartTotalWeight * 1000),
-  };
+  return { isInternational: true, deliveryCharge: Math.round(cartTotalWeight * 1000) };
+};
+
+// ✅ Server-side coupon lookup + discount. Returns { couponCode, discountAmount, finalSubtotal }
+// silent on failure — no coupon applied if code is missing, invalid, or inactive.
+const applyCouponIfValid = async (couponCode, subtotal) => {
+  const cleanCode = couponCode ? String(couponCode).trim().toUpperCase() : '';
+  if (!cleanCode) {
+    return { couponCode: '', discountAmount: 0, finalSubtotal: subtotal };
+  }
+
+  const coupon = await Coupon.findOne({ code: cleanCode });
+  if (!coupon || !coupon.isActive) {
+    return { couponCode: '', discountAmount: 0, finalSubtotal: subtotal };
+  }
+
+  const { discountAmount, finalSubtotal } = computeDiscount(coupon, subtotal);
+  if (discountAmount <= 0) {
+    return { couponCode: '', discountAmount: 0, finalSubtotal: subtotal };
+  }
+
+  return { couponCode: coupon.code, discountAmount, finalSubtotal };
 };
 
 // @desc    Create Razorpay order (not DB order)
 // @route   POST /api/orders
-// @access  Private
 const createOrder = async (req, res) => {
   try {
-    const { items, totalAmount, paymentMethod, address, freeGift } = req.body;
+    const { items, paymentMethod, address, freeGift, couponCode } = req.body;
     const userId = req.user.id;
 
     const orderItems = await addCategoriesToItems(items);
     const { isInternational, deliveryCharge } = computeDeliveryCharge(orderItems, address);
     const subtotal = calculateSubtotal(orderItems);
 
-    // ✅ Block COD for international orders
     if (isInternational && paymentMethod === 'cod') {
-      return res.status(400).json({
-        success: false,
-        message: 'Cash on Delivery is not available for international orders.',
-      });
+      return res.status(400).json({ success: false, message: 'Cash on Delivery is not available for international orders.' });
     }
 
-    // Server-side validation: only allow freeGift 1 or 2 if subtotal >= 3000.
-    // Anything invalid is forced to 0.
+    // ✅ Apply coupon BEFORE freeGift eligibility check so gift eligibility stays
+    //    based on the raw subtotal (coupons don't affect gift eligibility).
+    const { couponCode: appliedCode, discountAmount, finalSubtotal } = await applyCouponIfValid(couponCode, subtotal);
+
     let validatedFreeGift = 0;
     if (freeGift === 1 || freeGift === 2) {
       validatedFreeGift = subtotal >= 3000 ? freeGift : 0;
     }
 
+    const finalTotal = finalSubtotal + deliveryCharge;
     const codAdvance = deliveryCharge;
 
-    // DEBUG: Log received values
-    console.log('Razorpay Order Creation Debug:', {
-      receivedTotalAmount: totalAmount,
-      calculatedDeliveryCharge: deliveryCharge,
-      calculatedSubtotal: subtotal,
-      paymentMethod,
-      codAdvance,
-      freeGift,
-      validatedFreeGift,
-      isInternational,
-    });
-
-    const finalTotal = subtotal + deliveryCharge;
-
-    // Calculate amounts based on payment method
     const amountToPayNow = paymentMethod === 'cod' ? codAdvance : finalTotal;
     const remainingAmount = paymentMethod === 'cod' ? finalTotal - codAdvance : 0;
 
-    // Create Razorpay order for payment
     let razorpayOrder = null;
-
     if (paymentMethod === 'online') {
-      // Online: Full amount via Razorpay
       razorpayOrder = await razorpay.orders.create({
-        amount: finalTotal * 100, // Razorpay expects amount in paise
+        amount: finalTotal * 100,
         currency: 'INR',
         receipt: `ORDER-${Date.now()}`,
       });
     } else if (paymentMethod === 'cod') {
-      // COD: Only advance amount via Razorpay
       razorpayOrder = await razorpay.orders.create({
-        amount: codAdvance * 100, // Only COD advance in paise
+        amount: codAdvance * 100,
         currency: 'INR',
         receipt: `COD-${Date.now()}`,
       });
     }
 
-    console.log('Razorpay order created:', {
-      razorpayOrderId: razorpayOrder.id,
-      amountToPayNow,
-      remainingAmount,
-    });
+    console.log('Razorpay order created:', { razorpayOrderId: razorpayOrder.id, couponCode: appliedCode, discountAmount, finalTotal });
 
-    // Save the checkout data before opening Razorpay so the webhook can finish
-    // the same order if the browser callback is interrupted.
     const pendingOrder = await Order.create({
       userId,
       items: orderItems,
+      subtotal,
+      discountAmount,
+      couponCode: appliedCode,
       totalAmount: finalTotal,
       deliveryCharge,
       paymentMethod,
@@ -146,12 +137,6 @@ const createOrder = async (req, res) => {
       razorpayOrderId: razorpayOrder.id,
     });
 
-    console.log('Pending order created before Razorpay checkout:', {
-      orderId: pendingOrder._id,
-      orderNumber: pendingOrder.orderNumber,
-      razorpayOrderId: razorpayOrder.id,
-    });
-
     res.status(201).json({
       success: true,
       message: 'Razorpay order created successfully',
@@ -160,6 +145,9 @@ const createOrder = async (req, res) => {
         orderData: {
           userId,
           items: orderItems,
+          subtotal,
+          discountAmount,
+          couponCode: appliedCode,
           totalAmount: finalTotal,
           deliveryCharge,
           paymentMethod,
@@ -171,62 +159,46 @@ const createOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Create Razorpay order error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create Razorpay order',
-    });
+    res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
   }
 };
 
 // @desc    Verify Razorpay payment and create DB order
 // @route   POST /api/orders/verify-payment
-// @access  Private
 const verifyPayment = async (req, res) => {
   try {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderData } = req.body;
 
-    // Verify signature
     const body = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
       .digest('hex');
 
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (!isAuthentic) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid signature - payment verification failed',
-      });
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: 'Invalid signature - payment verification failed' });
     }
 
-    // A verified Razorpay payment must only create one order (and one email).
     const existingOrder = await Order.findOne({ razorpayPaymentId: razorpay_payment_id });
     if (existingOrder) {
-      return res.status(200).json({
-        success: true,
-        message: 'Payment was already verified and the order is confirmed',
-        data: existingOrder,
-      });
+      return res.status(200).json({ success: true, message: 'Payment was already verified and the order is confirmed', data: existingOrder });
     }
 
-    // Prefer the pending order created before checkout. This is also the record
-    // completed by the webhook when the browser callback is unavailable.
-    const { items, paymentMethod, address, freeGift } = orderData;
+    const { items, paymentMethod, address, freeGift, couponCode } = orderData;
     const userId = req.user.id;
     const orderItems = await addCategoriesToItems(items);
-    const { isInternational, deliveryCharge } = computeDeliveryCharge(orderItems, address);
+    const { deliveryCharge } = computeDeliveryCharge(orderItems, address);
     const subtotal = calculateSubtotal(orderItems);
-    const totalAmount = subtotal + deliveryCharge;
 
-    // Server-side validation mirrors createOrder for the backward-compat path.
+    // ✅ Recompute discount on the server — never trust the frontend
+    const { couponCode: appliedCode, discountAmount, finalSubtotal } = await applyCouponIfValid(couponCode, subtotal);
+    const totalAmount = finalSubtotal + deliveryCharge;
+
     const validatedFreeGift = (freeGift === 1 || freeGift === 2) && subtotal >= 3000 ? freeGift : 0;
 
     const codAdvance = deliveryCharge;
     const remainingAmount = paymentMethod === 'cod' ? totalAmount - codAdvance : 0;
 
-    // Determine payment status based on payment method
     let paymentStatus, paidAmount;
     if (paymentMethod === 'cod') {
       paymentStatus = 'partial_paid';
@@ -243,22 +215,26 @@ const verifyPayment = async (req, res) => {
       order.orderStatus = 'confirmed';
       order.paidAmount = paidAmount;
       order.remainingAmount = remainingAmount;
+      // ✅ Ensure coupon + discount are on the order
+      order.subtotal = subtotal;
+      order.couponCode = appliedCode;
+      order.discountAmount = discountAmount;
+      order.totalAmount = totalAmount;
       await order.save();
 
-      // ✅ Order confirmed — clear the user's CheckoutSession.
       try {
         const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
-        if (deleted.deletedCount > 0) {
-          console.log(`CheckoutSession cleared for user ${req.user.id}`);
-        }
+        if (deleted.deletedCount > 0) console.log(`CheckoutSession cleared for user ${req.user.id}`);
       } catch (sessionErr) {
         console.error('Failed to clear CheckoutSession:', sessionErr);
       }
     } else {
-      // Backward compatibility for payments started before pending-order storage.
       order = await Order.create({
         userId,
         items: orderItems,
+        subtotal,
+        couponCode: appliedCode,
+        discountAmount,
         totalAmount,
         deliveryCharge,
         paymentMethod,
@@ -272,32 +248,18 @@ const verifyPayment = async (req, res) => {
         razorpayPaymentId: razorpay_payment_id,
       });
 
-      // ✅ Order confirmed (new order path) — clear the user's CheckoutSession.
       try {
         const deleted = await CheckoutSession.deleteOne({ userId: req.user.id });
-        if (deleted.deletedCount > 0) {
-          console.log(`CheckoutSession cleared for user ${req.user.id}`);
-        }
+        if (deleted.deletedCount > 0) console.log(`CheckoutSession cleared for user ${req.user.id}`);
       } catch (sessionErr) {
         console.error('Failed to clear CheckoutSession:', sessionErr);
       }
     }
 
-    console.log('Order created after payment verification:', {
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      paymentStatus,
-      paidAmount,
-      isInternational,
-    });
-
-    // Prefer the verified account email over checkout input. Delivery failures
-    // are deliberately non-blocking for order completion.
+    // ✅ Email confirmation (unchanged)
     try {
       const confirmationEmail = req.user.email;
-      if (!confirmationEmail) {
-        throw new Error('No recipient email is available for this order');
-      }
+      if (!confirmationEmail) throw new Error('No recipient email is available for this order');
 
       const emailResult = await sendOrderConfirmationEmail(
         confirmationEmail,
@@ -311,91 +273,45 @@ const verifyPayment = async (req, res) => {
       console.error(`Order confirmation email failed for ${order.orderNumber}:`, emailError);
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Payment verified and order created successfully',
-      data: order,
-    });
+    res.status(200).json({ success: true, message: 'Payment verified and order created successfully', data: order });
   } catch (error) {
     console.error('Verify payment error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to verify payment or create order',
-    });
+    res.status(500).json({ success: false, message: 'Failed to verify payment or create order' });
   }
 };
 
 // @desc    Remove a pending Razorpay checkout order
-// @route   POST /api/orders/cancel-pending
-// @access  Private
 const cancelPendingOrder = async (req, res) => {
   try {
     const { razorpayOrderId, orderId } = req.body;
-
     if (!razorpayOrderId && !orderId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Razorpay order id or order id is required',
-      });
+      return res.status(400).json({ success: false, message: 'Razorpay order id or order id is required' });
     }
 
-    const query = {
-      userId: req.user.id,
-      paymentStatus: 'pending',
-    };
-
-    if (razorpayOrderId) {
-      query.razorpayOrderId = razorpayOrderId;
-    } else {
+    const query = { userId: req.user.id, paymentStatus: 'pending' };
+    if (razorpayOrderId) query.razorpayOrderId = razorpayOrderId;
+    else {
       if (!mongoose.isValidObjectId(orderId)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid order id',
-        });
+        return res.status(400).json({ success: false, message: 'Invalid order id' });
       }
-
       query._id = orderId;
     }
 
     const order = await Order.findOneAndDelete(query);
-
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pending order not found or already processed',
-      });
+      return res.status(404).json({ success: false, message: 'Pending order not found or already processed' });
     }
 
-    console.log('Pending order removed by user:', {
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      razorpayOrderId: order.razorpayOrderId,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Pending order removed successfully',
-      data: order,
-    });
+    res.status(200).json({ success: true, message: 'Pending order removed successfully', data: order });
   } catch (error) {
     console.error('Cancel pending order error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to cancel pending order',
-    });
+    res.status(500).json({ success: false, message: 'Failed to cancel pending order' });
   }
 };
 
-// @desc    Get logged in user's orders
-// @route   GET /api/orders/my-orders
-// @access  Private
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user._id })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // Format orders to ensure all fields are present
+    const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
     const formattedOrders = orders.map(order => ({
       ...order,
       items: order.items.map(item => ({
@@ -417,49 +333,21 @@ const getMyOrders = async (req, res) => {
         country: order.address?.country || 'India',
       },
     }));
-
-    res.status(200).json({
-      success: true,
-      count: formattedOrders.length,
-      data: formattedOrders,
-    });
+    res.status(200).json({ success: true, count: formattedOrders.length, data: formattedOrders });
   } catch (error) {
     console.error('Get my orders error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch orders',
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch orders', error: error.message });
   }
 };
 
-// @desc    Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({
-      _id: req.params.id,
-      userId: req.user.id,
-    }).populate('items.productId', 'name image category');
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: order,
-    });
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id }).populate('items.productId', 'name image category');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    res.status(200).json({ success: true, data: order });
   } catch (error) {
     console.error('Get order error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch order',
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch order' });
   }
 };
 

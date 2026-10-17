@@ -120,7 +120,7 @@ const Navbar = () => {
           >
             {navItems.map((item) => (
               <a
-                key={item.name}
+                key={item.name} 
                 onClick={() => handleNavigation(item.path)}
                 style={{
                   color: isActive(item.path) ? '#D4A373' : 'white',
