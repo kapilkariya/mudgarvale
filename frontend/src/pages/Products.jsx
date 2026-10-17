@@ -14,7 +14,7 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
+  const categories = ['all', 'mudgar', 'gada', 'samtola', 'senaboard', 'sticks', 'yoga'];
 
   // Category metadata configuration
   const categoryMeta = {
@@ -52,7 +52,12 @@ const Products = () => {
       title: 'Premium Lathi Chhada Utar | Mudgarvale',
       description: 'Explore our collection of premium lathi chhada utar, handcrafted wooden sticks designed with traditional craftsmanship and quality.',
       keywords: 'premium lathi, lathi chhada utar, chhada utar, wooden lathi, traditional lathi, Mudgarvale',
-    }
+    },
+    yoga: {
+      title: 'Yoga Equipment for Traditional Practice | Mudgarvale',
+      description: 'Shop traditional yoga equipment and accessories from Mudgarvale. Handcrafted with quality craftsmanship for your daily practice.',
+      keywords: 'yoga equipment, traditional yoga, yoga accessories, Mudgarvale yoga',
+    },
   };
 
   // Get category from URL - runs on every render
@@ -149,6 +154,7 @@ const Products = () => {
     senaboard: 4,
     decor: 5,
     sticks: 6,
+    yoga: 7,
   };
 
   // ✅ Hide decor products from the grid
@@ -165,6 +171,7 @@ const Products = () => {
     if (selectedCategory === 'all') return 'All Products';
     if (selectedCategory === 'sticks') return 'Bamboo Sticks/Lathi';
     if (selectedCategory === 'decor') return 'Home Decor';
+    if (selectedCategory === 'yoga') return 'Yoga';
     return selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
   };
 
@@ -225,7 +232,9 @@ const Products = () => {
                 ? 'Bamboo Sticks/Lathi'
                 : cat === 'decor'
                   ? 'Decor'
-                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  : cat === 'yoga'
+                    ? 'Yoga'
+                    : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </button>
           ))}
         </div>
@@ -303,7 +312,11 @@ const Products = () => {
                       {product.category !== 'senaboard' && product.weights && product.weights.length > 0 && (
                         <p className="text-[10px] xs:text-xs text-gray-500 text-center mt-1 truncate">
                           {product.weights.slice(0, 3).map(weight =>
-                            `${weight} ${product.category === 'sticks' ? 'ft' : product.category === 'decor' ? 'in' : 'kg'}`
+                            `${weight} ${product.category === 'sticks' ? 'ft'
+                              : product.category === 'decor' ? 'in'
+                                : product.category === 'yoga' ? 'mm'
+                                  : 'kg'
+                            }`
                           ).join(', ')}
                           {product.weights.length > 3 && '...'}
                         </p>

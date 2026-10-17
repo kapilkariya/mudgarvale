@@ -112,42 +112,53 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const EXCLUDED_NAMES = [
-      'Indian Bheem Gada Model: 13',
-      'Indian Hanuman Gada Model: 2',
-      'Angad Gada',
+    const yogaProducts = [
+      {
+        name: 'Yoga Block Set',
+        description:
+          'Improve your yoga practice with this premium teal blue yoga block set, made from high-density EVA foam for durability, stability, and comfortable support. The lightweight blocks feature a smooth, firm surface that helps improve balance, flexibility, and posture during yoga poses and stretching exercises. Suitable for beginners and experienced practitioners at home, gyms, and yoga studios.',
+        category: 'yoga',
+        image: 'yogablock1',
+        weights: ['2', '4'],
+        pricePerWeight: { '2': 400, '4': 700 },
+        isActive: true,
+        isSpecial: false,
+      },
+      {
+        name: 'Yoga Mat',
+        description:
+          'Enhance your yoga and fitness routine with this premium green yoga mat, designed with a textured, ribbed surface for improved grip and comfort. Its cushioned design supports yoga poses, stretching, meditation, and everyday floor workouts. Suitable for home workouts, gyms, yoga studios, and regular fitness practice.',
+        category: 'yoga',
+        image: 'yogamat1',
+        weights: ['4', '8', '10'],
+        pricePerWeight: { '4': 700, '8': 1200, '10': 1700 },
+        isActive: true,
+        isSpecial: false,
+      },
     ];
 
-    // Build a pricePerWeight map for weights 2..20, all at 400
-    const pricePerWeight = {};
-    for (let i = 2; i <= 20; i++) {
-      pricePerWeight[String(i)] = i*500;
+    let created = 0;
+    let skipped = 0;
+
+    for (const p of yogaProducts) {
+      const existing = await Product.findOne({ name: p.name });
+      if (existing) {
+        skipped++;
+        continue;
+      }
+      await Product.create(p);
+      created++;
     }
 
-    const result = await Product.updateMany(
-      {
-        category: 'gada',
-        name: { $nin: EXCLUDED_NAMES },
-      },
-      { $set: { pricePerWeight } }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No gada products found to update',
-      });
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: `Updated ${result.modifiedCount} gada product(s) to ₹400/kg`,
+      message: `Created ${created} yoga product(s), skipped ${skipped} existing`,
     });
   } catch (error) {
-    console.error('Dev update error:', error);
+    console.error('Dev add yoga products error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update products',
+      message: 'Failed to add yoga products',
       error: error.message,
     });
   }

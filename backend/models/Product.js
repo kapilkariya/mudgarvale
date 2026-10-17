@@ -17,7 +17,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Category is required'],
       enum: {
-        values: ['mudgar', 'gada', 'samtola', 'senaboard','decor', 'sticks'],
+        values: ['mudgar', 'gada', 'samtola', 'senaboard','decor', 'sticks','yoga'],
         message: 'Category must be mudgar, gada, samtola, senaboard, decor, or sticks',
       },
     },

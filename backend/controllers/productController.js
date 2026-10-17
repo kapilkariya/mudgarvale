@@ -49,7 +49,7 @@ const createProduct = async (req, res) => {
     const parsedWeights = typeof weights === 'string' ? JSON.parse(weights) : weights;
     const parsedPricePerWeight = typeof pricePerWeight === 'string' ? JSON.parse(pricePerWeight) : pricePerWeight;
 
-    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks'];
+    const allowedCategories = ['mudgar', 'gada', 'samtola', 'senaboard', 'sticks','yoga'];
     if (!allowedCategories.includes(category)) {
       return res.status(400).json({
         success: false,
