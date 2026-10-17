@@ -401,7 +401,7 @@ const AdminDashboard = () => {
     <div className="px-4 pb-8">
       <div className='h-20'></div>
       {/* Developer-only button */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-red-200">
+      {/* <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-red-200">
         <h2 className="text-lg font-bold text-red-700 mb-3">🛠 Developer Tools</h2>
         <button
           onClick={async () => {
@@ -426,7 +426,7 @@ const AdminDashboard = () => {
           {devBusy ? 'Working…' : 'Run Rename Script'}
         </button>
         {devMsg && <p className="mt-3 text-sm text-gray-700">{devMsg}</p>}
-      </div>
+      </div> */}
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
       <p className="text-gray-600 mb-8">Welcome to your admin panel</p>
 

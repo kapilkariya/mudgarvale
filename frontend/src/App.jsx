@@ -89,9 +89,9 @@ const PromoPopup = () => {
         }}
       >
         <picture>
-          <source media="(max-width: 600px)" srcSet="/offer.png" />
+          <source media="(max-width: 600px)" srcSet="/offer3.png" />
           <img
-            src="/offer2.png"
+            src="/offer4.png"
             alt="Ganesh Chaturthi Special Offer"
             style={{
               display: "block",
