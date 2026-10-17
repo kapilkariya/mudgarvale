@@ -122,6 +122,7 @@ const Checkout = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [listedCoupons, setListedCoupons] = useState([]);
+  const [showAllCoupons, setShowAllCoupons] = useState(false);
 
   const getMinQty = (item) => (MIN_QTY_PRODUCTS.includes(item.name) ? 2 : 1);
   const hasMinQtyViolation = cart.some((item) => item.quantity < getMinQty(item));
@@ -899,168 +900,213 @@ const Checkout = () => {
           </div>
 
           {/* Order Summary */}
-          <div>
-            <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
-              <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-                Order Summary
-              </h2>
+<div>
+  <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
+    <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+      Order Summary
+    </h2>
 
-              <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {cart.map((item, index) => {
-                  const belowMin = item.quantity < getMinQty(item);
-                  return (
-                    <div key={index} className={`flex justify-between text-sm ${belowMin ? 'text-red-600' : ''}`}>
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-gray-500">
-                          {' '}({item.selectedWeight} × {item.quantity})
-                        </span>
-                        {belowMin && (
-                          <span className="block text-xs text-red-600">Min {getMinQty(item)} required</span>
-                        )}
-                      </div>
-                      <span>{formatPrice(item.price * item.quantity)}</span>
-                    </div>
-                  );
-                })}
-
-                {isEligibleForFreeGift && freeGift !== 0 && (
-                  <div className="flex justify-between text-sm">
-                    <div>
-                      <span className="font-medium">🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}</span>
-                      <span className="text-gray-500"> (Free Gift)</span>
-                    </div>
-                    <span>FREE</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Coupon block (single copy) */}
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-2">Have a coupon?</label>
-
-                {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-300 rounded-lg px-3 py-2">
-                    <div className="text-sm">
-                      <span className="font-mono font-semibold text-green-800">{appliedCoupon.code}</span>
-                      <span className="text-green-700 ml-2">
-                        {appliedCoupon.type === 'percent'
-                          ? `(${appliedCoupon.value}% off)`
-                          : `(₹${appliedCoupon.value} off)`}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={removeCoupon}
-                      className="text-xs font-medium text-red-600 hover:text-red-700 underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          applyCoupon();
-                        }
-                      }}
-                      placeholder="Enter code"
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none uppercase font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={applyCoupon}
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 py-2 text-sm font-medium rounded-lg bg-[#5C3A21] text-white hover:bg-[#4a2e1a] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {couponLoading ? 'Applying…' : 'Apply'}
-                    </button>
-                  </div>
-                )}
-
-                {/* Listed coupons — chips */}
-                {!appliedCoupon && listedCoupons.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs text-gray-500 mb-2">Available offers:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {listedCoupons.map((c) => (
-                        <button
-                          key={c.code}
-                          type="button"
-                          onClick={() => applyCouponByCode(c.code)}
-                          disabled={couponLoading}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full border border-dashed border-[#5C3A21] text-[#5C3A21] hover:bg-[#fdf6ec] transition disabled:opacity-50"
-                        >
-                          🎟️ {c.code}
-                          <span className="text-[10px] opacity-75">
-                            {c.type === 'percent' ? `${c.value}% off` : `₹${c.value} off`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
-              </div>
-
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-
-                {appliedCoupon && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount ({appliedCoupon.code})</span>
-                    <span>- {formatPrice(discountAmount)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-gray-600">
-                  <span>
-                    Delivery Charge
-                    {isInternational && (
-                      <span className="block text-xs text-gray-500">
-                        {cartTotalWeight.toFixed(2)} kg × ₹1000/kg (international)
-                      </span>
-                    )}
-                  </span>
-                  <span>{formatPrice(deliveryCharge)}</span>
-                </div>
-
-                {paymentMethod === 'cod' && (
-                  <div className="flex justify-between text-orange-600">
-                    <span>COD Advance (to pay now)</span>
-                    <span>{formatPrice(codAdvance)}</span>
-                  </div>
-                )}
-
-                <div className="border-t pt-2">
-                  <div className="flex justify-between text-lg font-bold text-[#5C3A21]">
-                    <span>Total Amount</span>
-                    <span>{formatPrice(total)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {paymentMethod === 'cod' && (
-                <div className="mt-4 p-3 bg-orange-50 rounded-lg text-sm text-orange-800">
-                  <p>
-                    You'll pay <strong>{formatPrice(codAdvance)}</strong> now as advance.
-                  </p>
-                  <p>
-                    Remaining <strong>{formatPrice(total - codAdvance)}</strong> to be paid on delivery.
-                  </p>
-                </div>
+    {/* Items list */}
+    <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
+      {cart.map((item, index) => {
+        const belowMin = item.quantity < getMinQty(item);
+        return (
+          <div key={index} className={`flex justify-between text-sm ${belowMin ? 'text-red-600' : ''}`}>
+            <div>
+              <span className="font-medium">{item.name}</span>
+              <span className="text-gray-500">
+                {' '}({item.selectedWeight} × {item.quantity})
+              </span>
+              {belowMin && (
+                <span className="block text-xs text-red-600">Min {getMinQty(item)} required</span>
               )}
             </div>
+            <span>{formatPrice(item.price * item.quantity)}</span>
           </div>
+        );
+      })}
+
+      {isEligibleForFreeGift && freeGift !== 0 && (
+        <div className="flex justify-between text-sm">
+          <div>
+            <span className="font-medium">🎁 {freeGift === 1 ? '1 KG Gada' : 'Sena Board'}</span>
+            <span className="text-gray-500"> (Free Gift)</span>
+          </div>
+          <span>FREE</span>
+        </div>
+      )}
+    </div>
+
+    {/* Coupon section (single block) */}
+    <div className="mb-4 border-t pt-4">
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-gray-700 font-medium">Coupon</label>
+        {appliedCoupon && (
+          <button
+            type="button"
+            onClick={removeCoupon}
+            className="text-xs font-medium text-red-600 hover:text-red-700 underline"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+
+      {/* Applied coupon card */}
+      {appliedCoupon ? (
+        <div className="bg-green-50 border border-green-300 rounded-lg px-3 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🎟️</span>
+            <span className="font-mono font-semibold text-green-800">{appliedCoupon.code}</span>
+            <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full font-medium">
+              {appliedCoupon.type === 'percent'
+                ? `${appliedCoupon.value}% off`
+                : `₹${appliedCoupon.value} off`}
+            </span>
+          </div>
+          {appliedCoupon.description && (
+            <p className="text-xs text-green-700 mt-1.5">{appliedCoupon.description}</p>
+          )}
+          <p className="text-xs text-green-700 mt-1">
+            You saved <strong>{formatPrice(discountAmount)}</strong> on this order.
+          </p>
+        </div>
+      ) : (
+        /* Manual code input */
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={couponInput}
+            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                applyCoupon();
+              }
+            }}
+            placeholder="Enter code"
+            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5C3A21] focus:border-transparent outline-none uppercase font-mono"
+          />
+          <button
+            type="button"
+            onClick={applyCoupon}
+            disabled={couponLoading || !couponInput.trim()}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-[#5C3A21] text-white hover:bg-[#4a2e1a] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {couponLoading ? 'Applying…' : 'Apply'}
+          </button>
+        </div>
+      )}
+
+      {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
+    </div>
+
+    {/* Totals */}
+    <div className="border-t pt-4 space-y-2">
+      <div className="flex justify-between text-gray-600">
+        <span>Subtotal</span>
+        <span>{formatPrice(subtotal)}</span>
+      </div>
+
+      {appliedCoupon && (
+        <div className="flex justify-between text-green-600">
+          <span>Discount ({appliedCoupon.code})</span>
+          <span>- {formatPrice(discountAmount)}</span>
+        </div>
+      )}
+
+      <div className="flex justify-between text-gray-600">
+        <span>
+          Delivery Charge
+          {isInternational && (
+            <span className="block text-xs text-gray-500">
+              {cartTotalWeight.toFixed(2)} kg × ₹1000/kg (international)
+            </span>
+          )}
+        </span>
+        <span>{formatPrice(deliveryCharge)}</span>
+      </div>
+
+      {paymentMethod === 'cod' && (
+        <div className="flex justify-between text-orange-600">
+          <span>COD Advance (to pay now)</span>
+          <span>{formatPrice(codAdvance)}</span>
+        </div>
+      )}
+
+      <div className="border-t pt-2">
+        <div className="flex justify-between text-lg font-bold text-[#5C3A21]">
+          <span>Total Amount</span>
+          <span>{formatPrice(total)}</span>
+        </div>
+      </div>
+    </div>
+
+    {paymentMethod === 'cod' && (
+      <div className="mt-4 p-3 bg-orange-50 rounded-lg text-sm text-orange-800">
+        <p>
+          You'll pay <strong>{formatPrice(codAdvance)}</strong> now as advance.
+        </p>
+        <p>
+          Remaining <strong>{formatPrice(total - codAdvance)}</strong> to be paid on delivery.
+        </p>
+      </div>
+    )}
+
+    {/* Available coupons — below everything */}
+    {!appliedCoupon && listedCoupons.length > 0 && (
+      <div className="mt-5 border-t pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold text-gray-800">🎁 Available Offers</p>
+          {listedCoupons.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setShowAllCoupons((v) => !v)}
+              className="text-xs font-medium text-[#5C3A21] hover:underline"
+            >
+              {showAllCoupons ? 'Show less' : `See all (${listedCoupons.length})`}
+            </button>
+          )}
+        </div>
+        <div className="space-y-2">
+          {(showAllCoupons ? listedCoupons : listedCoupons.slice(0, 3)).map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => applyCouponByCode(c.code)}
+              disabled={couponLoading}
+              className="w-full flex items-start justify-between gap-3 px-3 py-2.5 rounded-lg border border-dashed border-[#5C3A21]/40 bg-[#fdf6ec] hover:bg-[#f5e8d5] transition text-left disabled:opacity-50"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-sm font-bold text-[#5C3A21]">{c.code}</span>
+                  <span className="text-xs bg-[#5C3A21] text-white px-2 py-0.5 rounded-full font-medium">
+                    {c.type === 'percent' ? `${c.value}% off` : `₹${c.value} off`}
+                  </span>
+                </div>
+                {c.description && (
+                  <p className="text-xs text-gray-600 mt-1 leading-snug">{c.description}</p>
+                )}
+              </div>
+              <span className="text-xs font-semibold text-[#5C3A21] whitespace-nowrap self-center">
+                Apply
+              </span>
+            </button>
+          ))}
+        </div>
+        {!showAllCoupons && listedCoupons.length > 3 && (
+          <button
+            type="button"
+            onClick={() => setShowAllCoupons(true)}
+            className="w-full mt-2 text-xs text-gray-500 hover:text-[#5C3A21] py-1"
+          >
+            + {listedCoupons.length - 3} more offer{listedCoupons.length - 3 > 1 ? 's' : ''}
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
           <div className="mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl border-2 border-amber-400 shadow-md">
             <div className="flex items-center justify-center gap-3 flex-wrap">

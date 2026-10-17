@@ -8,6 +8,7 @@ const AdminCoupons = () => {
   const [success, setSuccess] = useState('');
 
   const [code, setCode] = useState('');
+  const [description, setDescription] = useState('');
   const [type, setType] = useState('percent');
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
@@ -42,8 +43,10 @@ const AdminCoupons = () => {
         code: code.trim().toUpperCase(),
         type,
         value: Number(value),
+        description: description.trim(),
       });
       setCode('');
+      setDescription('');
       setType('percent');
       setValue('');
       setSuccess('Coupon created');
@@ -100,6 +103,7 @@ const AdminCoupons = () => {
 
       <form onSubmit={submit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-8">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Create Coupon</h2>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
@@ -133,6 +137,21 @@ const AdminCoupons = () => {
             />
           </div>
         </div>
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description <span className="text-gray-400 font-normal">(optional — shown to customers)</span>
+          </label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. 10% off on all orders"
+            className={inputCls}
+            maxLength={200}
+          />
+        </div>
+
         <div className="flex justify-end mt-4">
           <button
             type="submit"
@@ -160,6 +179,7 @@ const AdminCoupons = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
                   <th className="px-4 py-3 font-medium">Code</th>
+                  <th className="px-4 py-3 font-medium">Description</th>
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Value</th>
                   <th className="px-4 py-3 font-medium">Active</th>
@@ -172,6 +192,13 @@ const AdminCoupons = () => {
                 {coupons.map((c) => (
                   <tr key={c._id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono font-semibold text-[#5C3A21]">{c.code}</td>
+                    <td className="px-4 py-3 text-gray-700 max-w-xs">
+                      {c.description ? (
+                        <span className="line-clamp-2">{c.description}</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 capitalize text-gray-700">{c.type}</td>
                     <td className="px-4 py-3 text-gray-900 font-medium">
                       {c.type === 'percent' ? `${c.value}%` : `₹${c.value}`}

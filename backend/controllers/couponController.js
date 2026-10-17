@@ -16,7 +16,7 @@ const getCoupons = async (req, res) => {
 // @route   POST /api/admin/coupons
 const createCoupon = async (req, res) => {
   try {
-    const { code, type, value, isActive, isListed } = req.body;
+    const { code, type, value, description, isActive, isListed } = req.body;
 
     if (!code || !type || value === undefined) {
       return res.status(400).json({ success: false, message: 'code, type and value are required' });
@@ -43,6 +43,7 @@ const createCoupon = async (req, res) => {
       code: cleanCode,
       type,
       value: numValue,
+      description: typeof description === 'string' ? description.trim() : '',
       isActive: isActive !== false,
       isListed: isListed === true,
     });
@@ -129,6 +130,7 @@ const validateCoupon = async (req, res) => {
         code: coupon.code,
         type: coupon.type,
         value: coupon.value,
+        description: coupon.description || '',
         discountAmount,
         finalSubtotal,
       },
@@ -144,7 +146,7 @@ const validateCoupon = async (req, res) => {
 const getListedCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find({ isActive: true, isListed: true })
-      .select('code type value')
+      .select('code type value description')
       .lean();
 
     res.status(200).json({ success: true, data: coupons });

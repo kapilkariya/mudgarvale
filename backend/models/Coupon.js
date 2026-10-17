@@ -9,6 +9,12 @@ const couponSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
     },
+    description: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: [200, 'Description cannot exceed 200 characters'],
+    },
     type: {
       type: String,
       required: [true, 'Discount type is required'],
