@@ -116,12 +116,12 @@ const devRenameProduct = async (req, res) => {
       {
         name: 'Yoga Mat',
         image: 'yogamat',
-        images: ['yogamat_2', 'yogamat_3'],
+        images: ['yogamat_2', 'yogamat_3','yogamat_4'],
       },
       {
         name: 'Yoga Block Set',
         image: 'yogablock1',
-        images: ['yogablock1_2', 'yogablock1_3'],
+        images: ['yogablock1_2', 'yogablock1_3','yogablock1_4'],
       },
     ];
 
