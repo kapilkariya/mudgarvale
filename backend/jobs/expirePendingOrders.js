@@ -63,7 +63,7 @@ const startExpirePendingOrdersJob = () => {
 
   // New: daily at 00:00 IST
   cron.schedule(
-    '0 0 * * *',
+    '30 0 * * *',
     flipLastTwoDaysConfirmedOrders,
     { timezone: 'Asia/Kolkata' }
   );
