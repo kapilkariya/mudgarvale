@@ -938,6 +938,7 @@ const Checkout = () => {
     </div>
 
     {/* Coupon section (single block) */}
+{/*     
     <div className="mb-4 border-t pt-4">
       <div className="flex items-center justify-between mb-2">
         <label className="block text-gray-700 font-medium">Coupon</label>
@@ -952,7 +953,6 @@ const Checkout = () => {
         )}
       </div>
 
-      {/* Applied coupon card */}
       {appliedCoupon ? (
         <div className="bg-green-50 border border-green-300 rounded-lg px-3 py-3">
           <div className="flex items-center gap-2">
@@ -972,7 +972,6 @@ const Checkout = () => {
           </p>
         </div>
       ) : (
-        /* Manual code input */
         <div className="flex gap-2">
           <input
             type="text"
@@ -1000,6 +999,9 @@ const Checkout = () => {
 
       {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
     </div>
+     */}
+
+
 
     {/* Totals */}
     <div className="border-t pt-4 space-y-2">

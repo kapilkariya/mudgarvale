@@ -112,7 +112,10 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const result = await Product.updateOne(
+    const details = [];
+
+    // --- 1. Rename Yoga Block Set + fix weights/price ---
+    const renameResult = await Product.updateOne(
       { name: 'Yoga Block Set' },
       {
         $set: {
@@ -123,30 +126,63 @@ const devRenameProduct = async (req, res) => {
       }
     );
 
-    if (result.matchedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Product "Yoga Block Set" not found',
-        details: [{ name: 'Yoga Block Set', status: 'not found' }],
+    if (renameResult.matchedCount === 0) {
+      details.push({ name: 'Yoga Block Set', status: 'not found' });
+    } else {
+      details.push({
+        name: 'Yoga Block Set',
+        status: 'updated',
+        modified: renameResult.modifiedCount,
       });
     }
 
+    // --- 2. Update gada prices to 400/kg (exclude specific names) ---
+    const excludedNames = [
+      'Indian Bheem Gada Model: 13',
+      'Indian Hanuman Gada Model: 2',
+      'Indian Ram Gada Model: 10',
+      'Angad Gada',
+    ];
+
+    const gadaProducts = await Product.find({
+      category: 'gada',
+      name: { $nin: excludedNames },
+    });
+
+    let gadaModified = 0;
+
+    for (const product of gadaProducts) {
+      const newPricePerWeight = {};
+      for (const weight of product.weights) {
+        const kg = Number(weight);
+        newPricePerWeight[weight] = kg * 400;
+      }
+
+      const res = await Product.updateOne(
+        { _id: product._id },
+        { $set: { pricePerWeight: newPricePerWeight } }
+      );
+
+      gadaModified += res.modifiedCount;
+    }
+
+    details.push({
+      gada: true,
+      matched: gadaProducts.length,
+      modified: gadaModified,
+      excluded: excludedNames,
+    });
+
     return res.status(200).json({
       success: true,
-      message: 'Product renamed and weights/prices updated',
-      details: [
-        {
-          name: 'Yoga Block Set',
-          status: 'updated',
-          modified: result.modifiedCount,
-        },
-      ],
+      message: 'Dev updates applied',
+      details,
     });
   } catch (error) {
     console.error('Dev update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update product',
+      message: 'Failed to update products',
       error: error.message,
     });
   }
