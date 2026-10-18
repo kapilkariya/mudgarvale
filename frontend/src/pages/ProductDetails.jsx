@@ -290,7 +290,7 @@ const ProductDetails = () => {
             )}
 
             {/* Weight / Length Selection */}
-            {product.category !== 'senaboard' && (
+            {product.category !== 'senaboard' && product.name !== 'Yoga Block (Brick) Set of 2' && (
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-3">
                   Select {
@@ -331,7 +331,7 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Quantity Selection */}
+           {/* Quantity Selection */}
             <div className="mb-6">
               <label className="block text-gray-700 font-medium mb-3">Quantity</label>
               <div className="flex items-center gap-3">

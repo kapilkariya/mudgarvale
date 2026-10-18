@@ -112,53 +112,41 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const updates = [
+    const result = await Product.updateOne(
+      { name: 'Yoga Block Set' },
       {
-        name: 'Yoga Mat',
-        image: 'yogamat',
-        images: ['yogamat_2', 'yogamat_3','yogamat_4','yogamat_5'],
-      },
-      {
-        name: 'Yoga Block Set',
-        image: 'yogablock1',
-        images: ['yogablock1_2', 'yogablock1_3','yogablock1_4','yogablock1_5'],
-      },
-    ];
-
-    const results = [];
-
-    for (const u of updates) {
-      const result = await Product.updateOne(
-        { name: u.name },
-        { $set: { image: u.image, images: u.images } }
-      );
-
-      if (result.matchedCount === 0) {
-        results.push({ name: u.name, status: 'not found' });
-      } else {
-        results.push({ name: u.name, status: 'updated', modified: result.modifiedCount });
+        $set: {
+          name: 'Yoga Block (Brick) Set of 2',
+          weights: ['1'],
+          pricePerWeight: { '1': 700 },
+        },
       }
-    }
+    );
 
-    const notFound = results.filter((r) => r.status === 'not found');
-    if (notFound.length === results.length) {
+    if (result.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: 'None of the target products were found',
-        details: results,
+        message: 'Product "Yoga Block Set" not found',
+        details: [{ name: 'Yoga Block Set', status: 'not found' }],
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Product images updated',
-      details: results,
+      message: 'Product renamed and weights/prices updated',
+      details: [
+        {
+          name: 'Yoga Block Set',
+          status: 'updated',
+          modified: result.modifiedCount,
+        },
+      ],
     });
   } catch (error) {
     console.error('Dev update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update products',
+      message: 'Failed to update product',
       error: error.message,
     });
   }

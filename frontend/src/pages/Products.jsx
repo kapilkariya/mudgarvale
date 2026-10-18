@@ -309,7 +309,7 @@ const Products = () => {
                       </div>
 
                       {/* Available Weights */}
-                      {product.category !== 'senaboard' && product.weights && product.weights.length > 0 && (
+                      {product.category !== 'senaboard' && product.name !== 'Yoga Block (Brick) Set of 2' && product.weights && product.weights.length > 0 && (
                         <p className="text-[10px] xs:text-xs text-gray-500 text-center mt-1 truncate">
                           {product.weights.slice(0, 3).map(weight =>
                             `${weight} ${product.category === 'sticks' ? 'ft'
