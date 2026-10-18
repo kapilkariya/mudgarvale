@@ -112,59 +112,57 @@ const deleteProduct = async (req, res) => {
 // @access  Private (Admin)
 const devRenameProduct = async (req, res) => {
   try {
-    const yogaProducts = [
-      {
-        name: 'Yoga Block Set',
-        description:
-          'Improve your yoga practice with this premium teal blue yoga block set, made from high-density EVA foam for durability, stability, and comfortable support. The lightweight blocks feature a smooth, firm surface that helps improve balance, flexibility, and posture during yoga poses and stretching exercises. Suitable for beginners and experienced practitioners at home, gyms, and yoga studios.',
-        category: 'yoga',
-        image: 'yogablock1',
-        weights: ['2', '4'],
-        pricePerWeight: { '2': 400, '4': 700 },
-        isActive: true,
-        isSpecial: false,
-      },
+    const updates = [
       {
         name: 'Yoga Mat',
-        description:
-          'Enhance your yoga and fitness routine with this premium green yoga mat, designed with a textured, ribbed surface for improved grip and comfort. Its cushioned design supports yoga poses, stretching, meditation, and everyday floor workouts. Suitable for home workouts, gyms, yoga studios, and regular fitness practice.',
-        category: 'yoga',
-        image: 'yogamat1',
-        weights: ['4', '8', '10'],
-        pricePerWeight: { '4': 700, '8': 1200, '10': 1700 },
-        isActive: true,
-        isSpecial: false,
+        image: 'yogamat',
+        images: ['yogamat_2', 'yogamat_3'],
+      },
+      {
+        name: 'Yoga Block Set',
+        image: 'yogablock1',
+        images: ['yogablock1_2', 'yogablock1_3'],
       },
     ];
 
-    let created = 0;
-    let skipped = 0;
+    const results = [];
 
-    for (const p of yogaProducts) {
-      const existing = await Product.findOne({ name: p.name });
-      if (existing) {
-        skipped++;
-        continue;
+    for (const u of updates) {
+      const result = await Product.updateOne(
+        { name: u.name },
+        { $set: { image: u.image, images: u.images } }
+      );
+
+      if (result.matchedCount === 0) {
+        results.push({ name: u.name, status: 'not found' });
+      } else {
+        results.push({ name: u.name, status: 'updated', modified: result.modifiedCount });
       }
-      await Product.create(p);
-      created++;
+    }
+
+    const notFound = results.filter((r) => r.status === 'not found');
+    if (notFound.length === results.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'None of the target products were found',
+        details: results,
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: `Created ${created} yoga product(s), skipped ${skipped} existing`,
+      message: 'Product images updated',
+      details: results,
     });
   } catch (error) {
-    console.error('Dev add yoga products error:', error);
+    console.error('Dev update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to add yoga products',
+      message: 'Failed to update products',
       error: error.message,
     });
   }
 };
-
-
 
 module.exports = {
   getAllProducts,
