@@ -114,75 +114,130 @@ const devRenameProduct = async (req, res) => {
   try {
     const details = [];
 
-    // --- 1. Rename Yoga Block Set + fix weights/price ---
-    const renameResult = await Product.updateOne(
-      { name: 'Yoga Block Set' },
-      {
-        $set: {
-          name: 'Yoga Block (Brick) Set of 2',
-          weights: ['1'],
-          pricePerWeight: { '1': 700 },
-        },
-      }
-    );
+    // --- 1. Add / Update Yoga Mat + Yoga Block Combo ---
+    const comboName = 'Yoga Mat + Yoga Block (Set of 2) Combo';
 
-    if (renameResult.matchedCount === 0) {
-      details.push({ name: 'Yoga Block Set', status: 'not found' });
-    } else {
+    const comboData = {
+      name: comboName,
+      description:
+        'Get the perfect workout combination with a premium ribbed yoga mat and a set of 2 high-density EVA foam yoga blocks. The textured mat provides grip and cushioning, while the blocks offer stability, balance, and support during yoga poses, stretching, and flexibility exercises. Ideal for home workouts, gyms, and yoga studios.',
+      category: 'yoga',
+      image: 'yogacombo',
+      images: [
+        'yogamat_2',
+        'yogablock1_2',
+        'yogablock1_3',
+        'yogablock1_5',
+      ],
+      weights: ['4', '6', '8'],
+      pricePerWeight: {
+        '4': 1449,
+        '6': 1699,
+        '8': 1849,
+      },
+      lengthPerWeight: {},
+      isActive: true,
+      isSpecial: false,
+    };
+
+    const existingCombo = await Product.findOne({ name: comboName });
+
+    if (existingCombo) {
+      const updated = await Product.updateOne(
+        { _id: existingCombo._id },
+        { $set: comboData }
+      );
+
       details.push({
-        name: 'Yoga Block Set',
+        name: comboName,
         status: 'updated',
-        modified: renameResult.modifiedCount,
+        modified: updated.modifiedCount,
+        id: existingCombo._id,
+      });
+    } else {
+      const combo = await Product.create(comboData);
+
+      details.push({
+        name: comboName,
+        status: 'created',
+        id: combo._id,
       });
     }
 
-    // --- 2. Update gada prices to 400/kg (exclude specific names) ---
-    const excludedNames = [
-      'Indian Bheem Gada Model: 13',
-      'Indian Hanuman Gada Model: 2',
-      'Indian Ram Gada Model: 10',
-      'Angad Gada',
-    ];
+    // --- 2. Add / Update Premium Cobra Sort Danda ---
+    const dandaName = 'Premium Cobra Sort Danda';
 
-    const gadaProducts = await Product.find({
-      category: 'gada',
-      name: { $nin: excludedNames },
-    });
+    const dandaData = {
+      name: dandaName,
+      description:
+        'Premium Cobra Sort Danda crafted from strong, high-quality natural wood with a durable and sturdy design. Suitable for traditional training, practice, and fitness activities. Designed for comfortable handling and regular use, making it a practical choice for training centers, akhadas, and personal practice.',
+      category: 'sticks',
+      image: 'stick5',
+      images: [
+        'stick5_2',
+        'stick5_3',
+        'stick5_4',
+      ],
+      weights: ['3.5'],
+      pricePerWeight: {
+        '3.5': 350,
+      },
+      isActive: true,
+      isSpecial: false,
+    };
 
-    let gadaModified = 0;
+    const existingDanda = await Product.findOne({ name: dandaName });
 
-    for (const product of gadaProducts) {
-      const newPricePerWeight = {};
-      for (const weight of product.weights) {
-        const kg = Number(weight);
-        newPricePerWeight[weight] = kg * 400;
-      }
-
-      const res = await Product.updateOne(
-        { _id: product._id },
-        { $set: { pricePerWeight: newPricePerWeight } }
+    if (existingDanda) {
+      const updated = await Product.updateOne(
+        { _id: existingDanda._id },
+        { $set: dandaData }
       );
 
-      gadaModified += res.modifiedCount;
+      details.push({
+        name: dandaName,
+        status: 'updated',
+        modified: updated.modifiedCount,
+        id: existingDanda._id,
+      });
+    } else {
+      const danda = await Product.create(dandaData);
+
+      details.push({
+        name: dandaName,
+        status: 'created',
+        id: danda._id,
+      });
     }
 
-    details.push({
-      gada: true,
-      matched: gadaProducts.length,
-      modified: gadaModified,
-      excluded: excludedNames,
-    });
+    // --- 3. Update Tar Sort Danda price to 350 ---
+    const tarName = 'Tar Sort Danda';
+
+    const tarResult = await Product.updateOne(
+      { name: tarName },
+      { $set: { pricePerWeight: { '3': 350 } } }
+    );
+
+    if (tarResult.matchedCount === 0) {
+      details.push({ name: tarName, status: 'not found' });
+    } else {
+      details.push({
+        name: tarName,
+        status: 'updated',
+        modified: tarResult.modifiedCount,
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: 'Dev updates applied',
+      message: 'Dev update applied',
       details,
     });
   } catch (error) {
     console.error('Dev update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update products',
+      message: 'Failed to update product',
       error: error.message,
     });
   }
