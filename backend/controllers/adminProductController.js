@@ -178,9 +178,9 @@ const devRenameProduct = async (req, res) => {
         'stick5_3',
         'stick5_4',
       ],
-      weights: ['3.5'],
+      weights: ['3'],
       pricePerWeight: {
-        '3.5': 350,
+        '3': 350,
       },
       isActive: true,
       isSpecial: false,
