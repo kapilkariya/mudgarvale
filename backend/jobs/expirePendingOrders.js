@@ -18,11 +18,15 @@ const expirePendingOrders = async () => {
   }
 };
 
-// --- New: flip confirmed orders from the last 2 days to processing, daily at 00:00 IST ---
+// --- Flip confirmed orders from yesterday to processing, every hour ---
 const IST_OFFSET_MIN = 330; // +5:30
 
 const flipLastTwoDaysConfirmedOrders = async () => {
   try {
+    // Ensure the query is index-backed so MongoDB only touches yesterday's range.
+    // (Does NOT change query/behavior — only makes it seek + stop.)
+    await Order.collection.createIndex({ orderStatus: 1, createdAt: 1 });
+
     const now = new Date();
 
     // Midnight today in IST (as UTC Date)
@@ -31,17 +35,17 @@ const flipLastTwoDaysConfirmedOrders = async () => {
         IST_OFFSET_MIN * 60 * 1000
     );
 
-    // Midnight 2 days ago in IST
-    const istMidnightTwoDaysAgo = new Date(
-      istMidnightToday.getTime() - 2 * 24 * 60 * 60 * 1000
+    // Midnight yesterday in IST
+    const istMidnightYesterday = new Date(
+      istMidnightToday.getTime() - 1 * 24 * 60 * 60 * 1000
     );
 
     const result = await Order.updateMany(
       {
         orderStatus: 'confirmed',
         createdAt: {
-          $gte: istMidnightTwoDaysAgo,  // 2 days ago or later
-          $lt: istMidnightToday,        // but before today
+          $gte: istMidnightYesterday, // yesterday 00:00 IST
+          $lt: istMidnightToday,      // before today 00:00 IST
         },
       },
       { $set: { orderStatus: 'processing' } }
@@ -61,15 +65,15 @@ const startExpirePendingOrdersJob = () => {
   // Existing: every minute
   cron.schedule('* * * * *', expirePendingOrders);
 
-  // New: daily at 00:00 IST
+  // Every hour, on the hour, IST
   cron.schedule(
-    '30 0 * * *',
+    '* * * * *',
     flipLastTwoDaysConfirmedOrders,
     { timezone: 'Asia/Kolkata' }
   );
 
   console.log('Expire pending orders job scheduled every minute for orders older than 5 minutes');
-  console.log('Flip last 2 days confirmed → processing job scheduled daily at 00:00 IST');
+  console.log('Flip yesterday\'s confirmed → processing job scheduled every hour (IST)');
 };
 
 module.exports = startExpirePendingOrdersJob;
