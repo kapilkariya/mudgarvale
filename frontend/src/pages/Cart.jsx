@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 // ✅ Products that require a minimum order quantity of 2
-const MIN_QTY_PRODUCTS = ['Tar Sort Danda','Premium Cobra Sort Danda'];
+const MIN_QTY_PRODUCTS = ['Tar Sort Danda', 'Premium Cobra Sort Danda'];
 
 const Cart = () => {
   useEffect(() => {
@@ -87,10 +87,21 @@ const Cart = () => {
                   {/* Product Info */}
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {item.category === 'sticks' || item.category === 'decor' ? 'Length' : 'Weight'}: {item.selectedWeight}{' '}
-                      {item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'}
-                    </p>
+                    {item.name !== 'Yoga Block (Brick) Set of 2' && (
+                      <p className="text-sm text-gray-500">
+                        {item.category === 'sticks' || item.category === 'decor'
+                          ? 'Length'
+                          : item.category === 'yoga'
+                            ? 'Thickness'
+                            : 'Weight'}
+                        : {item.selectedWeight}{' '}
+                        {item.category === 'sticks' || item.category === 'decor'
+                          ? 'in'
+                          : item.category === 'yoga'
+                            ? 'mm'
+                            : 'kg'}
+                      </p>
+                    )}
                     <p className="text-[#5C3A21] font-semibold">
                       {formatPrice(item.price * item.quantity)}
                     </p>
