@@ -114,117 +114,51 @@ const devRenameProduct = async (req, res) => {
   try {
     const details = [];
 
-    // --- 1. Add / Update Yoga Mat + Yoga Block Combo ---
-    const comboName = 'Yoga Mat + Yoga Block (Set of 2) Combo';
+    // --- 1. Rename Traditional Mudgar Model: 13 ---
+    const mudgarOldName = 'Traditional Mudgar Model: 13';
+    const mudgarNewName = 'Traditional Indian Club Mudgar Model: 13';
 
-    const comboData = {
-      name: comboName,
-      description:
-        'Get the perfect workout combination with a premium ribbed yoga mat and a set of 2 high-density EVA foam yoga blocks. The textured mat provides grip and cushioning, while the blocks offer stability, balance, and support during yoga poses, stretching, and flexibility exercises. Ideal for home workouts, gyms, and yoga studios.',
-      category: 'yoga',
-      image: 'yogacombo',
-      images: [
-        'yogamat_2',
-        'yogablock1_2',
-        'yogablock1_3',
-        'yogablock1_5',
-      ],
-      weights: ['4', '6', '8'],
-      pricePerWeight: {
-        '4': 1449,
-        '6': 1699,
-        '8': 1849,
-      },
-      lengthPerWeight: {},
-      isActive: true,
-      isSpecial: false,
-    };
-
-    const existingCombo = await Product.findOne({ name: comboName });
-
-    if (existingCombo) {
-      const updated = await Product.updateOne(
-        { _id: existingCombo._id },
-        { $set: comboData }
-      );
-
-      details.push({
-        name: comboName,
-        status: 'updated',
-        modified: updated.modifiedCount,
-        id: existingCombo._id,
-      });
-    } else {
-      const combo = await Product.create(comboData);
-
-      details.push({
-        name: comboName,
-        status: 'created',
-        id: combo._id,
-      });
-    }
-
-    // --- 2. Add / Update Premium Cobra Sort Danda ---
-    const dandaName = 'Premium Cobra Sort Danda';
-
-    const dandaData = {
-      name: dandaName,
-      description:
-        'Premium Cobra Sort Danda crafted from strong, high-quality natural wood with a durable and sturdy design. Suitable for traditional training, practice, and fitness activities. Designed for comfortable handling and regular use, making it a practical choice for training centers, akhadas, and personal practice.',
-      category: 'sticks',
-      image: 'stick5',
-      images: [
-        'stick5_2',
-        'stick5_3',
-        'stick5_4',
-      ],
-      weights: ['3'],
-      pricePerWeight: {
-        '3': 350,
-      },
-      isActive: true,
-      isSpecial: false,
-    };
-
-    const existingDanda = await Product.findOne({ name: dandaName });
-
-    if (existingDanda) {
-      const updated = await Product.updateOne(
-        { _id: existingDanda._id },
-        { $set: dandaData }
-      );
-
-      details.push({
-        name: dandaName,
-        status: 'updated',
-        modified: updated.modifiedCount,
-        id: existingDanda._id,
-      });
-    } else {
-      const danda = await Product.create(dandaData);
-
-      details.push({
-        name: dandaName,
-        status: 'created',
-        id: danda._id,
-      });
-    }
-
-    // --- 3. Update Tar Sort Danda price to 350 ---
-    const tarName = 'Tar Sort Danda';
-
-    const tarResult = await Product.updateOne(
-      { name: tarName },
-      { $set: { pricePerWeight: { '3': 350 } } }
+    const mudgarResult = await Product.updateOne(
+      { name: mudgarOldName },
+      { $set: { name: mudgarNewName } }
     );
 
-    if (tarResult.matchedCount === 0) {
-      details.push({ name: tarName, status: 'not found' });
+    if (mudgarResult.matchedCount === 0) {
+      details.push({ name: mudgarOldName, status: 'not found' });
     } else {
       details.push({
-        name: tarName,
+        name: mudgarOldName,
+        status: 'renamed',
+        newName: mudgarNewName,
+        modified: mudgarResult.modifiedCount,
+      });
+    }
+
+    // --- 2. Update Yoga Mat weights + prices ---
+    const yogaMatName = 'Yoga Mat';
+
+    const yogaMatResult = await Product.updateOne(
+      { name: yogaMatName },
+      {
+        $set: {
+          weights: ['4', '6', '8', '10'],
+          pricePerWeight: {
+            '4': 849,
+            '6': 1099,
+            '8': 1249,
+            '10': 1349,
+          },
+        },
+      }
+    );
+
+    if (yogaMatResult.matchedCount === 0) {
+      details.push({ name: yogaMatName, status: 'not found' });
+    } else {
+      details.push({
+        name: yogaMatName,
         status: 'updated',
-        modified: tarResult.modifiedCount,
+        modified: yogaMatResult.modifiedCount,
       });
     }
 
