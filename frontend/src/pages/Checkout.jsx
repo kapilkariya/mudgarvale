@@ -5,7 +5,7 @@ import { orderAPI, configAPI, addressAPI, checkoutSessionAPI } from '../config/a
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 import { Country } from 'country-state-city';
 
-const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
+const MIN_QTY_PRODUCTS = ['Tar Sort Danda','Premium Cobra Sort Danda'];
 
 const CountrySelect = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);

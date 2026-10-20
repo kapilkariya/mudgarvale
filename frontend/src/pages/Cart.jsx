@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { calculateDeliveryCharge } from '../utils/deliveryCharge';
 
 // ✅ Products that require a minimum order quantity of 2
-const MIN_QTY_PRODUCTS = ['Tar Sort Danda'];
+const MIN_QTY_PRODUCTS = ['Tar Sort Danda','Premium Cobra Sort Danda'];
 
 const Cart = () => {
   useEffect(() => {
