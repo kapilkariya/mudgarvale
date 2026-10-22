@@ -8,7 +8,7 @@ import autoTable from 'jspdf-autotable';
 const SPECIAL_PRODUCT_NAMES = [
   'Traditional Mudgar Model: 201',
   'Special Traditional Mudgar : 1',
-  'Traditional Mudgar Model: 13',
+  'Traditional Indian Club Mudgar Model: 13',
   'Indian Hanuman Gada Model: 13',
   'Indian Ram Gada Model: 10',
   'Angad Gada',
