@@ -456,6 +456,11 @@ const prepareExportData = (ordersToExport) => {
     const hasSticks = sticksItems.length > 0;
     const hasNonSticks = nonSticksItems.length > 0;
 
+    const fullSubtotal = computeItemsSubtotal(allItems) || 1;
+
+    // Prepaid → show 'Paid' for every row
+    const isPrepaid = order.paymentMethod === 'online' && amountPending === 0;
+
     // ---------- Row 1: non-sticks only (only if there are non-sticks items) ----------
     if (hasNonSticks) {
       const nonSticksList = buildItemsList(nonSticksItems);
@@ -466,19 +471,32 @@ const prepareExportData = (ordersToExport) => {
       const nonSticksWeight = computeItemsWeight(nonSticksItems);
       const nonSticksTotalWeight = nonSticksWeight + freeGiftWeight;
 
+      const nonSticksSubtotal = computeItemsSubtotal(nonSticksItems);
+      const nonSticksPending = hasSticks
+        ? Math.round(amountPending * (nonSticksSubtotal / fullSubtotal))
+        : amountPending;
+      const nonSticksPendingDisplay = isPrepaid ? 'Paid' : nonSticksPending;
+
       rows.push({
         ...baseRow,
         'Row Type': hasSticks ? 'Non-Sticks Only' : 'Full Order',
         'Items': nonSticksItemsList,
         'Total Weight (kg)': nonSticksTotalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
+        'Amount Pending': nonSticksPendingDisplay,
       });
     }
 
     // ---------- Row 2: sticks only (only if sticks exist) ----------
     if (hasSticks) {
       const sticksList = buildItemsList(sticksItems);
-      const sticksWeight = computeItemsWeight(sticksItems); // 2 kg per stick
+      const sticksWeight = computeItemsWeight(sticksItems);
+
+      const sticksSubtotal = computeItemsSubtotal(sticksItems);
+      const sticksPending = hasNonSticks
+        ? Math.round(amountPending * (sticksSubtotal / fullSubtotal))
+        : amountPending;
+      const sticksPendingDisplay = isPrepaid ? 'Paid' : sticksPending;
 
       rows.push({
         ...baseRow,
@@ -486,6 +504,7 @@ const prepareExportData = (ordersToExport) => {
         'Items': sticksList,
         'Total Weight (kg)': sticksWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
+        'Amount Pending': sticksPendingDisplay,
       });
     }
   });
