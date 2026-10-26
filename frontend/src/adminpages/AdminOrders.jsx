@@ -375,7 +375,7 @@ const AdminOrders = () => {
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  const prepareExportData = (ordersToExport) => {
+const prepareExportData = (ordersToExport) => {
   const rows = [];
 
   ordersToExport.forEach((order) => {
@@ -456,21 +456,21 @@ const AdminOrders = () => {
     const hasSticks = sticksItems.length > 0;
     const hasNonSticks = nonSticksItems.length > 0;
 
-    // ---------- Row 1: full order (only if there are non-sticks items) ----------
+    // ---------- Row 1: non-sticks only (only if there are non-sticks items) ----------
     if (hasNonSticks) {
-      const fullProductItems = buildItemsList(allItems);
-      const fullItemsList = freeGiftLabel
-        ? `${fullProductItems}${fullProductItems ? '; ' : ''}${freeGiftLabel} (free)`
-        : fullProductItems;
+      const nonSticksList = buildItemsList(nonSticksItems);
+      const nonSticksItemsList = freeGiftLabel
+        ? `${nonSticksList}${nonSticksList ? '; ' : ''}${freeGiftLabel} (free)`
+        : nonSticksList;
 
-      const fullItemsWeight = computeItemsWeight(allItems);
-      const fullTotalWeight = fullItemsWeight + freeGiftWeight;
+      const nonSticksWeight = computeItemsWeight(nonSticksItems);
+      const nonSticksTotalWeight = nonSticksWeight + freeGiftWeight;
 
       rows.push({
         ...baseRow,
-        'Row Type': 'Full Order',
-        'Items': fullItemsList,
-        'Total Weight (kg)': fullTotalWeight.toFixed(2),
+        'Row Type': hasSticks ? 'Non-Sticks Only' : 'Full Order',
+        'Items': nonSticksItemsList,
+        'Total Weight (kg)': nonSticksTotalWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
       });
     }
@@ -479,21 +479,19 @@ const AdminOrders = () => {
     if (hasSticks) {
       const sticksList = buildItemsList(sticksItems);
       const sticksWeight = computeItemsWeight(sticksItems); // 2 kg per stick
-      const sticksSubtotal = computeItemsSubtotal(sticksItems);
 
       rows.push({
         ...baseRow,
-        'Row Type': hasNonSticks ? 'Sticks Only' : 'Sticks Only', // same label either way
+        'Row Type': hasNonSticks ? 'Sticks Only' : 'Sticks Only',
         'Items': sticksList,
         'Total Weight (kg)': sticksWeight.toFixed(2),
-        'Total Amount': sticksSubtotal,
+        'Total Amount': order.totalAmount || 0,
       });
     }
   });
 
   return rows;
 };
-
   const exportToExcel = async () => {
     try {
       let ordersToExport;
