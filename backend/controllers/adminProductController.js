@@ -114,53 +114,42 @@ const devRenameProduct = async (req, res) => {
   try {
     const details = [];
 
-    // --- 1. Rename Traditional Mudgar Model: 13 ---
-    const mudgarOldName = 'Traditional Mudgar Model: 13';
-    const mudgarNewName = 'Traditional Indian Club Mudgar Model: 13';
+    // --- Update all gada prices to 450/kg (except excluded) ---
+    const excludedGadaNames = [
+      'Indian Bheem Gada Model: 13',
+      'Angad Gada',
+      'Indian Ram Gada Model: 10',
+      'Indian Hanuman Gada Model: 2',
+    ];
 
-    const mudgarResult = await Product.updateOne(
-      { name: mudgarOldName },
-      { $set: { name: mudgarNewName } }
-    );
+    const gadaProducts = await Product.find({
+      category: 'gada',
+      name: { $nin: excludedGadaNames },
+    });
 
-    if (mudgarResult.matchedCount === 0) {
-      details.push({ name: mudgarOldName, status: 'not found' });
-    } else {
-      details.push({
-        name: mudgarOldName,
-        status: 'renamed',
-        newName: mudgarNewName,
-        modified: mudgarResult.modifiedCount,
-      });
-    }
+    let gadaModified = 0;
 
-    // --- 2. Update Yoga Mat weights + prices ---
-    const yogaMatName = 'Yoga Mat';
-
-    const yogaMatResult = await Product.updateOne(
-      { name: yogaMatName },
-      {
-        $set: {
-          weights: ['4', '6', '8', '10'],
-          pricePerWeight: {
-            '4': 849,
-            '6': 1099,
-            '8': 1249,
-            '10': 1349,
-          },
-        },
+    for (const product of gadaProducts) {
+      const newPricePerWeight = {};
+      for (const weight of product.weights) {
+        const kg = Number(weight);
+        newPricePerWeight[weight] = kg * 450;
       }
-    );
 
-    if (yogaMatResult.matchedCount === 0) {
-      details.push({ name: yogaMatName, status: 'not found' });
-    } else {
-      details.push({
-        name: yogaMatName,
-        status: 'updated',
-        modified: yogaMatResult.modifiedCount,
-      });
+      const updated = await Product.updateOne(
+        { _id: product._id },
+        { $set: { pricePerWeight: newPricePerWeight } }
+      );
+
+      gadaModified += updated.modifiedCount;
     }
+
+    details.push({
+      gada: true,
+      matched: gadaProducts.length,
+      modified: gadaModified,
+      excluded: excludedGadaNames,
+    });
 
     return res.status(200).json({
       success: true,
