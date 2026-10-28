@@ -114,42 +114,25 @@ const devRenameProduct = async (req, res) => {
   try {
     const details = [];
 
-    // --- Update all gada prices to 450/kg (except excluded) ---
-    const excludedGadaNames = [
-      'Indian Bheem Gada Model: 13',
-      'Angad Gada',
-      'Indian Ram Gada Model: 10',
-      'Indian Hanuman Gada Model: 2',
-    ];
+    // --- Rename Indian Hanuman Gada Model: 2 ---
+    const hanumanOldName = 'Indian Hanuman Gada Model: 2';
+    const hanumanNewName = 'Special Indian Hanuman Gada Model: 2';
 
-    const gadaProducts = await Product.find({
-      category: 'gada',
-      name: { $nin: excludedGadaNames },
-    });
+    const hanumanResult = await Product.updateOne(
+      { name: hanumanOldName },
+      { $set: { name: hanumanNewName } }
+    );
 
-    let gadaModified = 0;
-
-    for (const product of gadaProducts) {
-      const newPricePerWeight = {};
-      for (const weight of product.weights) {
-        const kg = Number(weight);
-        newPricePerWeight[weight] = kg * 450;
-      }
-
-      const updated = await Product.updateOne(
-        { _id: product._id },
-        { $set: { pricePerWeight: newPricePerWeight } }
-      );
-
-      gadaModified += updated.modifiedCount;
+    if (hanumanResult.matchedCount === 0) {
+      details.push({ name: hanumanOldName, status: 'not found' });
+    } else {
+      details.push({
+        name: hanumanOldName,
+        status: 'renamed',
+        newName: hanumanNewName,
+        modified: hanumanResult.modifiedCount,
+      });
     }
-
-    details.push({
-      gada: true,
-      matched: gadaProducts.length,
-      modified: gadaModified,
-      excluded: excludedGadaNames,
-    });
 
     return res.status(200).json({
       success: true,
