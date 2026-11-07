@@ -114,25 +114,108 @@ const devRenameProduct = async (req, res) => {
   try {
     const details = [];
 
-    // --- Rename Indian Hanuman Gada Model: 2 ---
-    const hanumanOldName = 'Indian Hanuman Gada Model: 2';
-    const hanumanNewName = 'Special Indian Hanuman Gada Model: 2';
+    // Helper: create product if name doesn't exist
+    const addProduct = async (data, pricePerWeight) => {
+      const existing = await Product.findOne({ name: data.name });
 
-    const hanumanResult = await Product.updateOne(
-      { name: hanumanOldName },
-      { $set: { name: hanumanNewName } }
+      if (existing) {
+        details.push({ name: data.name, status: 'already exists' });
+        return;
+      }
+
+      const product = await Product.create({
+        ...data,
+        pricePerWeight,
+        lengthPerWeight: {},
+        isActive: true,
+        isSpecial: false,
+      });
+
+      details.push({ name: data.name, status: 'created', id: product._id });
+    };
+
+    // --- 1. Sena PushupBoard Model :6 (3 feet) ---
+    await addProduct(
+      {
+        name: 'Sena PushupBoard Model :6(3 feet)',
+        category: 'senaboard',
+        image: 'sena9',
+        images: ['sena9_2', 'sena9_3'],
+        weights: ['2'],
+      },
+      { '2': 1050 }
     );
 
-    if (hanumanResult.matchedCount === 0) {
-      details.push({ name: hanumanOldName, status: 'not found' });
-    } else {
-      details.push({
-        name: hanumanOldName,
-        status: 'renamed',
-        newName: hanumanNewName,
-        modified: hanumanResult.modifiedCount,
-      });
-    }
+    // --- 2. Sena PushupBoard Model :7 ---
+    await addProduct(
+      {
+        name: 'Sena PushupBoard Model :7',
+        category: 'senaboard',
+        image: 'sena10',
+        images: ['sena10_2', 'sena10_3'],
+        weights: ['2'],
+      },
+      { '2': 1050 } // same 2kg price — change if different
+    );
+
+    // --- 3. Indian Club Mudgar Model:14 (300/kg) ---
+    await addProduct(
+      {
+        name: 'Indian Club Mudgar Model:14',
+        category: 'mudgar',
+        image: 'mud14',
+        weights: ['2', '3', '4', '5', '6', '7', '8', '9', '10'],
+      },
+      {
+        '2': 600, '3': 900, '4': 1200, '5': 1500,
+        '6': 1800, '7': 2100, '8': 2400, '9': 2700, '10': 3000,
+      }
+    );
+
+    // --- 4. Special Grip Mudgar Model:15 (300/kg) ---
+    await addProduct(
+      {
+        name: 'Special Grip Mudgar Model:15',
+        category: 'mudgar',
+        image: 'mud15',
+        images: ['mud15_2'],
+        weights: ['2', '3', '4', '5', '6', '7', '8', '9', '10'],
+      },
+      {
+        '2': 600, '3': 900, '4': 1200, '5': 1500,
+        '6': 1800, '7': 2100, '8': 2400, '9': 2700, '10': 3000,
+      }
+    );
+
+    // --- 5. Carving Hamuman Gada Model: 14 (800/kg) ---
+    await addProduct(
+      {
+        name: 'Carving Hamuman Gada Model: 14',
+        category: 'gada',
+        image: 'gada14',
+        images: ['gada14_2'],
+        weights: ['2', '3', '4', '5', '6', '7', '8', '9', '10'],
+      },
+      {
+        '2': 1600, '3': 2400, '4': 3200, '5': 4000,
+        '6': 4800, '7': 5600, '8': 6400, '9': 7200, '10': 8000,
+      }
+    );
+
+    // --- 6. Carving Hamuman Gada Model: 15 (850/kg) ---
+    await addProduct(
+      {
+        name: 'Carving Hamuman Gada Model: 15',
+        category: 'gada',
+        image: 'gada15',
+        images: ['gada15_2'],
+        weights: ['2', '3', '4', '5', '6', '7', '8', '9', '10'],
+      },
+      {
+        '2': 1700, '3': 2550, '4': 3400, '5': 4250,
+        '6': 5100, '7': 5950, '8': 6800, '9': 7650, '10': 8500,
+      }
+    );
 
     return res.status(200).json({
       success: true,
