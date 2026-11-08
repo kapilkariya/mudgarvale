@@ -12,6 +12,13 @@ const SPECIAL_PRODUCT_NAMES = [
   'Indian Bheem Gada Model: 13',
   'Indian Ram Gada Model: 10',
   'Angad Gada',
+  'Sena PushupBoard Model :6(3 feet)',
+  'Sapate Board Model :7 (3 feet)',
+  'Carving Hamuman Gada Model: 14',
+  'Carving Hamuman Gada Model: 15',
+  'Carving Hamuman Gada Model: 16',
+  'Indian Club Mudgar Model:14',
+  'Special Grip Mudgar Model:15'
 ];
 
 // Free gift code → label mapping (0 = none)
