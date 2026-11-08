@@ -381,7 +381,6 @@ const AdminOrders = () => {
   const formatPrice = (price) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price || 0);
   const getStatus = (status) => statusOptions.find((option) => option.value === status) || { label: status, color: 'bg-gray-100 text-gray-800' };
   const formatDate = (date) => new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
 const prepareExportData = (ordersToExport) => {
   const rows = [];
 
@@ -390,10 +389,13 @@ const prepareExportData = (ordersToExport) => {
 
     // ---------- Common helpers ----------
     const buildItemsList = (items) =>
-      items?.map(item =>
-        `${item.name}${item.category !== 'senaboard'
+      items?.map(item => {
+        const star = SPECIAL_PRODUCT_NAMES.includes(item.name) ? ' ⭐⭐⭐' : '';
+        const weightPart = item.category !== 'senaboard'
           ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
-          : ''} × ${item.quantity}`).join('; ') || '';
+          : '';
+        return `${item.name}${star}${weightPart} × ${item.quantity}`;
+      }).join('; ') || '';
 
     const computeItemsWeight = (items) =>
       items?.reduce((sum, item) => {
