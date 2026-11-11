@@ -388,18 +388,14 @@ const prepareExportData = (ordersToExport) => {
     const freeGiftLabel = getFreeGiftLabel(order.freeGift);
 
     // ---------- Common helpers ----------
-    // Builds the items string; appends a single ⭐⭐⭐ at the end if any item is special
-    const buildItemsList = (items, appendStar = false) => {
-      const list = items?.map(item => {
+    // Builds the items string (no star here anymore)
+    const buildItemsList = (items) =>
+      items?.map(item => {
         const weightPart = item.category !== 'senaboard'
           ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
           : '';
         return `${item.name}${weightPart} × ${item.quantity}`;
       }).join('; ') || '';
-
-      if (!list) return '';
-      return appendStar ? `${list} ⭐⭐⭐` : list;
-    };
 
     const computeItemsWeight = (items) =>
       items?.reduce((sum, item) => {
@@ -435,9 +431,6 @@ const prepareExportData = (ordersToExport) => {
     const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
 🌙
  `).join('; ') || '';
-
-    // Does this order contain any special product?
-    const orderHasSpecial = (order.items || []).some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
 
     const baseRow = {
       'Row Type': 'Full Order',
@@ -477,14 +470,20 @@ const prepareExportData = (ordersToExport) => {
     // Prepaid → show 'Paid' for every row
     const isPrepaid = order.paymentMethod === 'online' && amountPending === 0;
 
-    // ---------- Row 1: non-sticks only (only if there are non-sticks items) ----------
+    // ---------- Row 1: non-sticks only ----------
     if (hasNonSticks) {
-      // Does the non-sticks portion contain a special product?
       const nonSticksHasSpecial = nonSticksItems.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
-      const nonSticksList = buildItemsList(nonSticksItems, nonSticksHasSpecial);
-      const nonSticksItemsList = freeGiftLabel
-        ? `${nonSticksList}${nonSticksList ? '; ' : ''}${freeGiftLabel} (free)`
-        : nonSticksList;
+
+      const nonSticksList = buildItemsList(nonSticksItems);
+
+      // Append free gift first, THEN star (if special)
+      let nonSticksItemsList = nonSticksList;
+      if (freeGiftLabel) {
+        nonSticksItemsList = `${nonSticksItemsList}${nonSticksItemsList ? '; ' : ''}${freeGiftLabel} (free)`;
+      }
+      if (nonSticksHasSpecial && nonSticksItemsList) {
+        nonSticksItemsList = `${nonSticksItemsList} ⭐⭐⭐`;
+      }
 
       const nonSticksWeight = computeItemsWeight(nonSticksItems);
       const nonSticksTotalWeight = nonSticksWeight + freeGiftWeight;
@@ -505,11 +504,13 @@ const prepareExportData = (ordersToExport) => {
       });
     }
 
-    // ---------- Row 2: sticks only (only if sticks exist) ----------
+    // ---------- Row 2: sticks only ----------
     if (hasSticks) {
-      const sticksList = buildItemsList(sticksItems, false); // no special products in sticks
-      const sticksWeight = computeItemsWeight(sticksItems);
+      const sticksList = buildItemsList(sticksItems);
+      // No special products in sticks, so no star here
+      const sticksItemsList = sticksList;
 
+      const sticksWeight = computeItemsWeight(sticksItems);
       const sticksSubtotal = computeItemsSubtotal(sticksItems);
       const sticksPending = hasNonSticks
         ? Math.round(amountPending * (sticksSubtotal / fullSubtotal))
@@ -519,7 +520,7 @@ const prepareExportData = (ordersToExport) => {
       rows.push({
         ...baseRow,
         'Row Type': hasNonSticks ? 'Sticks Only' : 'Sticks Only',
-        'Items': sticksList,
+        'Items': sticksItemsList,
         'Total Weight (kg)': sticksWeight.toFixed(2),
         'Total Amount': order.totalAmount || 0,
         'Amount Pending': sticksPendingDisplay,
