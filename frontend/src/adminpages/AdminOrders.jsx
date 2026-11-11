@@ -388,14 +388,18 @@ const prepareExportData = (ordersToExport) => {
     const freeGiftLabel = getFreeGiftLabel(order.freeGift);
 
     // ---------- Common helpers ----------
-    const buildItemsList = (items) =>
-      items?.map(item => {
-        const star = SPECIAL_PRODUCT_NAMES.includes(item.name) ? ' ⭐⭐⭐' : '';
+    // Builds the items string; appends a single ⭐⭐⭐ at the end if any item is special
+    const buildItemsList = (items, appendStar = false) => {
+      const list = items?.map(item => {
         const weightPart = item.category !== 'senaboard'
           ? ` (${item.selectedWeight}${item.category === 'sticks' || item.category === 'decor' ? 'in' : 'kg'})`
           : '';
-        return `${item.name}${star}${weightPart} × ${item.quantity}`;
+        return `${item.name}${weightPart} × ${item.quantity}`;
       }).join('; ') || '';
+
+      if (!list) return '';
+      return appendStar ? `${list} ⭐⭐⭐` : list;
+    };
 
     const computeItemsWeight = (items) =>
       items?.reduce((sum, item) => {
@@ -431,6 +435,9 @@ const prepareExportData = (ordersToExport) => {
     const decorItems = order.items?.filter(item => item.category === 'decor').map(() => `🌙🌙
 🌙
  `).join('; ') || '';
+
+    // Does this order contain any special product?
+    const orderHasSpecial = (order.items || []).some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
 
     const baseRow = {
       'Row Type': 'Full Order',
@@ -472,7 +479,9 @@ const prepareExportData = (ordersToExport) => {
 
     // ---------- Row 1: non-sticks only (only if there are non-sticks items) ----------
     if (hasNonSticks) {
-      const nonSticksList = buildItemsList(nonSticksItems);
+      // Does the non-sticks portion contain a special product?
+      const nonSticksHasSpecial = nonSticksItems.some(item => SPECIAL_PRODUCT_NAMES.includes(item.name));
+      const nonSticksList = buildItemsList(nonSticksItems, nonSticksHasSpecial);
       const nonSticksItemsList = freeGiftLabel
         ? `${nonSticksList}${nonSticksList ? '; ' : ''}${freeGiftLabel} (free)`
         : nonSticksList;
@@ -498,7 +507,7 @@ const prepareExportData = (ordersToExport) => {
 
     // ---------- Row 2: sticks only (only if sticks exist) ----------
     if (hasSticks) {
-      const sticksList = buildItemsList(sticksItems);
+      const sticksList = buildItemsList(sticksItems, false); // no special products in sticks
       const sticksWeight = computeItemsWeight(sticksItems);
 
       const sticksSubtotal = computeItemsSubtotal(sticksItems);
