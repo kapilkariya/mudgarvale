@@ -829,7 +829,7 @@ const Checkout = () => {
                 </div>
 
                 {/* Free Gift */}
-                {isEligibleForFreeGift && (
+                {/* {isEligibleForFreeGift && (
                   <div className="pt-4">
                     <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-400">
                       <div className="flex items-center gap-2 mb-3">
@@ -874,7 +874,7 @@ const Checkout = () => {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {!hasSavedAddress && (
                   <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-800">

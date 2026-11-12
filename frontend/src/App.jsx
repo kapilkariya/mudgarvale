@@ -35,6 +35,7 @@ import Shipping from "./pages/Shipping";
 import SepPayement from "./pages/SepPayement";
 import Thankyou from "./pages/Thankyou";
 
+// ---- PromoPopup kept for later use — currently disabled (not rendered) ----
 const PromoPopup = () => {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -186,7 +187,8 @@ function App() {
           <Navbar />
           <AppRoutes />
           <MudgarFooter />
-          <PromoPopup />
+          {/* Promo popup disabled — uncomment the next line to re-enable */}
+          {/* <PromoPopup /> */}
         </Router>
       </CartProvider>
       <div
